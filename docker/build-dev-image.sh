@@ -1,11 +1,11 @@
 VER=develop
 
-REPO=victronenergy
-TARGET=venus-docker-upnp
-DOCKERFILE="docker-upnp/Dockerfile"
+OWNER=${OWNER:="victronenergy"}
+TARGET=venus-influx-loader
+DOCKERFILE="docker/Dockerfile"
 BUILD_OPTS="--pull --progress=plain"
 
-TAG="$REPO/$TARGET:${VER}"
+TAG="$OWNER/$TARGET:${VER}"
 
 # Note that we are invoking `docker build` from our parent directory
 # with -f pointing towards our custom Dockerfile

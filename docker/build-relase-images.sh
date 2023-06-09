@@ -7,12 +7,12 @@ if [ "$VER" == "" ]; then
   exit 1
 fi
 
-REPO=victronenergy
-TARGET=venus-docker-upnp
-DOCKERFILE="docker-upnp/Dockerfile"
-BUILD_OPTS="--no-cache --pull"
+OWNER=${OWNER:="victronenergy"}
+TARGET=venus-influx-loader
+DOCKERFILE="docker/Dockerfile"
+BUILD_OPTS="--no-cache --pull --progress=plain"
 
-TAG="$REPO/$TARGET:${VER}"
+TAG="$OWNER/$TARGET:${VER}"
 
 # Note that we are invoking `docker build` from our parent directory
 # with -f pointing towards our custom Dockerfile
