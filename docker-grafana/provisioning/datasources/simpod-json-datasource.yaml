@@ -1,8 +1,0 @@
-apiVersion: 1
-
-datasources:
-  - name: JSON
-    uid: datasource-simpod-json-datasource
-    type: simpod-json-datasource
-    access: proxy
-    url: ${VGS_GRAFANA_API_URL}
