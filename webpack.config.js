@@ -118,7 +118,7 @@ module.exports = (env, argv) => {
         // in prod, derive admin api host:port using window.location
         // in dev, hardcode to 8088, as webpack will spin up webpack dev server on random port
         // and window.location will point to webpack dev server, instead of venus grafana server
-        "VENUS_GRAFANA_SERVER_ADMIN_API_PORT": env.prod ? undefined : 8088,
+        "VENUS_INFLUX_LOADER_ADMIN_API_PORT": env.prod ? undefined : 8088,
       }),
       new CleanWebpackPlugin(),
       new MiniCssExtractPlugin(),

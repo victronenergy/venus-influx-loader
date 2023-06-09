@@ -1,27 +1,26 @@
 {
-  "name": "venus-docker-grafana-server",
-  "version": "2.5.0",
+  "name": "venus-influx-loader",
+  "version": "1.0.0",
   "description": ".",
   "scripts": {
-    "start": "bin/venus-grafana-server.js",
+    "start": "bin/venus-influx-loader.js",
     "format": "prettier-standard src/**/*.js*",
     "lint": "eslint src/ --fix",
-    "prepare": "npm run clean && npm run build",
     "clean": "rimraf ./build",
     "watch-client": "webpack serve --mode development --progress --hot",
-    "watch-grafana-server": "babel-watch bin/venus-grafana-server.js -- --config-path ./config/ --port 8088",
+    "watch-influx-loader": "babel-watch bin/venus-influx-loader.js -- --config-path ./config/ --port 8088",
     "watch-upnp-browser": "babel-watch bin/venus-upnp-browser.js",
     "build": "webpack build --mode production --progress",
-    "dev": "VGS_INFLUXDB_URL=http://localhost:8086 VGS_INFLUXDB_USERNAME=s3cr4t VGS_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-grafana-server npm:watch-client",
-    "create-release": "github-create-release --owner victronenergy --repository venus-docker-grafana-images",
+    "dev": "VIL_INFLUXDB_URL=http://localhost:8086 VIL_INFLUXDB_USERNAME=s3cr4t VIL_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-influx-loader npm:watch-client",
+    "create-release": "github-create-release --owner victronenergy --repository venus-influx-loader",
     "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm run create-release"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/victronenergy/venus-docker-grafana-images.git"
+    "url": "https://github.com/victronenergy/venus-influx-loader.git"
   },
   "bugs": {
-    "url": "https://github.com/victronenergy/venus-docker-grafana-images/issues"
+    "url": "https://github.com/victronenergy/venus-influx-loader/issues"
   },
   "lint-staged": {
     "linters": {
@@ -36,7 +35,7 @@
     }
   },
   "bin": {
-    "venus-grafana-server": "./bin/venus-grafana-server.js",
+    "venus-influx-loader": "./bin/venus-influx-loader.js",
     "venus-upnp-browser": "./bin/venus-upnp-browser.js"
   },
   "author": "Scott Bender <scott@scottbender.net>",

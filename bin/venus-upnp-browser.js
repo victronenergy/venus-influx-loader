@@ -23,7 +23,7 @@ function log (message) {
 log('Use --help to learn how to use this program')
 log(`Discovery API: ${options.discoveryApi}`)
 
-// endpoints used to talk to venus-grafana-server
+// endpoints used to talk to venus-influx-loader
 const logEndpoint = new URL('log', options.discoveryApi)
 const discoveryEndpoint = new URL('upnpDiscovered', options.discoveryApi)
 

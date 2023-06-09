@@ -11,10 +11,10 @@ const compare = require('tsscmp')
 const auth = require('basic-auth')
 
 const defaultInfluxDBURL = new URL(
-  process.env.VGS_INFLUXDB_URL || 'http://influxdb:8086'
+  process.env.VIL_INFLUXDB_URL || 'http://influxdb:8086'
 )
-const defaultInfluxDBUsername = process.env.VGS_INFLUXDB_USERNAME || ''
-const defaultInfluxDBPassword = process.env.VGS_INFLUXDB_PASSWORD || ''
+const defaultInfluxDBUsername = process.env.VIL_INFLUXDB_USERNAME || ''
+const defaultInfluxDBPassword = process.env.VIL_INFLUXDB_PASSWORD || ''
 const defaultInfluxDBDatabase = 'venus'
 const defaultInfluxDBRetention = '30d'
 
@@ -93,7 +93,7 @@ function Server (options) {
 
   loadSecrets(app)
   loadConfig(app)
-  createRootLogger(app, 'venus-grafana-server', 'info')
+  createRootLogger(app, 'venus-influx-loader', 'info')
   if (app.config.settings.debug) {
     app.rootLogger.level = 'debug'
   }
