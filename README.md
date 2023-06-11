@@ -1,6 +1,6 @@
-# Venus Grafana Server
+# Venus Influx Loader
 
-Venus Grafana Server is a small application that allows reatime monitoring, and historical data analysis of Venus devices. It obtains realtime measurements from Venus devices via MQTT, stores them for later analysis into InfluxDB, and allows visualization via Grafana.
+Venus Influx Loader is a small application that allows reatime monitoring, and historical data analysis of Venus devices. It obtains realtime measurements from Venus devices via MQTT, stores them for later analysis into InfluxDB, and allows visualization via Grafana.
 
 It supports connection to the Venus devices:
 
@@ -8,42 +8,51 @@ It supports connection to the Venus devices:
   - Configured manually by setting their IP address.
   - Configured via VRM login credentials.
 
-Venus Grafana Server can run nearby a Venus device, and does not require internet access.
+Venus Influx Loader can run nearby a Venus device, and does not require internet access.
 
 It is therefore ideal to be installed on a Yacht, Motorhome, or sites without permanent internet access.
 
-TODO: Venus Grafana Server comes with many preconfigured dashboards for various different types of installations, such as ESS, Yacht, and Motorhome.
+The Venus Grafana configuration and dashboards can be found at: https://github.com/victronenergy/venus-grafana-dashboards.
 
 ## Quick Start
 
-To start experimenting, please install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and use `docker compose` to bring up a quick testing environment:
+To start experimenting, please install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and use the following steps to spin up a quick dev environment:
+
+### Build Venus Influx Loader docker image locally
 
 ```
-$ docker compose -f docker-compose-playground.yaml up
+$ export OWNER="martin"
+$ (cd docker && ./build-dev-image.sh)
 ```
 
-It will spin up a custom instance of InfluxDB, Grafana, and Venus Grafana Server Admin User Interface.
+### Run InfluxDB docker image instance locally
 
-1. Navigate to http://localhost:8088 to access Venus Grafana Server Admin UI, use `admin`, `admin` to sign in, and configure what Venus devices to watch.
-2. Navigate to http://localhost:3000 to access Grafana, use `admin`, `admin` to sign in, and look around default Grafana dashboards.
+```
+$ (cd docker && ./run-influxdb.sh)
+```
 
-Note that playground environment will store all configuration and data inside docker containers created by `docker compose` and you will loose the data and all modifications if you later remove or recreate the containers.
+### Run Venus Influx Loader docker image locally
 
-Please see below how to specify where to store the data and configuration.
+```
+$ export OWNER="martin"
+$ (cd docker && ./run-dev-image.sh)
+```
+
+Navigate to http://localhost:8088 to access Venus Influx Loader Admin UI, use `admin`, `admin` to sign in, and configure what Venus devices to watch.
+
+Install Venus Grafana and dashboards by following the instructions here: https://github.com/victronenergy/venus-grafana-dashboards.
+
 
 ## Configuration
 
-### Venus Grafana Server Configuration
+### Venus Influx Loader Configuration
 
-  - TODO: Describe where the `config.json` and `secrets.json` is stored and how to change that via `docker-compose.yaml`, and command line arguments.
+  - TODO: Describe where the `config.json` and `secrets.json` is stored and how it can be configured.
 
 ### InfluxDB Data Storage
 
-  - TODO: Descibe where InfluxDB stores data, and how it can be configured via `docker-compose.yaml`.
+  - TODO: Descibe where InfluxDB stores data, and how it can be configured.
 
-### Grafana Configuration and Dashboards
-
-  - TODO: Descibe where Grafana stores custom dashboards, admin username and password, and how we provision Grafana with preconfigured data sources and preconfigured dashboards. How to best create your own setup with custom dashboards that can be stored in git easily.
 
 ## Source Code Details
 
@@ -51,19 +60,19 @@ The repository is spit into the following components:
 
 ## Server
 
-The directory `src/server` contains node.js based server watching Venus devices using MQTT and storing real time measurements into InfluxDB. It vends two binaries: `bin/venus-grafana-server`, and `bin/venus-upnp-browser`.
+The directory `src/server` contains node.js based server watching Venus devices using MQTT and storing real time measurements into InfluxDB. It vends two binaries: `bin/venus-influx-loader`, and `bin/venus-upnp-browser`.
 
-### Venus Grafana Server
+### Venus Influx Loader
 
-Venus Grafana Server allows MQTT connection to the Venus devices running on the same network and discovered via UPNP, configured manually using their IP address, or by accessing them via VRM.
+Venus Influx Loader allows MQTT connection to the Venus devices running on the same network and discovered via UPNP, configured manually using their IP address, or by accessing them via VRM.
 
 Configuration details and necessary usernames and passwords are stored in `config.json`, and `secrets.json` that are looked up under `--config-path` (`/config` by default). Config Path needs to be writable. TODO: should not be needed to config path to be writable in production deployments.
 
-Configuration files can either be created manually, or by starting the Venus Grafana Server, and accessing the Admin UI by browsing to `http://localhost:8088`. The default usernname and password is `admin`, `admin`.
+Configuration files can either be created manually, or by starting the Venus Influx Loader, and accessing the Admin UI by browsing to `http://localhost:8088`. The default usernname and password is `admin`, `admin`.
 
 ```
-$ npx venus-grafana-server --help
-Usage: venus-grafana-server [options]
+$ npx venus-influx-loader --help
+Usage: venus-influx-loader [options]
 
 Monitor Venus devices and capture & store realtime data to serve Grafana
 
@@ -76,21 +85,21 @@ Options:
   -h, --help                display help for command
 ```
 
-For production use, once the system is configured `--disable-admin-api` can be used to run the `venus-grafana-server` headless.
+For production use, once the system is configured `--disable-admin-api` can be used to run the `venus-influx-loader` headless.
 
 ### Venus UPNP Browser
 
-Venus Grafana Server contains built in mechanism to discover Venus devices running on the same network via UPNP, that is enabled by default.
+Venus Influx Loader contains built in mechanism to discover Venus devices running on the same network via UPNP, that is enabled by default.
 
-In cases where `venus-grafana-server` may not have access to local network UPNP, such as when it runs in isolated docker network, or in docker bridge mode, `venus-upnp-browser` can be used to discover Venus devices over UPNP.
+In cases where `venus-influx-loader` may not have access to local network UPNP, such as when it runs in isolated docker network, or in docker bridge mode, `venus-upnp-browser` can be used to discover Venus devices over UPNP.
 
 The reason behind spliting these two functionalities among two binaries is:
 
-  - Docker container running in host networking mode can not expose ports under Docker Desktop for Mac and Windows (https://github.com/docker/for-mac/issues/6185). So `venus-grafana-server` running in `host` networking mode can access UPNP, but will not get access to port `8088` to enable Admin UI.
-  - Docker container running in bridge networking mode does not support UPNP. So `venus-grafana-server` running in `bridge` networking mode will properly map port 8088 for Admin UI, but will not have access to UPNP.
+  - Docker container running in host networking mode can not expose ports under Docker Desktop for Mac and Windows (https://github.com/docker/for-mac/issues/6185). So `venus-influx-loader` running in `host` networking mode can access UPNP, but will not get access to port `8088` to enable Admin UI.
+  - Docker container running in bridge networking mode does not support UPNP. So `venus-influx-loader` running in `bridge` networking mode will properly map port 8088 for Admin UI, but will not have access to UPNP.
   - Docker container running in isolated networking mode can expose port `8088`, but does not have access to UPNP.  
 
-To workaround the limitations, `venus-upnp-browser` actually runs in docker host mode network - having access to both local area UPNP, as well as `venus-grafana-server` admin port exposed via docker, `venus-upnp-browser` communicates discovered Venus devices and diagnostic information to `venus-grafana-server` via `--discovery-api`.
+To workaround the limitations, `venus-upnp-browser` actually runs in docker host mode network - having access to both local area UPNP, as well as `venus-influx-loader` admin port exposed via docker, `venus-upnp-browser` communicates discovered Venus devices and diagnostic information to `venus-influx-loader` via `--discovery-api`.
 
 Note: `host` and `bridge` network mode work properly only on Linux. UPNP does not work in Docker Desktop for Mac at all.
 
@@ -105,23 +114,13 @@ Options:
   -h, --help                 display help for command
 ```
 
-### Venus Grafana Server Admin UI
+### Venus Influx Loader Admin UI
 
 The directory `src/client` contains react.js based web admin interface to manage configuration of `src/server`. Client Admin UI app uses `webpack` to compile the browser JavaScript, HTML, and CSS code.
 
 ## Development
 
-### 1. Prepare development instance of InfluxDB and Grafana
-
-Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and use `docker compose` to bring up a quick dev environment:
-
-```
-$ docker compose -f docker-compose-dev.yaml up
-```
-
-This will spin up a local testing InfluxDB instance, as well as local Grafana instance with preconfigured data sources and dashboards.
-
-### 2. Start venus-grafana-server, and client in hot reloading mode
+### Start venus-influx-loader, and client in hot reloading mode
 
 ```
 $ npm install
