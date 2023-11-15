@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TAG="influxdb:1.8"
 NETWORK="vil"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 PLATFORMS="linux/armhf,linux/arm64,linux/amd64"
 
