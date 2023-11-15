@@ -1,3 +1,5 @@
+#!/bin/sh
+
 VER=develop
 
 OWNER=${OWNER:="victronenergy"}
