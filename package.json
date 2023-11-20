@@ -72,7 +72,7 @@
     "@babel/core": "^7.23.3",
     "@babel/eslint-parser": "^7.23.3",
     "@babel/preset-env": "^7.23.2",
-    "@babel/preset-react": "^7.22.15",
+    "@babel/preset-react": "^7.23.3",
     "@coreui/coreui": "^4",
     "@coreui/icons": "^3.0.1",
     "@coreui/icons-react": "^2.2.1",
