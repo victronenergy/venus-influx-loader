@@ -1,5 +1,5 @@
 const axios = require('axios')
-const fs = require('fs')
+const fs = require('node:fs')
 const _ = require('lodash')
 const mqtt = require('mqtt')
 const bodyParser = require('body-parser')
