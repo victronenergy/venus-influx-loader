@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '*'
 
 jobs:
   build:
@@ -26,6 +28,7 @@ jobs:
      - name: build and push multiplatform docker image
        env:
          OWNER: ${{ secrets.DOCKERHUB_USERNAME }}
+         VERSION: ${{ github.ref_name }}
        run: |
-         (cd docker && ./build-release-images.sh main)
+         (cd docker && ./build-release-images.sh $VERSION)
 
