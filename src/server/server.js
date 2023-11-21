@@ -61,6 +61,7 @@ async function loadConfig (app) {
     try {
       await fs.writeFile(app.config.configLocation, JSON.stringify(app.config.settings, null, 2))
     } catch (error) {
+      app.logger.error(error)
     }
   }
 }
@@ -69,9 +70,9 @@ async function saveConfig (app, cb) {
   try {
     await fs.writeFile(app.config.configLocation, JSON.stringify(app.config.settings, null, 2))
   } catch (error) {
-    app.logger.error(err)
+    app.logger.error(error)
     if (cb) {
-      cb(err)
+      cb(error)
     }
   }
 }
