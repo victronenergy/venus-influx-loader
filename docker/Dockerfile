@@ -1,5 +1,5 @@
 # Stage 1: build from source
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 
 WORKDIR /venus-influx-loader
 
@@ -8,7 +8,7 @@ RUN npm install
 RUN npm run build
 
 # Stage 2: minimize
-FROM node:18-alpine
+FROM node:20-alpine
 
 RUN apk --no-cache add curl
 
