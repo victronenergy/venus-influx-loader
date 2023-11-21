@@ -77,7 +77,7 @@ async function saveConfig (app, cb) {
 }
 
 class Server {
-  constructor(options) {
+  constructor (options) {
     const app = express()
     this.app = app
 
@@ -94,7 +94,7 @@ class Server {
     app.started = false
   }
 
-  async start() {
+  async start () {
     const self = this
     const app = this.app
 
@@ -190,7 +190,7 @@ class Server {
     app.emit('settingsChanged', app.config.settings)
 
     // TODO: this is called from many places, clean up and clarify
-    function settingsChanged(settings) {
+    function settingsChanged (settings) {
       if (settings.upnp.enabled && app.upnp.isRunning() === false) {
         if (!app.options.discoveryApiEndpoint) {
           app.upnp.start()
@@ -295,7 +295,7 @@ class Server {
     })
   }
 
-  async stop(cb) {
+  async stop (cb) {
     if (!this.app.started) {
         return
     }

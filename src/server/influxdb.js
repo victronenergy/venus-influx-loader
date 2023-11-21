@@ -3,7 +3,7 @@ const _ = require('lodash')
 const debug = require('debug')('venus-server:influxdb')
 
 class InfluxDB {
-  constructor(app) {
+  constructor (app) {
     this.app = app
     this.logger = app.getLogger('influxdb')
     this.debug = this.logger.debug.bind(this.logger)
@@ -41,7 +41,7 @@ class InfluxDB {
     })
   }
 
-  async start() {
+  async start () {
     this.connected = false
     try {
       await this._connect()
@@ -50,7 +50,7 @@ class InfluxDB {
     }
   }
 
-  async _connect() {
+  async _connect () {
     const {
       host, port, database, retention, username, password
     } = this.app.config.settings.influxdb
@@ -73,7 +73,7 @@ class InfluxDB {
     this.info(`Attempting connection to ${host}:${port}/${database} using ${this.username}:*****`)
 
     try {
-      let databaseNames = await this.influxClient.getDatabaseNames()
+      const databaseNames = await this.influxClient.getDatabaseNames()
       this.info(`Connected to ${host}:${port}/${database}`)
       if (!databaseNames.includes(database)) {
         this.info(`Creating database: ${database}`)
@@ -87,7 +87,7 @@ class InfluxDB {
     }
   }
 
-  async _setRetentionPolicy(retention) {
+  async _setRetentionPolicy (retention) {
     if (this.connected === false || _.isUndefined(retention) || retention === null) {
       return
     }
@@ -115,7 +115,7 @@ class InfluxDB {
     }
   }
 
-  async store(portalId, name, instanceNumber, measurement, value) {
+  async store (portalId, name, instanceNumber, measurement, value) {
     if (this.connected === false || _.isUndefined(value) || value === null) {
       return
     }
