@@ -79,7 +79,7 @@
     "@coreui/react": "^4",
     "@popperjs/core": "^2.11.8",
     "autoprefixer": "^10.4.16",
-    "axios-hooks": "^5.0.1",
+    "axios-hooks": "^5.0.2",
     "babel-loader": "^9.1.3",
     "babel-plugin-transform-object-rest-spread": "6.26.0",
     "babel-watch": "^7.8.1",
