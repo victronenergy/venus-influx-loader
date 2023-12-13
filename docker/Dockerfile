@@ -21,6 +21,9 @@ COPY --from=build /venus-influx-loader/package*.json ./
 
 RUN npm install --omit=dev
 
+USER root
+RUN mkdir -p /config && chown -R node /config
+
 USER node
 EXPOSE 8088
 
