@@ -1,0 +1,6 @@
+# make sure bin/ files are checked with \n line endings on Windows
+# this makes sure that shebang `/usr/bin/env node` works properly
+# on Windows produced docker images
+# without this setting git converts line endinds on Windows to \r\n
+# and /usr/bin/env complains that "node\r" can not be found
+bin/* text eol=lf
