@@ -4,7 +4,7 @@ const Transport = require('winston-transport')
 // custom log storage transport
 // that keeps last 100 messages
 // and emits them live over ws /stream connection
-// from venus-influx-loader to reacjs client
+// from venus-influx-loader to react.js client
 class LogStorageTransport extends Transport {
   constructor (app, opts) {
     super(opts)

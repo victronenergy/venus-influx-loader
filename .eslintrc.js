@@ -10,8 +10,9 @@ module.exports = {
     "plugin:react/recommended",
     "plugin:react/jsx-runtime",
   ],
+  parser: "@babel/eslint-parser",
   parserOptions: {
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2020,
     "sourceType": "module",
     "ecmaFeatures": {
       "jsx": true
@@ -57,4 +58,9 @@ module.exports = {
     "no-invalid-this": "error",
     "no-path-concat": "error",
   },
+  settings: {
+    react: {
+      version: "detect",
+    }
+  }
 }

@@ -1,5 +1,7 @@
 # Venus Influx Loader
 
+## Introduction
+
 Venus Influx Loader is a small application that allows reatime monitoring, and historical data analysis of Venus devices. It obtains realtime measurements from Venus devices via MQTT, stores them for later analysis into InfluxDB, and allows visualization via Grafana.
 
 It supports connection to the Venus devices:
@@ -12,9 +14,18 @@ Venus Influx Loader can run nearby a Venus device, and does not require internet
 
 It is therefore ideal to be installed on a Yacht, Motorhome, or sites without permanent internet access.
 
-The Venus Grafana configuration and dashboards can be found at: https://github.com/victronenergy/venus-grafana-dashboards.
-
 ## Quick Start
+
+Follow detailed instructions at: https://github.com/victronenergy/venus-grafana to learn how to setup Venus Influx Loader, Influx DB, and Venus Grafana.
+
+## Distribution
+
+Venus Influx Loader is distributed as:
+
+- NPM module: https://www.npmjs.com/package/venus-influx-loader
+- Docker Image: https://hub.docker.com/r/victronenergy/venus-influx-loader
+
+## Development
 
 To start experimenting, please install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and use the following steps to spin up a quick dev environment:
 
@@ -40,18 +51,7 @@ $ (cd docker && ./run-dev-image.sh)
 
 Navigate to http://localhost:8088 to access Venus Influx Loader Admin UI, use `admin`, `admin` to sign in, and configure what Venus devices to watch.
 
-Install Venus Grafana and dashboards by following the instructions here: https://github.com/victronenergy/venus-grafana-dashboards.
-
-
-## Configuration
-
-### Venus Influx Loader Configuration
-
-  - TODO: Describe where the `config.json` and `secrets.json` is stored and how it can be configured.
-
-### InfluxDB Data Storage
-
-  - TODO: Descibe where InfluxDB stores data, and how it can be configured.
+Install Venus Grafana by following the instructions here: https://github.com/victronenergy/venus-grafana.
 
 
 ## Source Code Details
@@ -66,7 +66,9 @@ The directory `src/server` contains node.js based server watching Venus devices 
 
 Venus Influx Loader allows MQTT connection to the Venus devices running on the same network and discovered via UPNP, configured manually using their IP address, or by accessing them via VRM.
 
-Configuration details and necessary usernames and passwords are stored in `config.json`, and `secrets.json` that are looked up under `--config-path` (`/config` by default). Config Path needs to be writable. TODO: should not be needed to config path to be writable in production deployments.
+Configuration details and necessary usernames and passwords are stored in `config.json`, and `secrets.json` that are looked up under `--config-path` (`/config` by default). Config Path needs to be writable.
+
+> TODO: should not be needed to config path to be writable in production deployments.
 
 Configuration files can either be created manually, or by starting the Venus Influx Loader, and accessing the Admin UI by browsing to `http://localhost:8088`. The default usernname and password is `admin`, `admin`.
 
@@ -97,7 +99,7 @@ The reason behind spliting these two functionalities among two binaries is:
 
   - Docker container running in host networking mode can not expose ports under Docker Desktop for Mac and Windows (https://github.com/docker/for-mac/issues/6185). So `venus-influx-loader` running in `host` networking mode can access UPNP, but will not get access to port `8088` to enable Admin UI.
   - Docker container running in bridge networking mode does not support UPNP. So `venus-influx-loader` running in `bridge` networking mode will properly map port 8088 for Admin UI, but will not have access to UPNP.
-  - Docker container running in isolated networking mode can expose port `8088`, but does not have access to UPNP.  
+  - Docker container running in isolated networking mode can expose port `8088`, but does not have access to UPNP.
 
 To workaround the limitations, `venus-upnp-browser` actually runs in docker host mode network - having access to both local area UPNP, as well as `venus-influx-loader` admin port exposed via docker, `venus-upnp-browser` communicates discovered Venus devices and diagnostic information to `venus-influx-loader` via `--discovery-api`.
 
@@ -127,15 +129,15 @@ $ npm install
 $ npm run dev
 ```
 
-This command will use [`concurrently`](https://www.npmjs.com/package/concurrently) command to start hot reloading development instances of both the `src/server`, and `src/client`, so whenever you change source code in `src/` everything should get restarted/reloaded automatically. 
+This command will use [`concurrently`](https://www.npmjs.com/package/concurrently) command to start hot reloading development instances of both the `src/server`, and `src/client`, so whenever you change source code in `src/` everything should get restarted/reloaded automatically.
 
 Alternatively you can spin up only hot reloading server, or only hot reloading client via:
 
 ```
-$ npm run watch-grafana-server
+$ npm run watch-influx-loader
 ```
 
-and 
+and
 
 ```
 $ npm run watch-client
@@ -151,33 +153,32 @@ The directory `/src/server` is a [Node.js](https://nodejs.org/en/) app that is c
 
 `/src/server` exposes the following internal API routes.
 
-1. `/admin` protected by admin username and password stored ic `/config/secrets.json`.
+1. `/admin` protected by admin username and password stored in `/config/secrets.json`.
 
-This route serves compiled and packed `src/client` `html`, `js`, and `css` web app files from `src/client/dist`.
+    - This route serves compiled and packed `src/client` `html`, `js`, and `css` web app files from `src/client/dist`.
 
-1. `/admin-api` protected by admin username and password stored in `/config/secrets.json`.
+2. `/admin-api` protected by admin username and password stored in `/config/secrets.json`.
 
- - `/admin-api/config` for `src/client` to `GET/PUT` `/config/config.json`.
- - `/admin-api/security` for `scr/client` to `POST` new admin username and password and save to `/config/secrets.json`.
- - `/admin-api/log` for `src/client` to `GET` recent server log entries.
- - `/admin-api/debug` to `src/client` to `PUT` server in `debug` or `info` log mode.
+   - `/admin-api/config` for `src/client` to `GET/PUT` `/config/config.json`.
+   - `/admin-api/security` for `scr/client` to `POST` new admin username and password and save to `/config/secrets.json`.
+   - `/admin-api/log` for `src/client` to `GET` recent server log entries.
+   - `/admin-api/debug` to `src/client` to `PUT` server in `debug` or `info` log mode.
 
-TODO: cleanup (move away from `vrm.js` ??)
 
- - `/admin-api/vrmLogin` `POST` to login into VRM.
- - `/admin-api/vrmLogout` `POST` to logout from VRM.
- - `/admin-api/vrmRefresh` `PUT` to refresh list of portals available via VRM.
- 
+   - `/admin-api/vrmLogin` `POST` to login into VRM.
+   - `/admin-api/vrmLogout` `POST` to logout from VRM.
+   - `/admin-api/vrmRefresh` `PUT` to refresh list of portals available via VRM.
+   - TODO: cleanup (move away from `vrm.js` ??)
 
-2. `/grafana-api` that is unprotected and used by [Grafana JSON Datasource](https://grafana.com/grafana/plugins/simpod-json-datasource/) to query Venus OS devices being watched.
- - `/grafana-api/` `GET`
- - `/grafana-api/search` `POST`
- - `/grafana-api/query ` `POST`
 
-3. Interface for `venus-upnp-browser`. Unprotected.
+3. `/grafana-api` that is unprotected and used by [Grafana JSON Datasource](https://grafana.com/grafana/plugins/simpod-json-datasource/) to query Venus OS devices being watched.
+   - `/grafana-api/` `GET`
+   - `/grafana-api/search` `POST`
+   - `/grafana-api/query ` `POST`
 
-TODO: protect with admin username and password so that nobody can flood the log and discovery endpoint?
+4. Interface for `venus-upnp-browser`. Unprotected.
 
- - `/discovery-api/log` to `POST`a new server log entry.
- - `/discovery-api/upnpDiscovered` to `POST` info about Venus OS device newly discovered via externally running `venus-upnp-browser`.
+   - `/discovery-api/log` to `POST`a new server log entry.
+   - `/discovery-api/upnpDiscovered` to `POST` info about Venus OS device newly discovered via externally running `venus-upnp-browser`.
+   - TODO: protect with admin username and password so that nobody can flood the log and discovery endpoint?
 
