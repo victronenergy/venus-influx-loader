@@ -19,5 +19,5 @@ docker run -p 8088:8088 --network $NETWORK \
     -e VIL_INFLUXDB_URL=$VIL_INFLUXDB_URL \
     -e VIL_INFLUXDB_USERNAME=$VIL_INFLUXDB_USERNAME \
     -e VIL_INFLUXDB_PASSWORD=$VIL_INFLUXDB_PASSWORD \
-    -v $PWD/../config:/config \
+    -v "$PWD/../config:/config" \
     ${TAG}
