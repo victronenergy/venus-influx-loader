@@ -92,7 +92,7 @@
     "eslint-plugin-react": "^7.33.2",
     "html-loader": "5.0.0",
     "html-webpack-plugin": "^5.5.4",
-    "husky": "^8.0.3",
+    "husky": "^9.0.10",
     "lint-staged": "^15.2.0",
     "mini-css-extract-plugin": "^2.7.7",
     "postcss-loader": "^7.3.3",
