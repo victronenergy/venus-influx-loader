@@ -130,14 +130,15 @@ class InfluxDB {
     } else if (typeof value !== 'number') {
       return
     }
-
+    measurement = measurement.replace(/\//g, '.')
     const point = {
       timestamp: new Date(),
       measurement: measurement,
       tags: {
         portalId: portalId,
         instanceNumber: instanceNumber,
-        name: name || portalId
+        name: name || portalId,
+        topic: measurement
       },
       fields: {
         [valueKey]: value
