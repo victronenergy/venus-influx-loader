@@ -130,7 +130,7 @@ class InfluxDB {
     } else if (typeof value !== 'number') {
       return
     }
-
+    measurement = measurement.replace(/\//g,'.')
     const point = {
       timestamp: new Date(),
       measurement: measurement,
