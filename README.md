@@ -97,7 +97,7 @@ In cases where `venus-influx-loader` may not have access to local network UPNP, 
 
 The reason behind spliting these two functionalities among two binaries is:
 
-  - ~~~Docker container running in host networking mode can not expose ports under Docker Desktop for Mac and Windows (https://github.com/docker/for-mac/issues/6185). So `venus-influx-loader` running in `host` networking mode can access UPNP, but will not get access to port `8088` to enable Admin UI.~~
+  - ~~Docker container running in host networking mode can not expose ports under Docker Desktop for Mac and Windows (https://github.com/docker/for-mac/issues/6185). So `venus-influx-loader` running in `host` networking mode can access UPNP, but will not get access to port `8088` to enable Admin UI.~~
   - Docker Desktop since version 4.29 (https://docs.docker.com/network/drivers/host/#docker-desktop) allows to experimentally enable host networking mode in which a container running in host network mode can actually expose UDP/TCP ports and gain access to the host network.
   - Docker container running in bridge networking mode does not support UPNP. So `venus-influx-loader` running in `bridge` networking mode will properly map port 8088 for Admin UI, but will not have access to UPNP.
   - Docker container running in isolated networking mode can expose port `8088`, but does not have access to UPNP.
