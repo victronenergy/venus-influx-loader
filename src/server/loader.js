@@ -4,7 +4,7 @@ const ignoredMeasurements = require('./ignoredMeasurements')
 
 const collectStatsInterval = 5
 const vrmAddress = 'mqtt.victronenergy.com'
-const keepAliveInterval = 62.0
+const keepAliveInterval = 30
 
 function Loader (app) {
   this.app = app
@@ -69,14 +69,15 @@ Loader.prototype.getPortalName = function (client, id) {
   }
 }
 
-Loader.prototype.sendKeepAlive = function (client, portalId) {
-  this.logger.debug('sending keep alive for %s', portalId)
-  client.publish(`R/${portalId}/system/0/Serial`)
+Loader.prototype.sendKeepAlive = function (client, portalId, isFirstKeepAliveRequest) {
+  this.logger.debug(`sending keep alive for ${portalId}, isFirstKeepAliveRequest: ${isFirstKeepAliveRequest}`)
+  client.publish(`R/${portalId}/system/0/Serial`, isFirstKeepAliveRequest ? '' : '{ "keepalive-options" : ["suppress-republish"] }')
 }
 
 Loader.prototype.keepAlive = function (client) {
   if (client.portalId) {
-    this.sendKeepAlive(client, client.portalId)
+    this.sendKeepAlive(client, client.portalId, client.isFirstKeepAliveRequest)
+    client.isFirstKeepAliveRequest = false
   }
 }
 
@@ -333,6 +334,7 @@ Loader.prototype.setupClient = function (client, address, portalInfos, isVrm) {
     }
     if (!client.venusKeepAlive) {
       this.logger.debug('starting keep alive timer')
+      client.isFirstKeepAliveRequest = true
       client.venusKeepAlive = setInterval(
         this.keepAlive.bind(this, client),
         keepAliveInterval * 1000
