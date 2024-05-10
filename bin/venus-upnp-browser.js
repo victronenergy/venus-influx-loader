@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-const program = require('commander')
+const commander = require('commander')
+const program = commander.program
+
 const axios = require('axios')
 
 const upnp = require('../src/server/upnp')

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const program = require('commander')
+const commander = require('commander')
+const program = commander.program
 
 const Server = require('../src/server/server')
 
