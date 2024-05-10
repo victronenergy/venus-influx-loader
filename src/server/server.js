@@ -99,10 +99,11 @@ class Server {
     const self = this
     const app = this.app
 
+    createRootLogger(app, 'venus-influx-loader', 'info')
+
     await loadSecrets(app)
     await loadConfig(app)
 
-    createRootLogger(app, 'venus-influx-loader', 'info')
     if (app.config.settings.debug) {
       app.rootLogger.level = 'debug'
     }
