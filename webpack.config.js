@@ -30,11 +30,9 @@ module.exports = (env, argv) => {
       proxy: [{
         // in dev, proxy admin api requests coming to webpack dev server
         // to our venus grafana server
-        '/admin-api/*': {
-         target: 'http://localhost:8088',
-         auth: 'admin:admin',
-         logLevel: 'debug'
-        }
+        context: '/admin-api/*',
+        target: 'http://localhost:8088',
+        auth: 'admin:admin',
       }]
     },
     module: {
