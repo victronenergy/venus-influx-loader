@@ -12,52 +12,52 @@ const navigation = [
   {
     component: CNavItem,
     name: 'Dashboard',
-    href: '#/dashboard',
+    to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName='nav-icon' />
   },
   {
     component: CNavGroup,
     name: 'Settings',
-    href: '#/settings',
+    to: '/settings',
     icon: <CIcon icon={cilSettings} customClassName='nav-icon' />,
     items: [
       {
         component: CNavItem,
         name: 'Discovery',
-        href: '#/settings/discovery'
+        to: '/settings/discovery'
       },
       {
         component: CNavItem,
         name: 'VRM',
-        href: '#/settings/VRM'
+        to: '/settings/VRM'
       },
       {
         component: CNavItem,
         name: 'Manual',
-        href: '#/settings/manual'
+        to: '/settings/manual'
       },
       {
         component: CNavItem,
         name: 'InfluxDB',
-        href: '#/settings/influxdb'
+        to: '/settings/influxdb'
       },
       {
         component: CNavItem,
         name: 'Security',
-        href: '#/settings/security'
+        to: '/settings/security'
       }
     ]
   },
   {
     component: CNavItem,
     name: 'Troubleshooting',
-    href: '#/troubleshooting',
+    to: '/troubleshooting',
     icon: <CIcon icon={cilHistory} customClassName='nav-icon' />
   },
   {
     component: CNavItem,
     name: 'Grafana',
-    href: `http://${window.location.hostname}:3000/`,
+    to: `http://${window.location.hostname}:3000/`,
     icon: <CIcon icon={cilChartLine} customClassName='nav-icon' />
   }
 ]

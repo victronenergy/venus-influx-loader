@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
@@ -15,12 +15,13 @@ import { cilMenu } from '@coreui/icons'
 import { AppBreadcrumb } from './index'
 
 const AppHeader = () => {
+  const headerRef = useRef()
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
   return (
-    <CHeader position="sticky" className="mb-4">
-      <CContainer fluid>
+    <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
+      <CContainer className="border-bottom px-4" fluid>
         <CHeaderToggler
           className="ps-1"
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
@@ -32,7 +33,6 @@ const AppHeader = () => {
         <CHeaderNav className="d-none d-md-flex me-auto">
         </CHeaderNav>
       </CContainer>
-      <CHeaderDivider />
       <CContainer fluid>
         <AppBreadcrumb />
       </CContainer>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
-import { CSidebar, CSidebarBrand, CSidebarNav, CSidebarToggler, CImage } from '@coreui/react'
+import { CSidebar, CSidebarHeader, CSidebarBrand, CSidebarNav, CImage } from '@coreui/react'
 
 import logo from '../public/img/victron-logo-footer.svg'
 
@@ -16,19 +16,20 @@ const AppSidebar = () => {
 
   return (
     <CSidebar
+      colorScheme="dark"
       position="fixed"
       visible={sidebarShow}
       onVisibleChange={(visible) => {
         dispatch({ type: 'set', sidebarShow: visible })
       }}
     >
-      <CSidebarBrand className="d-none d-md-flex" to="/">
-        <CImage src={logo} width="80%" className="sidebar-brand-full" />
-        <CImage src={logo} width="80%" className="sidebar-brand-narrow" />
-      </CSidebarBrand>
-      <CSidebarNav>
-        <AppSidebarNav items={navigation} />
-      </CSidebarNav>
+      <CSidebarHeader className="border-bottom px-4">
+        <CSidebarBrand to="/">
+          <CImage src={logo} width="80%" className="sidebar-brand-full" />
+          <CImage src={logo} width="80%" className="sidebar-brand-narrow" />
+        </CSidebarBrand>
+      </CSidebarHeader>
+      <AppSidebarNav items={navigation} />
     </CSidebar>
   )
 }
