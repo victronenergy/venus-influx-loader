@@ -25,8 +25,8 @@ const AppSidebar = () => {
     >
       <CSidebarHeader className="border-bottom px-4">
         <CSidebarBrand to="/">
-          <CImage src={logo} width="80%" className="sidebar-brand-full" />
-          <CImage src={logo} width="80%" className="sidebar-brand-narrow" />
+          <CImage src={logo} width="100%" className="sidebar-brand-full" />
+          <CImage src={logo} width="100%" className="sidebar-brand-narrow" />
         </CSidebarBrand>
       </CSidebarHeader>
       <AppSidebarNav items={navigation} />
