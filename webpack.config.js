@@ -1,9 +1,9 @@
-const webpack = require('webpack');
-const path = require('node:path');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const TerserPlugin = require("terser-webpack-plugin");
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const webpack = require('webpack')
+const path = require('node:path')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 const SRC_DIR = path.resolve(__dirname, 'src/client')
 const BUILD_DIR = path.resolve(__dirname, 'dist')
@@ -13,7 +13,7 @@ console.log('SRC_DIR', SRC_DIR)
 
 module.exports = (env, argv) => {
   return {
-    mode: "development",
+    mode: 'development',
     entry: [path.join(SRC_DIR, 'index.js')],
     output: {
       path: BUILD_DIR,
@@ -27,7 +27,7 @@ module.exports = (env, argv) => {
       open: true,
       host: 'local-ip',
       port: 'auto',
-      proxy: {
+      proxy: [{
         // in dev, proxy admin api requests coming to webpack dev server
         // to our venus grafana server
         '/admin-api/*': {
@@ -35,7 +35,7 @@ module.exports = (env, argv) => {
          auth: 'admin:admin',
          logLevel: 'debug'
         }
-      }
+      }]
     },
     module: {
       rules: [
@@ -65,8 +65,8 @@ module.exports = (env, argv) => {
         {
           test: /\.css$/,
           use: [
-            env.prod ? MiniCssExtractPlugin.loader : "style-loader",
-            "css-loader",
+            env.production ? MiniCssExtractPlugin.loader : 'style-loader',
+            'css-loader',
             {
               loader: 'postcss-loader',
               options: {
@@ -83,7 +83,7 @@ module.exports = (env, argv) => {
           test: /\.(scss)$/,
           use: [
             {
-              loader: env.prod ? MiniCssExtractPlugin.loader : "style-loader"
+              loader: env.production ? MiniCssExtractPlugin.loader : 'style-loader'
             },
             {
               loader: 'css-loader'
@@ -115,10 +115,10 @@ module.exports = (env, argv) => {
     },
     plugins: [
       new webpack.DefinePlugin({
-        // in prod, derive admin api host:port using window.location
+        // in production, derive admin api host:port from window.location
         // in dev, hardcode to 8088, as webpack will spin up webpack dev server on random port
-        // and window.location will point to webpack dev server, instead of venus grafana server
-        "VENUS_INFLUX_LOADER_ADMIN_API_PORT": env.prod ? undefined : 8088,
+        // and window.location will point to webpack dev server, instead of venus influx loader
+        'VENUS_INFLUX_LOADER_ADMIN_API_PORT': env.production ? undefined : 8088,
       }),
       new CleanWebpackPlugin(),
       new MiniCssExtractPlugin(),
