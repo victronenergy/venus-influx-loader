@@ -1,4 +1,5 @@
 export function openServerEventsConnection (dispatch) {
+  console.log('VENUS_INFLUX_LOADER_ADMIN_API_PORT: ' + VENUS_INFLUX_LOADER_ADMIN_API_PORT)
   const host =
     window.location.hostname +
     ':' +
