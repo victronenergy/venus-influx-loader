@@ -1,11 +1,8 @@
 // If you want to override variables do it here
 @import "variables";
 
-$enable-ltr: true;
-$enable-rtl: true;
-
-// Import CoreUI for React components library
+// Import styles
 @import "@coreui/coreui/scss/coreui";
 
-// Import layout code for sidebar
-@import "layout";
+// Custom styles for this theme
+@import "theme";
