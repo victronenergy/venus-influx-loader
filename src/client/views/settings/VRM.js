@@ -174,7 +174,7 @@ function VRMDetails (props) {
   const [state, setState] = useState({
     username: '',
     password: '',
-    tokenName: `Venus Grafana Server Token (${(new Date()).toISOString()})`
+    tokenName: `Venus Influx Loader Token (${(new Date()).toISOString()})`
   })
 
   const vrmStatus = useSelector(state => state.vrmStatus)
