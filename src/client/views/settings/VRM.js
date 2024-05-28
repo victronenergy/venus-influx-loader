@@ -221,7 +221,6 @@ function VRMDetails (props) {
           >
             {props.loginInProgress ? 'Working...' : 'Login'}
           </CButton>
-          <VRMStatus status={vrmStatus} />
         </CForm>
       )
       }
