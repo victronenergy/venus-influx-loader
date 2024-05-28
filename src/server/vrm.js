@@ -93,7 +93,7 @@ module.exports = function (app) {
   })
 
   app.post('/admin-api/vrmLogout', (req, res, next) => {
-    logger.info('logging out of VRM')
+    logger.info('Logging Out of VRM')
 
     const scopy = JSON.parse(JSON.stringify(app.config.secrets))
     delete scopy.vrmToken
@@ -181,45 +181,7 @@ module.exports = function (app) {
       })
   }
 
-  function connectMQTT (address, port) {
-    return new Promise((resolve, reject) => {
-      axios
-        .post(
-          `${apiUrl}/v2/auth/generatetoken`,
-          {},
-          {
-            headers: {
-              'X-Authorization': `Token ${app.config.secrets.vrmToken}`
-            }
-          }
-        )
-        .then(response => response.data)
-        .then(response => {
-          if (_.isUndefined(response.token)) {
-            fail(response.errors)
-            reject(new Error('token request failed'))
-          } else {
-            const token = response.token
-            const client = mqtt.connect(`mqtts:${address}:${port}`, {
-              rejectUnauthorized: false,
-              username: `vrmlogin_live_${app.config.secrets.vrmUsername}`,
-              password: token,
-              reconnectPeriod: 0
-            })
-            good('Connected')
-            resolve(client)
-          }
-        })
-        .catch(err => {
-          logger.error(err)
-          fail(err.message)
-          reject(err)
-        })
-    })
-  }
-
   return {
     loadPortalIDs: loadPortalIDs,
-    connectMQTT: connectMQTT
   }
 }

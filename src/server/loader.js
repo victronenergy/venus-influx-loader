@@ -402,23 +402,21 @@ Loader.prototype.connect = function (
   isVrm = false
 ) {
   return new Promise((resolve, reject) => {
-    let client
+    let options
     this.logger.info('connecting to %s:%d', address, port)
     if (isVrm) {
-      const vrmConnecting = this.app.vrm.connectMQTT(address, port)
-      vrmConnecting
-        .then(client => {
-          this.setupClient(client, address, portalInfos, isVrm)
-          resolve(client)
-        })
-        .catch(err => {
-          reject(err)
-        })
+      options = {
+        rejectUnauthorized: false,
+        username: `${this.app.config.secrets.vrmUsername}`,
+        password: `Token ${this.app.config.secrets.vrmToken}`,
+        reconnectPeriod: 0
+      }
     } else {
-      client = mqtt.connect(`mqtt:${address}:${port}`)
-      this.setupClient(client, address, portalInfos, isVrm)
-      resolve(client)
+      options = {}
     }
+    const client = mqtt.connect(`${isVrm ? 'mqtts' : 'mqtt'}:${address}:${port}`, options)
+    this.setupClient(client, address, portalInfos, isVrm)
+      resolve(client)
   })
 }
 
