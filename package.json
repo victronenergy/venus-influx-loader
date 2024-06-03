@@ -104,7 +104,7 @@
     "redux": "^5.0.1",
     "redux-thunk": "^3.1.0",
     "rimraf": "^5.0.7",
-    "sass": "^1.77.1",
+    "sass": "^1.77.4",
     "sass-loader": "^14.2.1",
     "source-list-map": "2.0.1",
     "style-loader": "^4.0.0",
