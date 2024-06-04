@@ -50,7 +50,6 @@ function Manual (props) {
     clone[type].hosts = clone[type].hosts.map(element => {
       return { hostName: element.hostName, enabled: event.target.checked }
     })
-    console.log(`clone: ${JSON.stringify(clone[type])}`)
     setConfig(clone)
   }
 

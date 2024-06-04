@@ -74,8 +74,6 @@ function VRM (props) {
   function handleEnableAllPortalsChange (event) {
     const clone = { ...config }
 
-    console.log(`clone[type]: ${JSON.stringify(clone[type])}`)
-
     if (event.target.checked) {
       clone[type].enabledPortalIds = vrmDiscovered.map((element) => {
         return (element.portalId ? element.portalId : element)
@@ -83,8 +81,6 @@ function VRM (props) {
     } else {
       clone[type].enabledPortalIds = []
     }
-
-    console.log(`clone[type]: ${JSON.stringify(clone[type])}`)
 
     setConfig(clone)
   }
