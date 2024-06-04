@@ -170,7 +170,6 @@ module.exports = function (app) {
             app.saveSettings()
           }
 
-          console.log('vrmDisovered: ' + JSON.stringify(devices))
           app.emit('vrmDiscovered', devices)
           good('Installations Retrieved')
         }
