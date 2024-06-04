@@ -106,13 +106,9 @@ Loader.prototype.onMessage = function (client, topic, message) {
 
     if (client.venusNeedsID && measurement === 'system/Serial') {
       this.logger.info('Detected portalId %s', json.value)
-      client.subscribe(
-        `N/${json.value}/settings/0/Settings/SystemSetup/SystemName`
-      )
-      client.subscribe(`N/${json.value}/+/#`)
-      client.publish(
-        `R/${json.value}/settings/0/Settings/SystemSetup/SystemName`
-      )
+      client.subscribe(`N/${json.value}/settings/0/Settings/SystemSetup/SystemName`)
+      client.subscribe(`N/${json.value}/#`)
+      client.publish(`R/${json.value}/settings/0/Settings/SystemSetup/SystemName`)
       client.publish(`R/${json.value}/system/0/Serial`)
       client.venusNeedsID = false
       client.portalId = json.value
@@ -239,13 +235,14 @@ Loader.prototype.settingsChanged = function (settings) {
   }
 }
 
+// for UPNP info contains IP `address` and `portalId`
 Loader.prototype.connectUPNP = function (info) {
   this.upnpConnections[info.portalId] = {
     name: info.name,
     address: info.address
   }
 
-  this.connect(info.address, 1883, [info])
+  this.connect(info.address, 1883, info)
     .then(client => {
       this.upnpConnections[info.portalId].client = client
     })
@@ -254,13 +251,14 @@ Loader.prototype.connectUPNP = function (info) {
     })
 }
 
+// for Manual info contains IP `address`
 Loader.prototype.connectManual = function (info) {
   this.manualConnections[info.address] = {
     name: info.name,
     address: info.address
   }
 
-  this.connect(info.address, 1883, [info])
+  this.connect(info.address, 1883, info)
     .then(client => {
       this.manualConnections[info.address].client = client
     })
@@ -278,6 +276,8 @@ function calculateVRMBrokerURL (portalId) {
   return `mqtt${sum % 128}.victronenergy.com`
 }
 
+// for VRM portalInfos contains an array of objects with `portalId` and `name`
+// belonging to the VRM account
 Loader.prototype.connectVRM = function (portalInfos) {
   if (this.app.config.secrets.vrmToken) {
     const enabled = portalInfos.filter(info => {
@@ -297,7 +297,7 @@ Loader.prototype.connectVRM = function (portalInfos) {
           portalId: info.portalId
         }
 
-        this.connect(address, port, [info], true)
+        this.connect(address, port, info, true)
           .then(client => {
             this.vrmConnections[info.portalId].client = client
           })
@@ -310,26 +310,23 @@ Loader.prototype.connectVRM = function (portalInfos) {
   }
 }
 
-Loader.prototype.setupClient = function (client, address, portalInfos, isVrm) {
+Loader.prototype.setupClient = function (client, address, info, isVrm) {
   client.on('connect', () => {
     this.logger.info('connected to %s', address)
-    if (portalInfos.length === 1 && !portalInfos[0].portalId) {
+    if (info.portalId === undefined) {
+      // we do not know the portalId yet (manual connection)
       this.logger.info('Detecting portalId...')
-      client.subscribe('N/+/+/#')
+      client.subscribe('N/+/#')
       client.venusNeedsID = true
     } else {
-      portalInfos.forEach(info => {
-        this.logger.info('Subscribing to portalId %s', info.portalId)
-        client.subscribe(
-          `N/${info.portalId}/settings/0/Settings/SystemSetup/SystemName`
-        )
-        client.subscribe(`N/${info.portalId}/+/#`)
-        client.publish(
-          `R/${info.portalId}/settings/0/Settings/SystemSetup/SystemName`
-        )
-        client.publish(`R/${info.portalId}/system/0/Serial`)
-        client.portalId = info.portalId
-      })
+      // we do know the portalId already (vrm + upnp connection)
+      this.logger.info('Subscribing to portalId %s', info.portalId)
+      client.subscribe(`N/${info.portalId}/settings/0/Settings/SystemSetup/SystemName`)
+      client.subscribe(`N/${info.portalId}/#`)
+      client.publish(`R/${info.portalId}/settings/0/Settings/SystemSetup/SystemName`)
+      client.publish(`R/${info.portalId}/system/0/Serial`)
+      client.portalId = info.portalId
+      client.venusNeedsID = false
     }
     if (!client.venusKeepAlive) {
       this.logger.debug('starting keep alive timer')
@@ -397,7 +394,7 @@ Loader.prototype.setupClient = function (client, address, portalInfos, isVrm) {
 Loader.prototype.connect = function (
   address,
   port,
-  portalInfos,
+  info,
   isVrm = false
 ) {
   return new Promise((resolve, reject) => {
@@ -414,7 +411,7 @@ Loader.prototype.connect = function (
       options = {}
     }
     const client = mqtt.connect(`${isVrm ? 'mqtts' : 'mqtt'}:${address}:${port}`, options)
-    this.setupClient(client, address, portalInfos, isVrm)
+    this.setupClient(client, address, info, isVrm)
       resolve(client)
   })
 }
