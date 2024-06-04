@@ -3,7 +3,6 @@ const mqtt = require('mqtt')
 const ignoredMeasurements = require('./ignoredMeasurements')
 
 const collectStatsInterval = 5
-const vrmAddress = 'mqtt.victronenergy.com'
 const keepAliveInterval = 30
 
 function Loader (app) {
