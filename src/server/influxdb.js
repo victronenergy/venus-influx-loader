@@ -130,7 +130,12 @@ class InfluxDB {
     } else if (typeof value !== 'number') {
       return
     }
-
+    // replace separator
+    const separator = this.app.config.influxdb.format
+    if (separator && separator !== '/') {
+      measurement = measurement.replace(/\//g, separator)
+    }
+    // prepare influxdb point
     const point = {
       timestamp: new Date(),
       measurement: measurement,
