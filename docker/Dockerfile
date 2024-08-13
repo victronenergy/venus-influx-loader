@@ -1,5 +1,5 @@
 # Stage 1: build from source
-FROM node:20 as build
+FROM node:20 AS build
 
 WORKDIR /venus-influx-loader
 
