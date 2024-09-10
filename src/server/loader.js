@@ -69,7 +69,7 @@ Loader.prototype.getPortalName = function (client, id) {
 }
 
 Loader.prototype.sendKeepAlive = function (client, portalId, isFirstKeepAliveRequest) {
-  this.logger.debug(`sending keep alive for ${portalId}, isFirstKeepAliveRequest: ${isFirstKeepAliveRequest}`)
+  this.logger.debug(`sending keep alive for ${portalId}, isFirstKeepAliveRequest: ${isFirstKeepAliveRequest} [${client.venusKeepAlive}]`)
   client.publish(`R/${portalId}/system/0/Serial`, isFirstKeepAliveRequest ? '' : '{ "keepalive-options" : ["suppress-republish"] }')
 }
 
@@ -310,9 +310,13 @@ Loader.prototype.connectVRM = function (portalInfos) {
   }
 }
 
-Loader.prototype.setupClient = function (client, address, info, isVrm) {
+function formatClientRemoteAddress (client) {
+  return `${client.options?.host}:${client.options?.port}`
+}
+
+Loader.prototype.setupClient = function (client, info, isVrm) {
   client.on('connect', () => {
-    this.logger.info('connected to %s', address)
+    this.logger.info(`MQTT connected to ${formatClientRemoteAddress(client)}`)
     if (info.portalId === undefined) {
       // we do not know the portalId yet (manual connection)
       this.logger.info('Detecting portalId...')
@@ -329,12 +333,12 @@ Loader.prototype.setupClient = function (client, address, info, isVrm) {
       client.venusNeedsID = false
     }
     if (!client.venusKeepAlive) {
-      this.logger.debug('starting keep alive timer')
       client.isFirstKeepAliveRequest = true
       client.venusKeepAlive = setInterval(
         this.keepAlive.bind(this, client),
         keepAliveInterval * 1000
       )
+      this.logger.debug(`starting keep alive timer for ${client.portalId} [${client.venusKeepAlive}]`)
     }
   })
 
@@ -343,51 +347,30 @@ Loader.prototype.setupClient = function (client, address, info, isVrm) {
   )
 
   client.on('error', error => {
-    this.logger.error(error)
+    this.logger.error(`MQTT connection to ${formatClientRemoteAddress(client)}, ${error}`)
   })
 
   client.on('close', () => {
-    this.logger.debug('connection to %s closed', address)
+    this.logger.debug(`MQTT connection to ${formatClientRemoteAddress(client)} closed`)
 
     if (client.venusKeepAlive) {
-      this.logger.debug('clearing keep alive')
+      this.logger.debug(`clearing keep alive timer for ${client.portalId} [${client.venusKeepAlive}]`)
       clearInterval(client.venusKeepAlive)
       delete client.venusKeepAlive
     }
 
     if (isVrm) {
       delete this.vrmConnections[client.portalId]
-
-      if (!this.vrmReconnectInterval) {
-        this.vrmReconnectInterval = setInterval(() => {
-          const enabled = this.app.vrmDiscovered.filter(info => {
-            return (
-              this.app.config.settings.vrm.enabledPortalIds.indexOf(
-                info.portalId
-              ) !== -1
-            )
-          })
-
-          if (enabled.length === _.keys(this.vrmConnections).length) {
-            this.logger.info('done trying vrm reconnect')
-            clearInterval(this.vrmReconnectInterval)
-            delete this.vrmReconnectInterval
-          } else {
-            this.logger.info('trying to reconnect to vrm...')
-            this.connectVRM(this.app.vrmDiscovered)
-          }
-        }, 10000)
-      }
     }
   })
   client.on('offline', () => {
-    this.logger.debug('connection to %s offline', address)
+    this.logger.debug(`MQTT connection to ${formatClientRemoteAddress(client)} offline`)
   })
   client.on('end', () => {
-    this.logger.info('connection to %s ended', address)
+    this.logger.info(`MQTT connection to ${formatClientRemoteAddress(client)} ended`)
   })
   client.on('reconnect', () => {
-    this.logger.debug('connection to %s reconnect', address)
+    this.logger.debug(`MQTT reconnecting to ${formatClientRemoteAddress(client)}`)
   })
 }
 
@@ -400,7 +383,7 @@ Loader.prototype.connect = function (
   return new Promise((resolve, reject) => {
     const clientId = Math.random().toString(16).slice(3)
     let options
-    this.logger.info('connecting to %s:%d', address, port)
+    this.logger.info('MQTT connecting to %s:%d', address, port)
     if (isVrm) {
       options = {
         rejectUnauthorized: false,
@@ -408,15 +391,17 @@ Loader.prototype.connect = function (
         password: `Token ${this.app.config.secrets.vrmToken}`,
         // use random clientId + vrmTokenId to identify this loader instance
         clientId: `venus_influx_loader_${clientId}_${this.app.config.secrets.vrmTokenId}`,
+        reconnectPeriod: 10_000,
       }
     } else {
       options = {
         // use random clientId to identify this loader instance
         clientId: `venus_influx_loader_${clientId}`,
+        reconnectPeriod: 10_000,
       }
     }
     const client = mqtt.connect(`${isVrm ? 'mqtts' : 'mqtt'}:${address}:${port}`, options)
-    this.setupClient(client, address, info, isVrm)
+    this.setupClient(client, info, isVrm)
       resolve(client)
   })
 }
