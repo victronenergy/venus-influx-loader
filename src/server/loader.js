@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const mqtt = require('mqtt')
 const ignoredMeasurements = require('./ignoredMeasurements')
+const buildVersion = require('../../dist/buildInfo').buildVersion
 
 const collectStatsInterval = 5
 const keepAliveInterval = 30
@@ -383,23 +384,23 @@ Loader.prototype.connect = function (
   return new Promise((resolve, reject) => {
     const clientId = Math.random().toString(16).slice(3)
     let options
-    this.logger.info('MQTT connecting to %s:%d', address, port)
     if (isVrm) {
       options = {
         rejectUnauthorized: false,
         username: `${this.app.config.secrets.vrmUsername}`,
         password: `Token ${this.app.config.secrets.vrmToken}`,
         // use random clientId + vrmTokenId to identify this loader instance
-        clientId: `venus_influx_loader_${clientId}_${this.app.config.secrets.vrmTokenId}`,
+        clientId: `venus_influx_loader_${buildVersion}_${clientId}_${this.app.config.secrets.vrmTokenId}`,
         reconnectPeriod: 10_000,
       }
     } else {
       options = {
         // use random clientId to identify this loader instance
-        clientId: `venus_influx_loader_${clientId}`,
+        clientId: `venus_influx_loader_${buildVersion}_${clientId}`,
         reconnectPeriod: 10_000,
       }
     }
+    this.logger.info(`MQTT connecting to ${address}:${port} using clientId: ${options.clientId}`)
     const client = mqtt.connect(`${isVrm ? 'mqtts' : 'mqtt'}:${address}:${port}`, options)
     this.setupClient(client, info, isVrm)
       resolve(client)

@@ -2,12 +2,14 @@
 
 const commander = require('commander')
 const program = commander.program
+const buildVersion = require('../dist/buildInfo').buildVersion
 
 const axios = require('axios')
 
 const upnp = require('../src/server/upnp')
 
 program
+  .version(buildVersion)
   .description('Discover Venus devices running on local network using UPNP')
   .option(
     '-d, --discovery-api <url>',

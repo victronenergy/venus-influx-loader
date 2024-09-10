@@ -2,10 +2,12 @@
 
 const commander = require('commander')
 const program = commander.program
+const buildVersion = require('../dist/buildInfo').buildVersion
 
 const Server = require('../src/server/server')
 
 program
+  .version(buildVersion)
   .description(
     'Monitor Venus devices and capture & store realtime data to serve Grafana'
   )
