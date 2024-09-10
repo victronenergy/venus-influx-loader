@@ -20,7 +20,7 @@ MAJMIN=$(echo $VER | grep -Eo '[0-9]+\.[0-9]+')
 # Optionally tag docker image with major.minor if $VER matches SemVer spec
 [[ ! -z "$MAJMIN" ]] && TAG_MAJMIN="-t $OWNER/$TARGET:$MAJMIN"
 
-BUILD_VERSION=$(git describe --tags)
+BUILD_VERSION=${BUILD_VERSION:=$(git describe --tags)}
 
 # Note that we are invoking `docker build` from our parent directory
 # with -f pointing towards our custom Dockerfile

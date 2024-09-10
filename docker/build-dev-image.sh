@@ -9,7 +9,7 @@ BUILD_OPTS="--pull --progress=plain"
 
 TAG="$OWNER/$TARGET:${VER}"
 
-BUILD_VERSION=$(git describe --tags)
+BUILD_VERSION=${BUILD_VERSION:=$(git describe --tags)}
 
 # Note that we are invoking `docker build` from our parent directory
 # with -f pointing towards our custom Dockerfile

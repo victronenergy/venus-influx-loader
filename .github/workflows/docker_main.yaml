@@ -27,6 +27,7 @@ jobs:
        env:
          OWNER: ${{ secrets.DOCKERHUB_USERNAME }}
          VERSION: ${{ github.ref_name }}
+         BUILD_VERSION: ${{ github.ref_name }}
        run: |
          (cd docker && ./build-release-images.sh $VERSION)
 
