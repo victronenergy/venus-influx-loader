@@ -9,7 +9,7 @@ const WebpackShellPluginNext = require('webpack-shell-plugin-next')
 
 const SRC_DIR = path.resolve(__dirname, 'src/client')
 const BUILD_DIR = path.resolve(__dirname, 'dist')
-const GIT_REF = childProcess.execSync('git describe --tags').toString().trim()
+const BUILD_VERSION = process.env.BUILD_VERSION || childProcess.execSync('git describe --tags').toString().trim()
 
 console.log('BUILD_DIR', BUILD_DIR)
 console.log('SRC_DIR', SRC_DIR)
@@ -120,7 +120,7 @@ module.exports = (env, argv) => {
         // in dev, hardcode to 8088, as webpack will spin up webpack dev server on random port
         // and window.location will point to webpack dev server, instead of venus influx loader
         'VENUS_INFLUX_LOADER_ADMIN_API_PORT': env.production ? undefined : 8088,
-        'VENUS_INFLUX_LOADER_GIT_REF': GIT_REF,
+        'VENUS_INFLUX_LOADER_BUILD_VERSION': BUILD_VERSION,
       }),
       new CleanWebpackPlugin(),
       new MiniCssExtractPlugin(),
@@ -130,7 +130,7 @@ module.exports = (env, argv) => {
       }),
       new WebpackShellPluginNext({
         onBuildEnd: {
-          scripts: [`echo module.exports.buildVersion=\\"${GIT_REF}\\" >> ./dist/buildInfo.js`],
+          scripts: [`echo module.exports.buildVersion=\\"${BUILD_VERSION}\\" >> ./dist/buildInfo.js`],
           blocking: true,
           parallel: false
         }

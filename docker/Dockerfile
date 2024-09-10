@@ -1,6 +1,9 @@
 # Stage 1: build from source
 FROM node:20 AS build
 
+ARG BUILD_VERSION=develop
+ENV BUILD_VERSION=${BUILD_VERSION}
+
 WORKDIR /venus-influx-loader
 
 COPY . .
