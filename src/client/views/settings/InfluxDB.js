@@ -6,6 +6,7 @@ import {
   CForm,
   CFormLabel,
   CFormInput,
+  CFormSelect,
   CButton,
 } from '@coreui/react'
 
@@ -81,6 +82,16 @@ function InfluxDB (props) {
                 value={config.influxdb.password}
                 onChange={event => handleFormInputChange(event)}
               />
+            </div>
+            <div className="mb-3">
+              <CFormLabel htmlFor="format">Measurement Format</CFormLabel>
+              <CFormSelect name="format"
+                value={config.influxdb.format}
+                onChange={event => handleFormInputChange(event)}
+              >
+                <option value="/">system/Dc/Battery/Soc</option>
+                <option value=".">system.Dc.Battery.Soc</option>
+              </CFormSelect>
             </div>
           </CForm>
         </CCardBody>
