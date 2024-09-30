@@ -10,7 +10,7 @@
     "watch-client": "webpack serve --mode development --progress --hot",
     "watch-influx-loader": "babel-watch bin/venus-influx-loader.js -- --config-path ./config/ --port 8088",
     "watch-upnp-browser": "babel-watch bin/venus-upnp-browser.js",
-    "build": "webpack build --mode production --progress",
+    "build": "webpack build --mode production --env production --progress",
     "dev": "VIL_INFLUXDB_URL=http://localhost:8086 VIL_INFLUXDB_USERNAME=s3cr4t VIL_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-influx-loader npm:watch-client",
     "create-release": "github-create-release --owner victronenergy --repository venus-influx-loader",
     "release": "git tag -d v$npm_package_version; git tag v$npm_package_version && git push --tags && git push && npm run create-release"
