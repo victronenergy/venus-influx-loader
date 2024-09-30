@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/victronenergy/venus-influx-loader/compare/1.2.0...1.2.1) (2024-09-30)
+
+
+### Bug Fixes
+
+* Make production build actually work ([1f3eed3](https://github.com/victronenergy/venus-influx-loader/commit/1f3eed354b7d91b89858091973b9e5dc6d9c85bc))
+
 # [1.2.0](https://github.com/victronenergy/venus-influx-loader/compare/1.1.0...1.2.0) (2024-09-13)
 
 
