@@ -1,6 +1,6 @@
-import { useState } from "react"
-import PropTypes from "prop-types"
-import { useSelector } from "react-redux"
+import { useState } from 'react'
+import PropTypes from 'prop-types'
+import { useSelector } from 'react-redux'
 import {
   CCard,
   CCardBody,
@@ -12,7 +12,7 @@ import {
   CButton,
   CFormCheck,
   CAlert,
-} from "@coreui/react"
+} from '@coreui/react'
 
 import {
   useGetConfig,
@@ -20,15 +20,15 @@ import {
   useVRMLogin,
   useVRMLogout,
   useVRMRefresh,
-} from "../../hooks/useAdminApi"
+} from '../../hooks/useAdminApi'
 import {
   useFormValidation,
   extractParameterNameAndValue,
-} from "../../hooks/useFormValidation"
-import { DeviceList } from "./DeviceList"
+} from '../../hooks/useFormValidation'
+import { DeviceList } from './DeviceList'
 
 function VRM() {
-  const type = "vrm"
+  const type = 'vrm'
 
   const [
     {
@@ -186,15 +186,15 @@ function VRM() {
             hidden={!config[type].hasToken}
             disabled={isVRMRefreshInProgress}
           >
-            {isVRMRefreshInProgress ? "Working..." : "Refresh"}
-          </CButton>{" "}
+            {isVRMRefreshInProgress ? 'Working...' : 'Refresh'}
+          </CButton>{' '}
           <CButton
             color="primary"
             onClick={() => handleVRMLogout()}
             hidden={!config[type].hasToken}
             disabled={!config[type].hasToken}
           >
-            {isVRMLogoutInProgress ? "Working..." : "Logout"}
+            {isVRMLogoutInProgress ? 'Working...' : 'Logout'}
           </CButton>
           <VRMStatus hidden={!config[type].hasToken} status={vrmStatus} />
         </CCardBody>
@@ -204,7 +204,7 @@ function VRM() {
             onClick={() => save({ data: config })}
             disabled={!isSaveEnabled}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? 'Saving...' : 'Save'}
           </CButton>
         </CCardFooter>
       </CCard>
@@ -219,14 +219,14 @@ VRM.propTypes = {
 
 function VRMDetails(props) {
   const [state, setState] = useState({
-    username: "",
-    password: "",
+    username: '',
+    password: '',
     tokenName: `Venus Influx Loader Token (${new Date().toISOString()})`,
   })
 
   const isLoginEnabled = useFormValidation(() => {
     return (
-      state.username !== "" && state.password !== "" && state.tokenName !== ""
+      state.username !== '' && state.password !== '' && state.tokenName !== ''
     )
   })
 
@@ -282,7 +282,7 @@ function VRMDetails(props) {
               )
             }
           >
-            {props.loginInProgress ? "Working..." : "Login"}
+            {props.loginInProgress ? 'Working...' : 'Login'}
           </CButton>
         </CForm>
       )}
@@ -306,9 +306,9 @@ function VRMStatus(props) {
       <CAlert
         hidden={props.hidden}
         color={
-          props.status && props.status.status === "success"
-            ? "success"
-            : "danger"
+          props.status && props.status.status === 'success'
+            ? 'success'
+            : 'danger'
         }
       >
         <small>VRM Status: {props.status && props.status.message}</small>

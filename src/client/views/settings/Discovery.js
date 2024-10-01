@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux"
+import { useSelector } from 'react-redux'
 import {
   CCard,
   CCardBody,
@@ -7,17 +7,17 @@ import {
   CForm,
   CButton,
   CFormCheck,
-} from "@coreui/react"
+} from '@coreui/react'
 
-import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
+import { useGetConfig, usePutConfig } from '../../hooks/useAdminApi'
 import {
   useFormValidation,
   extractParameterNameAndValue,
-} from "../../hooks/useFormValidation"
-import { DeviceList } from "./DeviceList"
+} from '../../hooks/useFormValidation'
+import { DeviceList } from './DeviceList'
 
 function Discovery() {
-  const type = "upnp"
+  const type = 'upnp'
 
   const [
     {
@@ -117,7 +117,7 @@ function Discovery() {
             onClick={() => save({ data: config })}
             disabled={!isSaveEnabled}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? 'Saving...' : 'Save'}
           </CButton>
         </CCardFooter>
       </CCard>

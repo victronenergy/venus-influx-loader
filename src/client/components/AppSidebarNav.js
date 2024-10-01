@@ -1,7 +1,7 @@
-import { NavLink } from "react-router-dom"
-import PropTypes from "prop-types"
+import { NavLink } from 'react-router-dom'
+import PropTypes from 'prop-types'
 
-import { CBadge, CNavLink, CSidebarNav } from "@coreui/react"
+import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
 
 export const AppSidebarNav = ({ items }) => {
   const navLink = (name, icon, badge, indent = false) => {

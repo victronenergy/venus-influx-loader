@@ -1,5 +1,5 @@
-import PropTypes from "prop-types"
-import { useSelector } from "react-redux"
+import PropTypes from 'prop-types'
+import { useSelector } from 'react-redux'
 import {
   CAlert,
   CCard,
@@ -14,10 +14,10 @@ import {
   CTableDataCell,
   CTableRow,
   CContainer,
-} from "@coreui/react"
+} from '@coreui/react'
 
-import CIcon from "@coreui/icons-react"
-import { cilRss } from "@coreui/icons"
+import CIcon from '@coreui/icons-react'
+import { cilRss } from '@coreui/icons'
 
 function Dashboard() {
   const { measurementRate, measurementCount, deviceStatistics } = useSelector(
@@ -35,7 +35,7 @@ function Dashboard() {
 
   return (
     <div>
-      {websocketStatus === "open" && (
+      {websocketStatus === 'open' && (
         <div>
           <CCard>
             <CCardHeader>Statistics</CCardHeader>
@@ -80,7 +80,7 @@ function Dashboard() {
                                   className="text-muted"
                                   icon={cilRss}
                                   size="lg"
-                                />{" "}
+                                />{' '}
                                 {deviceStats.name}
                               </CCol>
                               <CCol xs="auto">
@@ -119,7 +119,7 @@ function Dashboard() {
         </div>
       )}
 
-      {websocketStatus !== "open" && (
+      {websocketStatus !== 'open' && (
         <CAlert color="danger">Not connected to the server</CAlert>
       )}
     </div>

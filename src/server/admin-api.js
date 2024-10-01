@@ -1,13 +1,13 @@
-const router = require("express").Router()
-const fs = require("node:fs")
-const _ = require("lodash")
+const router = require('express').Router()
+const fs = require('node:fs')
+const _ = require('lodash')
 
 module.exports = function (app) {
-  router.get("/config", (_req, res, _next) => {
+  router.get('/config', (_req, res, _next) => {
     fs.readFile(app.config.configLocation, (err, contents) => {
       if (err) {
         app.logger.error(err)
-        res.status(500).send("Unable to read config file")
+        res.status(500).send('Unable to read config file')
       } else {
         const config = JSON.parse(contents)
         if (_.isUndefined(config.upnp.enabledPortalIds)) {
@@ -22,25 +22,25 @@ module.exports = function (app) {
     })
   })
 
-  router.put("/config", (req, res, _next) => {
+  router.put('/config', (req, res, _next) => {
     fs.writeFile(
       app.config.configLocation,
       JSON.stringify(req.body, null, 2),
       (err) => {
         if (err) {
           app.logger.error(err)
-          res.status(500).send("Unable to write config file")
+          res.status(500).send('Unable to write config file')
         } else {
-          res.status(200).send("Configuration Saved")
+          res.status(200).send('Configuration Saved')
           app.config.settings = req.body
-          app.emit("settingsChanged", app.config.settings)
+          app.emit('settingsChanged', app.config.settings)
           delete req.body.vrm.hasToken
         }
       },
     )
   })
 
-  router.post("/security", (req, res, _next) => {
+  router.post('/security', (req, res, _next) => {
     if (
       req.body.username &&
       req.body.username.length > 0 &&
@@ -54,33 +54,33 @@ module.exports = function (app) {
         (err) => {
           if (err) {
             app.logger.error(err)
-            res.status(500).send("Unable to write secrets file")
+            res.status(500).send('Unable to write secrets file')
           } else {
             res.send()
           }
         },
       )
     } else {
-      res.status(400).send("Please enter a Username and Password")
+      res.status(400).send('Please enter a Username and Password')
     }
   })
 
-  router.get("/log", (_req, res, _next) => {
+  router.get('/log', (_req, res, _next) => {
     res.json({ entries: app.logTransport.entries })
   })
 
-  router.get("/debug", (_req, res, _next) => {
-    const value = app.rootLogger.level === "debug" ? true : false
+  router.get('/debug', (_req, res, _next) => {
+    const value = app.rootLogger.level === 'debug' ? true : false
     res.send(value)
   })
 
-  router.put("/debug", (req, res, _next) => {
-    app.rootLogger.level = req.body.value ? "debug" : "info"
+  router.put('/debug', (req, res, _next) => {
+    app.rootLogger.level = req.body.value ? 'debug' : 'info'
     app.logger[app.rootLogger.level](
-      "Log level changed to: " + app.rootLogger.level,
+      'Log level changed to: ' + app.rootLogger.level,
     )
-    app.emit("serverevent", {
-      type: "DEBUG",
+    app.emit('serverevent', {
+      type: 'DEBUG',
       data: req.body.value,
     })
     res.send(req.body.value)

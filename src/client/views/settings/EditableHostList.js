@@ -1,4 +1,4 @@
-import PropTypes from "prop-types"
+import PropTypes from 'prop-types'
 import {
   CFormCheck,
   CTable,
@@ -9,7 +9,7 @@ import {
   CTableRow,
   CFormInput,
   CButton,
-} from "@coreui/react"
+} from '@coreui/react'
 
 function EditableHostList(props) {
   return (

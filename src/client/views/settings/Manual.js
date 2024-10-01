@@ -6,17 +6,17 @@ import {
   CForm,
   CButton,
   CFormCheck,
-} from "@coreui/react"
+} from '@coreui/react'
 
-import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
+import { useGetConfig, usePutConfig } from '../../hooks/useAdminApi'
 import {
   useFormValidation,
   extractParameterNameAndValue,
-} from "../../hooks/useFormValidation"
-import { EditableHostList } from "./EditableHostList"
+} from '../../hooks/useFormValidation'
+import { EditableHostList } from './EditableHostList'
 
 function Manual() {
-  const type = "manual"
+  const type = 'manual'
 
   const [
     {
@@ -36,7 +36,7 @@ function Manual() {
 
   const isSaveEnabled = useFormValidation(() => {
     return (
-      config && config[type].hosts.filter((x) => x.hostName === "").length === 0
+      config && config[type].hosts.filter((x) => x.hostName === '').length === 0
     )
   })
 
@@ -69,7 +69,7 @@ function Manual() {
 
   function handleAddHost(_event) {
     const clone = { ...config }
-    clone[type].hosts.push({ hostName: "", enabled: true })
+    clone[type].hosts.push({ hostName: '', enabled: true })
     setConfig(clone)
   }
 
@@ -111,7 +111,7 @@ function Manual() {
             onClick={() => save({ data: config })}
             disabled={!isSaveEnabled}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? 'Saving...' : 'Save'}
           </CButton>
         </CCardFooter>
       </CCard>

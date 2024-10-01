@@ -1,9 +1,9 @@
-const Client = require("node-ssdp").Client
-const axios = require("axios")
-const parseXml = require("xml2js").parseString
+const Client = require('node-ssdp').Client
+const axios = require('axios')
+const parseXml = require('xml2js').parseString
 
 module.exports = function (app) {
-  const logger = app.getLogger("upnp")
+  const logger = app.getLogger('upnp')
   const client = new Client()
   let isRunning = false
 
@@ -11,10 +11,10 @@ module.exports = function (app) {
     logger: logger,
 
     stop: () => {
-      logger.info("Stopping UPNP Discovery")
+      logger.info('Stopping UPNP Discovery')
       isRunning = false
       client.stop()
-      app.emit("upnpDiscoveryDidStop", {})
+      app.emit('upnpDiscoveryDidStop', {})
     },
 
     isRunning: () => {
@@ -22,10 +22,10 @@ module.exports = function (app) {
     },
 
     start: () => {
-      client.on("response", function (headers, statusCode, rinfo) {
+      client.on('response', function (headers, statusCode, rinfo) {
         if (
           headers.USN &&
-          headers.USN.startsWith("uuid:com.victronenergy.ccgx")
+          headers.USN.startsWith('uuid:com.victronenergy.ccgx')
         ) {
           axios
             .get(headers.LOCATION)
@@ -37,13 +37,13 @@ module.exports = function (app) {
                 } else {
                   try {
                     const info = {
-                      portalId: result.root.device[0]["ve:X_VrmPortalId"][0]._,
+                      portalId: result.root.device[0]['ve:X_VrmPortalId'][0]._,
                       address: rinfo.address,
                     }
                     logger.info(
                       `Found a venus device with id ${info.portalId} at ${info.address}`,
                     )
-                    app.emit("upnpDiscovered", info)
+                    app.emit('upnpDiscovered', info)
                   } catch (err) {
                     logger.error(err)
                   }
@@ -56,10 +56,10 @@ module.exports = function (app) {
         }
       })
 
-      logger.info("Running UPNP Discovery...")
+      logger.info('Running UPNP Discovery...')
       isRunning = true
-      app.emit("upnpDiscoveryDidStart", {})
-      client.search("urn:schemas-upnp-org:device:Basic:1")
+      app.emit('upnpDiscoveryDidStart', {})
+      client.search('urn:schemas-upnp-org:device:Basic:1')
     },
   }
 }
