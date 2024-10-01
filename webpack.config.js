@@ -13,6 +13,7 @@ const BUILD_VERSION = process.env.BUILD_VERSION || childProcess.execSync('git de
 
 console.log('BUILD_DIR', BUILD_DIR)
 console.log('SRC_DIR', SRC_DIR)
+console.log('BUILD_VERSION', BUILD_VERSION)
 
 module.exports = (env, argv) => {
   return {
@@ -120,7 +121,7 @@ module.exports = (env, argv) => {
         // in dev, hardcode to 8088, as webpack will spin up webpack dev server on random port
         // and window.location will point to webpack dev server, instead of venus influx loader
         'VENUS_INFLUX_LOADER_ADMIN_API_PORT': env.production ? undefined : 8088,
-        'VENUS_INFLUX_LOADER_BUILD_VERSION': BUILD_VERSION,
+        'VENUS_INFLUX_LOADER_BUILD_VERSION': `\"${BUILD_VERSION}\"`,
       }),
       new CleanWebpackPlugin(),
       new MiniCssExtractPlugin(),
