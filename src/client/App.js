@@ -1,9 +1,9 @@
-import React, { Suspense } from 'react'
-import { useDispatch } from 'react-redux'
-import { HashRouter, Route, Routes } from 'react-router-dom'
-import './scss/style.scss'
+import React, { Suspense } from "react"
+import { useDispatch } from "react-redux"
+import { HashRouter, Route, Routes } from "react-router-dom"
+import "./scss/style.scss"
 
-import { openServerEventsConnection } from './actions'
+import { openServerEventsConnection } from "./actions"
 
 const loading = (
   <div className="pt-3 text-center">
@@ -12,7 +12,7 @@ const loading = (
 )
 
 // Containers
-const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
+const DefaultLayout = React.lazy(() => import("./layout/DefaultLayout"))
 
 function App() {
   // TODO: move openServerEventsConnection somplace else

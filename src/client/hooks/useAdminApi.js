@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react'
-import useAxios from 'axios-hooks'
+import { useState, useEffect } from "react"
+import useAxios from "axios-hooks"
 
-const ADMIN_API_CONFIG = '/admin-api/config'
-const ADMIN_API_SECURITY = '/admin-api/security'
-const ADMIN_API_LOG = '/admin-api/log'
-const ADMIN_API_DEBUG = '/admin-api/debug'
+const ADMIN_API_CONFIG = "/admin-api/config"
+const ADMIN_API_SECURITY = "/admin-api/security"
+const ADMIN_API_LOG = "/admin-api/log"
+const ADMIN_API_DEBUG = "/admin-api/debug"
 
 function useGetConfig() {
   const [{ data, loading, error }, execute, cancel] = useAxios({
     url: ADMIN_API_CONFIG,
-    method: 'GET',
+    method: "GET",
   })
 
   const [config, setConfig] = useState()
@@ -22,7 +22,7 @@ function useGetConfig() {
 
 function usePutConfig() {
   const [{ data, loading, error }, execute, cancel] = useAxios(
-    { url: ADMIN_API_CONFIG, method: 'PUT' },
+    { url: ADMIN_API_CONFIG, method: "PUT" },
     { manual: true },
   )
 
@@ -33,7 +33,7 @@ export { useGetConfig, usePutConfig }
 
 function usePostSecurity() {
   const [{ data, loading, error }, execute, cancel] = useAxios(
-    { url: ADMIN_API_SECURITY, method: 'POST' },
+    { url: ADMIN_API_SECURITY, method: "POST" },
     { manual: true },
   )
 
@@ -45,7 +45,7 @@ export { usePostSecurity }
 function useGetLog() {
   const [{ data, loading, error }, execute, cancel] = useAxios({
     url: ADMIN_API_LOG,
-    method: 'GET',
+    method: "GET",
   })
 
   return [{ data, loading, error }, execute, cancel]
@@ -56,7 +56,7 @@ export { useGetLog }
 function useGetDebug() {
   const [{ data, loading, error }, execute, cancel] = useAxios({
     url: ADMIN_API_DEBUG,
-    method: 'GET',
+    method: "GET",
   })
 
   return [{ data, loading, error }, execute, cancel]
@@ -64,7 +64,7 @@ function useGetDebug() {
 
 function usePutDebug() {
   const [{ data, loading, error }, execute, cancel] = useAxios(
-    { url: ADMIN_API_DEBUG, method: 'PUT' },
+    { url: ADMIN_API_DEBUG, method: "PUT" },
     { manual: true },
   )
 
@@ -73,13 +73,13 @@ function usePutDebug() {
 
 export { useGetDebug, usePutDebug }
 
-const ADMIN_API_VRM_LOGIN = '/admin-api/vrmLogin'
-const ADMIN_API_VRM_LOGOUT = '/admin-api/vrmLogout'
-const ADMIN_API_VRM_REFRESH = '/admin-api/vrmRefresh'
+const ADMIN_API_VRM_LOGIN = "/admin-api/vrmLogin"
+const ADMIN_API_VRM_LOGOUT = "/admin-api/vrmLogout"
+const ADMIN_API_VRM_REFRESH = "/admin-api/vrmRefresh"
 
 function useVRMLogin() {
   const [{ data, loading, error }, execute, cancel] = useAxios(
-    { url: ADMIN_API_VRM_LOGIN, method: 'POST' },
+    { url: ADMIN_API_VRM_LOGIN, method: "POST" },
     { manual: true },
   )
 
@@ -88,7 +88,7 @@ function useVRMLogin() {
 
 function useVRMLogout() {
   const [{ data, loading, error }, execute, cancel] = useAxios(
-    { url: ADMIN_API_VRM_LOGOUT, method: 'POST' },
+    { url: ADMIN_API_VRM_LOGOUT, method: "POST" },
     { manual: true },
   )
 
@@ -97,7 +97,7 @@ function useVRMLogout() {
 
 function useVRMRefresh() {
   const [{ data, loading, error }, execute, cancel] = useAxios(
-    { url: ADMIN_API_VRM_REFRESH, method: 'PUT' },
+    { url: ADMIN_API_VRM_REFRESH, method: "PUT" },
     { manual: true },
   )
 

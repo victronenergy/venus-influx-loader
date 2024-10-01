@@ -1,5 +1,5 @@
-const winston = require('winston')
-const Transport = require('winston-transport')
+const winston = require("winston")
+const Transport = require("winston-transport")
 
 // custom log storage transport
 // that keeps last 100 messages
@@ -20,8 +20,8 @@ class LogStorageTransport extends Transport {
       this.entries.splice(0, this.entries.length - this.size)
     }
 
-    this.app.emit('serverevent', {
-      type: 'LOG',
+    this.app.emit("serverevent", {
+      type: "LOG",
       data: info,
     })
 
@@ -38,7 +38,7 @@ class LogStorageTransport extends Transport {
 //
 module.exports = function (app, label, level) {
   const format = winston.format.printf((info, _opts) => {
-    return `[${info.level}] [${info.label}] ${info.message} ${info.stack || ''}`
+    return `[${info.level}] [${info.label}] ${info.message} ${info.stack || ""}`
   })
 
   app.logTransport = new LogStorageTransport(app, {

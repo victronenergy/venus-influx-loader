@@ -1,10 +1,10 @@
-const Influx = require('influx')
-const _ = require('lodash')
+const Influx = require("influx")
+const _ = require("lodash")
 
 class InfluxDB {
   constructor(app) {
     this.app = app
-    this.logger = app.getLogger('influxdb')
+    this.logger = app.getLogger("influxdb")
     this.debug = this.logger.debug.bind(this.logger)
     this.info = this.logger.info.bind(this.logger)
     this.warn = this.logger.warn.bind(this.logger)
@@ -18,7 +18,7 @@ class InfluxDB {
         ? 10
         : this.app.config.settings.influxdb.batchWriteInterval) * 1000
 
-    app.on('settingsChanged', (settings) => {
+    app.on("settingsChanged", (settings) => {
       this.batchWriteInterval =
         (_.isUndefined(this.app.config.settings.influxdb.batchWriteInterval)
           ? 10
@@ -66,13 +66,13 @@ class InfluxDB {
     this.host = host
     this.port = port
     this.database = database
-    this.username = username !== '' ? username : 'root'
-    this.password = password !== '' ? password : 'root'
+    this.username = username !== "" ? username : "root"
+    this.password = password !== "" ? password : "root"
 
     this.influxClient = new Influx.InfluxDB({
       host: host,
       port: port,
-      protocol: 'http',
+      protocol: "http",
       database: database,
       username: username,
       password: password,
@@ -115,12 +115,12 @@ class InfluxDB {
     this.info(`Setting retention policy: ${retention}`)
 
     try {
-      await this.influxClient.createRetentionPolicy('venus_default', opts)
+      await this.influxClient.createRetentionPolicy("venus_default", opts)
       this.logger.debug(`Retention policy set: ${retention}`)
       this.retention = retention
     } catch {
       try {
-        await this.influxClient.alterRetentionPolicy('venus_default', opts)
+        await this.influxClient.alterRetentionPolicy("venus_default", opts)
         this.logger.debug(`Retention policy set: ${retention}`)
         this.retention = retention
       } catch (error) {
@@ -136,14 +136,14 @@ class InfluxDB {
       return
     }
 
-    let valueKey = 'value'
-    if (typeof value === 'string') {
+    let valueKey = "value"
+    if (typeof value === "string") {
       if (value.length === 0) {
         //influxdb won't allow empty strings
         return
       }
-      valueKey = 'stringValue'
-    } else if (typeof value !== 'number') {
+      valueKey = "stringValue"
+    } else if (typeof value !== "number") {
       return
     }
 

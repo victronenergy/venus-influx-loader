@@ -6,16 +6,16 @@ import {
   CFormLabel,
   CFormInput,
   CButton,
-} from '@coreui/react'
+} from "@coreui/react"
 
-import { useGetConfig, usePutConfig } from '../../hooks/useAdminApi'
+import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import {
   useFormValidation,
   extractParameterNameAndValue,
-} from '../../hooks/useFormValidation'
+} from "../../hooks/useFormValidation"
 
 function InfluxDB() {
-  const type = 'influxdb'
+  const type = "influxdb"
 
   const [
     {
@@ -36,10 +36,10 @@ function InfluxDB() {
   const isSaveEnabled = useFormValidation(() => {
     return (
       config &&
-      config.influxdb.host !== '' &&
-      config.influxdb.port !== '' &&
-      config.influxdb.database !== '' &&
-      config.influxdb.retention !== ''
+      config.influxdb.host !== "" &&
+      config.influxdb.port !== "" &&
+      config.influxdb.database !== "" &&
+      config.influxdb.retention !== ""
     )
   })
 
@@ -123,7 +123,7 @@ function InfluxDB() {
             onClick={() => save({ data: config })}
             disabled={!isSaveEnabled}
           >
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? "Saving..." : "Save"}
           </CButton>
         </CCardFooter>
       </CCard>

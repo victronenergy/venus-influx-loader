@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from "react"
 import {
   CCard,
   CCardBody,
@@ -7,19 +7,19 @@ import {
   CFormLabel,
   CFormInput,
   CButton,
-} from '@coreui/react'
+} from "@coreui/react"
 
-import { usePostSecurity } from '../../hooks/useAdminApi'
+import { usePostSecurity } from "../../hooks/useAdminApi"
 import {
   useFormValidation,
   extractParameterNameAndValue,
-} from '../../hooks/useFormValidation'
+} from "../../hooks/useFormValidation"
 
 function Security() {
   const [state, setState] = useState({
-    username: '',
-    password: '',
-    password1: '',
+    username: "",
+    password: "",
+    password1: "",
   })
 
   const [
@@ -30,8 +30,8 @@ function Security() {
 
   const isSaveEnabled = useFormValidation(() => {
     return (
-      state.username !== '' &&
-      state.password !== '' &&
+      state.username !== "" &&
+      state.password !== "" &&
       state.password === state.password1
     )
   })
@@ -85,7 +85,7 @@ function Security() {
           onClick={() => save({ data: state })}
           disabled={!isSaveEnabled}
         >
-          {isSaving ? 'Saving...' : 'Save'}
+          {isSaving ? "Saving..." : "Save"}
         </CButton>
       </CCardFooter>
     </CCard>

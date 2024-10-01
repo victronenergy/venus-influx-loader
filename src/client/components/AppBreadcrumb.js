@@ -1,9 +1,9 @@
-import React from 'react'
-import { useLocation } from 'react-router-dom'
+import React from "react"
+import { useLocation } from "react-router-dom"
 
-import routes from '../routes'
+import routes from "../routes"
 
-import { CBreadcrumb, CBreadcrumbItem } from '@coreui/react'
+import { CBreadcrumb, CBreadcrumbItem } from "@coreui/react"
 
 const AppBreadcrumb = () => {
   const currentLocation = useLocation().pathname
@@ -15,7 +15,7 @@ const AppBreadcrumb = () => {
 
   const getBreadcrumbs = (location) => {
     const breadcrumbs = []
-    location.split('/').reduce((prev, curr, index, array) => {
+    location.split("/").reduce((prev, curr, index, array) => {
       const currentPathname = `${prev}/${curr}`
       const routeName = getRouteName(currentPathname, routes)
       routeName &&

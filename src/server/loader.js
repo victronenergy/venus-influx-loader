@@ -1,7 +1,7 @@
-const _ = require('lodash')
-const mqtt = require('mqtt')
-const ignoredMeasurements = require('./ignoredMeasurements')
-const buildVersion = require('../../dist/buildInfo').buildVersion
+const _ = require("lodash")
+const mqtt = require("mqtt")
+const ignoredMeasurements = require("./ignoredMeasurements")
+const buildVersion = require("../../dist/buildInfo").buildVersion
 
 const collectStatsInterval = 5
 const keepAliveInterval = 30
@@ -18,16 +18,16 @@ function Loader(app) {
   this.lastIntervalCount = 0
   this.vrmSubscriptions = []
 
-  this.logger = app.getLogger('loader')
+  this.logger = app.getLogger("loader")
 }
 
 Loader.prototype.start = function () {
-  this.logger.debug('starting...')
-  this.app.emit('serverevent', {
-    type: 'SERVERSTATISTICS',
+  this.logger.debug("starting...")
+  this.app.emit("serverevent", {
+    type: "SERVERSTATISTICS",
   })
 
-  this.app.on('upnpDiscovered', (info) => {
+  this.app.on("upnpDiscovered", (info) => {
     const upnp = this.app.config.settings.upnp
     if (
       !this.upnpConnections[info.portalId] &&
@@ -37,13 +37,13 @@ Loader.prototype.start = function () {
     }
   })
 
-  this.app.on('vrmDiscovered', (devices) => {
+  this.app.on("vrmDiscovered", (devices) => {
     if (this.app.config.settings.vrm.enabled) {
       this.connectVRM(devices)
     }
   })
 
-  this.app.on('settingsChanged', this.settingsChanged.bind(this))
+  this.app.on("settingsChanged", this.settingsChanged.bind(this))
 
   this.collectInterval = setInterval(
     this.collectStats.bind(this),
@@ -80,7 +80,7 @@ Loader.prototype.sendKeepAlive = function (
   client.publish(
     `R/${portalId}/system/0/Serial`,
     isFirstKeepAliveRequest
-      ? ''
+      ? ""
       : '{ "keepalive-options" : ["suppress-republish"] }',
   )
 }
@@ -99,13 +99,13 @@ Loader.prototype.onMessage = function (client, topic, message) {
     return
   }
 
-  const split = topic.split('/')
+  const split = topic.split("/")
   const id = split[1]
   const instanceNumber = split[3]
 
   split.splice(0, 2)
   split.splice(1, 1)
-  const measurement = split.join('/')
+  const measurement = split.join("/")
 
   if (ignoredMeasurements.find((path) => measurement.startsWith(path))) {
     return
@@ -116,8 +116,8 @@ Loader.prototype.onMessage = function (client, topic, message) {
 
     //console.log(`${id} ${instanceNumber} ${measurement} ${json.value}`)
 
-    if (client.venusNeedsID && measurement === 'system/Serial') {
-      this.logger.info('Detected portalId %s', json.value)
+    if (client.venusNeedsID && measurement === "system/Serial") {
+      this.logger.info("Detected portalId %s", json.value)
       client.subscribe(
         `N/${json.value}/settings/0/Settings/SystemSetup/SystemName`,
       )
@@ -155,16 +155,16 @@ Loader.prototype.onMessage = function (client, topic, message) {
     portalStats.measurementCount++
 
     if (measurements.indexOf(measurement) === -1) {
-      this.logger.debug('got measurement %s = %j', measurement, json.value)
+      this.logger.debug("got measurement %s = %j", measurement, json.value)
       measurements.push(measurement)
     }
 
     if (!name && !client.isVrm) {
-      if (measurement === 'settings/Settings/SystemSetup/SystemName') {
+      if (measurement === "settings/Settings/SystemSetup/SystemName") {
         if (json.value.length === 0) {
           client.deviceName = id
         } else {
-          this.logger.info('Detected name %s : %j', id, json.value)
+          this.logger.info("Detected name %s : %j", id, json.value)
           client.deviceName = json.value
           portalStats.name = client.deviceName
         }
@@ -181,7 +181,7 @@ Loader.prototype.onMessage = function (client, topic, message) {
 
 Loader.prototype.close = function (connectionInfo) {
   this.logger.info(
-    'closing connection to %s',
+    "closing connection to %s",
     connectionInfo.client.portalId || connectionInfo.address,
   )
   connectionInfo.client.end(true)
@@ -217,9 +217,9 @@ Loader.prototype.settingsChanged = function (settings) {
       info.client.end(true)
     })
     this.vrmConnections = {}
-    this.app.emit('vrmStatus', {
-      status: 'success',
-      message: 'Connections Closed',
+    this.app.emit("vrmStatus", {
+      status: "success",
+      message: "Connections Closed",
     })
   }
   if (settings.vrm.enabled) {
@@ -331,16 +331,16 @@ function formatClientRemoteAddress(client) {
 }
 
 Loader.prototype.setupClient = function (client, info, isVrm) {
-  client.on('connect', () => {
+  client.on("connect", () => {
     this.logger.info(`MQTT connected to ${formatClientRemoteAddress(client)}`)
     if (info.portalId === undefined) {
       // we do not know the portalId yet (manual connection)
-      this.logger.info('Detecting portalId...')
-      client.subscribe('N/+/#')
+      this.logger.info("Detecting portalId...")
+      client.subscribe("N/+/#")
       client.venusNeedsID = true
     } else {
       // we do know the portalId already (vrm + upnp connection)
-      this.logger.info('Subscribing to portalId %s', info.portalId)
+      this.logger.info("Subscribing to portalId %s", info.portalId)
       client.subscribe(
         `N/${info.portalId}/settings/0/Settings/SystemSetup/SystemName`,
       )
@@ -364,17 +364,17 @@ Loader.prototype.setupClient = function (client, info, isVrm) {
     }
   })
 
-  client.on('message', (topic, message) =>
+  client.on("message", (topic, message) =>
     this.onMessage(client, topic, message),
   )
 
-  client.on('error', (error) => {
+  client.on("error", (error) => {
     this.logger.error(
       `MQTT connection to ${formatClientRemoteAddress(client)}, ${error}`,
     )
   })
 
-  client.on('close', () => {
+  client.on("close", () => {
     this.logger.debug(
       `MQTT connection to ${formatClientRemoteAddress(client)} closed`,
     )
@@ -391,17 +391,17 @@ Loader.prototype.setupClient = function (client, info, isVrm) {
       delete this.vrmConnections[client.portalId]
     }
   })
-  client.on('offline', () => {
+  client.on("offline", () => {
     this.logger.debug(
       `MQTT connection to ${formatClientRemoteAddress(client)} offline`,
     )
   })
-  client.on('end', () => {
+  client.on("end", () => {
     this.logger.info(
       `MQTT connection to ${formatClientRemoteAddress(client)} ended`,
     )
   })
-  client.on('reconnect', () => {
+  client.on("reconnect", () => {
     this.logger.debug(
       `MQTT reconnecting to ${formatClientRemoteAddress(client)}`,
     )
@@ -432,7 +432,7 @@ Loader.prototype.connect = function (address, port, info, isVrm = false) {
       `MQTT connecting to ${address}:${port} using clientId: ${options.clientId}`,
     )
     const client = mqtt.connect(
-      `${isVrm ? 'mqtts' : 'mqtt'}:${address}:${port}`,
+      `${isVrm ? "mqtts" : "mqtt"}:${address}:${port}`,
       options,
     )
     this.setupClient(client, info, isVrm)
@@ -463,8 +463,8 @@ Loader.prototype.collectStats = function () {
 
   this.app.lastStats = stats
 
-  this.app.emit('serverevent', {
-    type: 'SERVERSTATISTICS',
+  this.app.emit("serverevent", {
+    type: "SERVERSTATISTICS",
     data: stats,
   })
 }
