@@ -262,13 +262,19 @@ class Server {
       if (app.options.adminApiEndpoint) {
         app.logger.info(`setting up ${app.options.adminApiEndpoint} routes`)
 
-        app.use('/admin', adminCredentials)
+        // setup /admin-api basic auth, if enabled
+        if (app.options.adminApiEndpointAuthEnabled) {
+          app.use('/admin', adminCredentials)
+        }
         app.use('/admin', express.static(path.join(__dirname, '../../dist')))
         app.get('/', (req, res) => {
           res.redirect('/admin')
         })
 
-        app.use(app.options.adminApiEndpoint, adminCredentials)
+        // setup /admin-api basic auth, if enabled
+        if (app.options.adminApiEndpointAuthEnabled) {
+          app.use(app.options.adminApiEndpoint, adminCredentials)
+        }
         app.use(app.options.adminApiEndpoint, require('./admin-api')(app))
 
         app.websocket = require('./websocket')(app)
