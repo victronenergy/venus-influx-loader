@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
-import { CSidebar, CSidebarHeader, CSidebarBrand, CSidebarNav, CImage } from '@coreui/react'
+import { CSidebar, CSidebarHeader, CSidebarBrand, CImage } from '@coreui/react'
 
 import logo from '../public/img/victron-logo-footer.svg'
 
