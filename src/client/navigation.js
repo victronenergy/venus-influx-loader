@@ -1,11 +1,11 @@
-import CIcon from "@coreui/icons-react";
+import CIcon from "@coreui/icons-react"
 import {
   cilChartLine,
   cilSettings,
   cilSpeedometer,
   cilHistory,
-} from "@coreui/icons";
-import { CNavGroup, CNavItem } from "@coreui/react";
+} from "@coreui/icons"
+import { CNavGroup, CNavItem } from "@coreui/react"
 
 const navigation = [
   {
@@ -59,6 +59,6 @@ const navigation = [
     to: `http://${window.location.hostname}:3000/`,
     icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
   },
-];
+]
 
-export default navigation;
+export default navigation

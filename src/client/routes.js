@@ -1,14 +1,14 @@
-import React from "react";
+import React from "react"
 
-const Dashboard = React.lazy(() => import("./views/dashboard/Dashboard"));
-const Discovery = React.lazy(() => import("./views/settings/Discovery"));
-const VRM = React.lazy(() => import("./views/settings/VRM"));
-const Manual = React.lazy(() => import("./views/settings/Manual"));
-const InfluxDB = React.lazy(() => import("./views/settings/InfluxDB"));
-const Security = React.lazy(() => import("./views/settings/Security"));
+const Dashboard = React.lazy(() => import("./views/dashboard/Dashboard"))
+const Discovery = React.lazy(() => import("./views/settings/Discovery"))
+const VRM = React.lazy(() => import("./views/settings/VRM"))
+const Manual = React.lazy(() => import("./views/settings/Manual"))
+const InfluxDB = React.lazy(() => import("./views/settings/InfluxDB"))
+const Security = React.lazy(() => import("./views/settings/Security"))
 const Troubleshooting = React.lazy(
   () => import("./views/troubleshooting/Troubleshooting"),
-);
+)
 
 const routes = [
   { path: "/", name: "Home", exact: true },
@@ -23,6 +23,6 @@ const routes = [
     name: "Troubleshooting",
     element: Troubleshooting,
   },
-];
+]
 
-export default routes;
+export default routes

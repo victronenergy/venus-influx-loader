@@ -1,17 +1,17 @@
-const router = require("express").Router();
-const _ = require("lodash");
+const router = require("express").Router()
+const _ = require("lodash")
 
 module.exports = function (app) {
   router.get("/", (_req, res, _next) => {
-    res.send("ok");
-  });
+    res.send("ok")
+  })
 
   router.post("search", (_req, res, _next) => {
-    res.json(["portals"]);
-  });
+    res.json(["portals"])
+  })
 
   router.post("/query", (req, res, _next) => {
-    const request = req.body;
+    const request = req.body
 
     if (app.lastStats && request.targets) {
       if (request.targets.length > 0 && request.targets[0].type === "table") {
@@ -22,18 +22,18 @@ module.exports = function (app) {
               { text: "Last Measurement", type: "string" },
             ],
             type: "table",
-          };
+          }
 
           json.rows = _.values(app.lastStats.deviceStatistics).map((stats) => {
-            return [stats.name, stats.lastMeasurement.toString()];
-          });
-          res.json([json]);
-          return;
+            return [stats.name, stats.lastMeasurement.toString()]
+          })
+          res.json([json])
+          return
         }
       }
     }
-    res.json([]);
-  });
+    res.json([])
+  })
 
-  return router;
-};
+  return router
+}
