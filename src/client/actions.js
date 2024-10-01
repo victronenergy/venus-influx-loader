@@ -20,7 +20,7 @@ export function openServerEventsConnection (dispatch) {
     })
   }
   ws.onerror = error => {
-    console.log('error: ' + error)
+    console.log(`error: ${JSON.stringify(error)}`)
     dispatch({
       type: 'WEBSOCKET_ERROR'
     })
