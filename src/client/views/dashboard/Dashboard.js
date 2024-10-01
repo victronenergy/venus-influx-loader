@@ -1,6 +1,5 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { useSelector } from 'react-redux'
+import PropTypes from "prop-types"
+import { useSelector } from "react-redux"
 import {
   CAlert,
   CCard,
@@ -15,34 +14,48 @@ import {
   CTableDataCell,
   CTableRow,
   CContainer,
-} from '@coreui/react'
+} from "@coreui/react"
 
-import CIcon from '@coreui/icons-react'
-import { cilRss } from '@coreui/icons'
+import CIcon from "@coreui/icons-react"
+import { cilRss } from "@coreui/icons"
 
-function Dashboard (props) {
-  const { measurementRate, measurementCount, deviceStatistics } = useSelector(state => { 
-    return (state.serverStatistics || { measurementRate: 0, measurementCount: 0, deviceStatistics: [] })
-  })
-  const websocketStatus = useSelector(state => state.websocketStatus)
+function Dashboard() {
+  const { measurementRate, measurementCount, deviceStatistics } = useSelector(
+    (state) => {
+      return (
+        state.serverStatistics || {
+          measurementRate: 0,
+          measurementCount: 0,
+          deviceStatistics: [],
+        }
+      )
+    },
+  )
+  const websocketStatus = useSelector((state) => state.websocketStatus)
 
   return (
     <div>
-      {websocketStatus === 'open' && (
+      {websocketStatus === "open" && (
         <div>
           <CCard>
             <CCardHeader>Statistics</CCardHeader>
             <CCardBody>
               <CRow>
-                <CCol xs='12' md='6'>
+                <CCol xs="12" md="6">
                   <CCallout color="info">
-                    <small className="text-muted">Total Measurement Rate (measurements/second)</small><br />
+                    <small className="text-muted">
+                      Total Measurement Rate (measurements/second)
+                    </small>
+                    <br />
                     <strong className="h4">{measurementRate.toFixed(1)}</strong>
                   </CCallout>
                 </CCol>
-                <CCol xs='12' md='6'>
+                <CCol xs="12" md="6">
                   <CCallout color="info">
-                    <small className="text-muted">Total Number of Measurements</small><br />
+                    <small className="text-muted">
+                      Total Number of Measurements
+                    </small>
+                    <br />
                     <strong className="h4">{measurementCount}</strong>
                   </CCallout>
                 </CCol>
@@ -55,7 +68,7 @@ function Dashboard (props) {
             <CCardBody>
               <CTable borderless>
                 <CTableBody>
-                  {Object.keys(deviceStatistics || {}).map(portalId => {
+                  {Object.keys(deviceStatistics || {}).map((portalId) => {
                     const deviceStats = deviceStatistics[portalId]
                     return (
                       <CTableRow key={portalId}>
@@ -63,29 +76,34 @@ function Dashboard (props) {
                           <CContainer>
                             <CRow className="align-items-start">
                               <CCol>
-                                <CIcon className="text-muted" icon={cilRss} size='lg' />
-                                {' '}
+                                <CIcon
+                                  className="text-muted"
+                                  icon={cilRss}
+                                  size="lg"
+                                />{" "}
                                 {deviceStats.name}
                               </CCol>
-                              <CCol xs='auto'>
-                                <strong>
-                                  {' '}
-                                  {deviceStats.measurementRate}
-                                  {' '}
-                                </strong>
-                                ({(
-                                  deviceStats.measurementRate /
-                                  measurementRate *
+                              <CCol xs="auto">
+                                <strong> {deviceStats.measurementRate} </strong>
+                                (
+                                {(
+                                  (deviceStats.measurementRate /
+                                    measurementRate) *
                                   100
-                                ).toFixed(0)}%)
+                                ).toFixed(0)}
+                                %)
                               </CCol>
                             </CRow>
                             <CRow className="align-items-end">
                               <CCol>
                                 <CProgress
-                                  className='progress-xs'
-                                  color='warning'
-                                  value={deviceStats.measurementRate / measurementRate * 100}
+                                  className="progress-xs"
+                                  color="warning"
+                                  value={
+                                    (deviceStats.measurementRate /
+                                      measurementRate) *
+                                    100
+                                  }
                                 />
                               </CCol>
                             </CRow>
@@ -94,7 +112,6 @@ function Dashboard (props) {
                       </CTableRow>
                     )
                   })}
-
                 </CTableBody>
               </CTable>
             </CCardBody>
@@ -102,12 +119,10 @@ function Dashboard (props) {
         </div>
       )}
 
-      {websocketStatus !== 'open' && (
-        <CAlert color='danger'>
-          Not connected to the server
-        </CAlert>
+      {websocketStatus !== "open" && (
+        <CAlert color="danger">Not connected to the server</CAlert>
       )}
-    </div >
+    </div>
   )
 }
 

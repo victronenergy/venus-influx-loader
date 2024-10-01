@@ -1,14 +1,14 @@
-import React from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import React from "react"
+import { useSelector, useDispatch } from "react-redux"
 
-import { CSidebar, CSidebarHeader, CSidebarBrand, CSidebarNav, CImage } from '@coreui/react'
+import { CSidebar, CSidebarHeader, CSidebarBrand, CImage } from "@coreui/react"
 
-import logo from '../public/img/victron-logo-footer.svg'
+import logo from "../public/img/victron-logo-footer.svg"
 
-import { AppSidebarNav } from './AppSidebarNav'
+import { AppSidebarNav } from "./AppSidebarNav"
 
 // sidebar nav config
-import navigation from '../navigation'
+import navigation from "../navigation"
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
@@ -20,7 +20,7 @@ const AppSidebar = () => {
       position="fixed"
       visible={sidebarShow}
       onVisibleChange={(visible) => {
-        dispatch({ type: 'set', sidebarShow: visible })
+        dispatch({ type: "set", sidebarShow: visible })
       }}
     >
       <CSidebarHeader className="border-bottom px-4">

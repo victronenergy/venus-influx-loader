@@ -1,5 +1,4 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from "prop-types"
 import {
   CFormCheck,
   CTable,
@@ -8,9 +7,9 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-} from '@coreui/react'
+} from "@coreui/react"
 
-function DeviceList (props) {
+function DeviceList(props) {
   return (
     <CTable bordered striped hidden={props.hidden}>
       <CTableHead>
@@ -18,34 +17,41 @@ function DeviceList (props) {
           <CTableHeaderCell>Installation Name</CTableHeaderCell>
           <CTableHeaderCell>Portal ID</CTableHeaderCell>
           <CTableHeaderCell>
-            <CFormCheck id="enable" label=""
+            <CFormCheck
+              id="enable"
+              label=""
               onChange={props.onEnableAllPortalsChange}
               checked={
                 props.availablePortalIds &&
                 props.availablePortalIds.length > 0 &&
-                props.settings.enabledPortalIds.length === props.availablePortalIds.length
+                props.settings.enabledPortalIds.length ===
+                  props.availablePortalIds.length
               }
             />
           </CTableHeaderCell>
         </CTableRow>
       </CTableHead>
       <CTableBody>
-        {props.availablePortalIds && props.availablePortalIds.map((element, index) => {
-          const id = element.portalId ? element.portalId : element
-          const name = element.name ? element.name : 'Unknown'
-          return (
-            <CTableRow key={id}>
-              <CTableDataCell>{name}</CTableDataCell>
-              <CTableDataCell>{id}</CTableDataCell>
-              <CTableDataCell>
-                <CFormCheck name="enablePortal" id={id} label="Enabled"
-                  onChange={props.onEnablePortalChange}
-                  checked={props.settings.enabledPortalIds.indexOf(id) !== -1}
-                />
-              </CTableDataCell>
-            </CTableRow>
-          )
-        })}
+        {props.availablePortalIds &&
+          props.availablePortalIds.map((element, _index) => {
+            const id = element.portalId ? element.portalId : element
+            const name = element.name ? element.name : "Unknown"
+            return (
+              <CTableRow key={id}>
+                <CTableDataCell>{name}</CTableDataCell>
+                <CTableDataCell>{id}</CTableDataCell>
+                <CTableDataCell>
+                  <CFormCheck
+                    name="enablePortal"
+                    id={id}
+                    label="Enabled"
+                    onChange={props.onEnablePortalChange}
+                    checked={props.settings.enabledPortalIds.indexOf(id) !== -1}
+                  />
+                </CTableDataCell>
+              </CTableRow>
+            )
+          })}
       </CTableBody>
     </CTable>
   )
