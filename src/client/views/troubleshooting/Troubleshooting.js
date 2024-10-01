@@ -1,5 +1,5 @@
-import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
+import PropTypes from "prop-types"
+import { useSelector } from "react-redux"
 import {
   CCard,
   CCardBody,
@@ -13,19 +13,19 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-} from "@coreui/react";
+} from "@coreui/react"
 
-import { usePutDebug } from "../../hooks/useAdminApi";
+import { usePutDebug } from "../../hooks/useAdminApi"
 
 function Troubleshooting() {
-  const log = useSelector((state) => state.log);
-  const isDebugLevelEnabled = useSelector((state) => state.debug);
+  const log = useSelector((state) => state.log)
+  const isDebugLevelEnabled = useSelector((state) => state.debug)
 
   const [
     { _data, _loading, _error },
     toggleDebugLevel,
     _cancelToggleDebugLevel,
-  ] = usePutDebug();
+  ] = usePutDebug()
 
   return (
     log &&
@@ -50,7 +50,7 @@ function Troubleshooting() {
         </CCardBody>
       </CCard>
     )
-  );
+  )
 }
 
 function LogList(props) {
@@ -67,15 +67,15 @@ function LogList(props) {
       <CTableBody>
         {props.entries &&
           props.entries.map((entry, index) => {
-            let levelClass;
+            let levelClass
             if (entry.level === "error") {
-              levelClass = "text-danger";
+              levelClass = "text-danger"
             } else if (entry.level === "info") {
-              levelClass = "text-info";
+              levelClass = "text-info"
             } else if (entry.level === "warn") {
-              levelClass = "text-warning";
+              levelClass = "text-warning"
             } else {
-              levelClass = "text-success";
+              levelClass = "text-success"
             }
 
             return (
@@ -87,15 +87,15 @@ function LogList(props) {
                 <CTableDataCell>{entry.label}</CTableDataCell>
                 <CTableDataCell>{entry.message}</CTableDataCell>
               </CTableRow>
-            );
+            )
           })}
       </CTableBody>
     </CTable>
-  );
+  )
 }
 
 LogList.propTypes = {
   entries: PropTypes.array,
-};
+}
 
-export default Troubleshooting;
+export default Troubleshooting

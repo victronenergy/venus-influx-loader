@@ -1,4 +1,4 @@
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 import {
   CFormCheck,
   CTable,
@@ -9,7 +9,7 @@ import {
   CTableRow,
   CFormInput,
   CButton,
-} from "@coreui/react";
+} from "@coreui/react"
 
 function EditableHostList(props) {
   return (
@@ -73,7 +73,7 @@ function EditableHostList(props) {
                     </CButton>
                   </CTableDataCell>
                 </CTableRow>
-              );
+              )
             })}
         </CTableBody>
       </CTable>
@@ -81,7 +81,7 @@ function EditableHostList(props) {
         Add Host
       </CButton>
     </div>
-  );
+  )
 }
 
 EditableHostList.propTypes = {
@@ -92,6 +92,6 @@ EditableHostList.propTypes = {
   onEnableAllHostsChange: PropTypes.func,
   onAddHost: PropTypes.func,
   onDeleteHost: PropTypes.func,
-};
+}
 
-export { EditableHostList };
+export { EditableHostList }

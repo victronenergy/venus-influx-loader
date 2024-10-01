@@ -1,4 +1,4 @@
-import PropTypes from "prop-types";
+import PropTypes from "prop-types"
 import {
   CFormCheck,
   CTable,
@@ -7,7 +7,7 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-} from "@coreui/react";
+} from "@coreui/react"
 
 function DeviceList(props) {
   return (
@@ -34,8 +34,8 @@ function DeviceList(props) {
       <CTableBody>
         {props.availablePortalIds &&
           props.availablePortalIds.map((element, _index) => {
-            const id = element.portalId ? element.portalId : element;
-            const name = element.name ? element.name : "Unknown";
+            const id = element.portalId ? element.portalId : element
+            const name = element.name ? element.name : "Unknown"
             return (
               <CTableRow key={id}>
                 <CTableDataCell>{name}</CTableDataCell>
@@ -50,11 +50,11 @@ function DeviceList(props) {
                   />
                 </CTableDataCell>
               </CTableRow>
-            );
+            )
           })}
       </CTableBody>
     </CTable>
-  );
+  )
 }
 
 DeviceList.propTypes = {
@@ -65,6 +65,6 @@ DeviceList.propTypes = {
   // NOTE: In UPNP Discovery, availablePortalIds will be array of portalId: string
   // NOTE: In VRM Discovery, availablePortalIds will be array of object with { portalId: string, name: string }
   availablePortalIds: PropTypes.array,
-};
+}
 
-export { DeviceList };
+export { DeviceList }

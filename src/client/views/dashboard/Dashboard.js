@@ -1,5 +1,5 @@
-import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
+import PropTypes from "prop-types"
+import { useSelector } from "react-redux"
 import {
   CAlert,
   CCard,
@@ -14,10 +14,10 @@ import {
   CTableDataCell,
   CTableRow,
   CContainer,
-} from "@coreui/react";
+} from "@coreui/react"
 
-import CIcon from "@coreui/icons-react";
-import { cilRss } from "@coreui/icons";
+import CIcon from "@coreui/icons-react"
+import { cilRss } from "@coreui/icons"
 
 function Dashboard() {
   const { measurementRate, measurementCount, deviceStatistics } = useSelector(
@@ -28,10 +28,10 @@ function Dashboard() {
           measurementCount: 0,
           deviceStatistics: [],
         }
-      );
+      )
     },
-  );
-  const websocketStatus = useSelector((state) => state.websocketStatus);
+  )
+  const websocketStatus = useSelector((state) => state.websocketStatus)
 
   return (
     <div>
@@ -69,7 +69,7 @@ function Dashboard() {
               <CTable borderless>
                 <CTableBody>
                   {Object.keys(deviceStatistics || {}).map((portalId) => {
-                    const deviceStats = deviceStatistics[portalId];
+                    const deviceStats = deviceStatistics[portalId]
                     return (
                       <CTableRow key={portalId}>
                         <CTableDataCell>
@@ -110,7 +110,7 @@ function Dashboard() {
                           </CContainer>
                         </CTableDataCell>
                       </CTableRow>
-                    );
+                    )
                   })}
                 </CTableBody>
               </CTable>
@@ -123,12 +123,12 @@ function Dashboard() {
         <CAlert color="danger">Not connected to the server</CAlert>
       )}
     </div>
-  );
+  )
 }
 
 Dashboard.propTypes = {
   serverStatistics: PropTypes.object,
   websocketStatus: PropTypes.string,
-};
+}
 
-export default Dashboard;
+export default Dashboard

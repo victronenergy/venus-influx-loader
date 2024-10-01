@@ -1,6 +1,6 @@
-import { useState } from "react";
-import PropTypes from "prop-types";
-import { useSelector } from "react-redux";
+import { useState } from "react"
+import PropTypes from "prop-types"
+import { useSelector } from "react-redux"
 import {
   CCard,
   CCardBody,
@@ -12,7 +12,7 @@ import {
   CButton,
   CFormCheck,
   CAlert,
-} from "@coreui/react";
+} from "@coreui/react"
 
 import {
   useGetConfig,
@@ -20,15 +20,15 @@ import {
   useVRMLogin,
   useVRMLogout,
   useVRMRefresh,
-} from "../../hooks/useAdminApi";
+} from "../../hooks/useAdminApi"
 import {
   useFormValidation,
   extractParameterNameAndValue,
-} from "../../hooks/useFormValidation";
-import { DeviceList } from "./DeviceList";
+} from "../../hooks/useFormValidation"
+import { DeviceList } from "./DeviceList"
 
 function VRM() {
-  const type = "vrm";
+  const type = "vrm"
 
   const [
     {
@@ -39,15 +39,15 @@ function VRM() {
     },
     _load,
     _cancelLoad,
-  ] = useGetConfig();
+  ] = useGetConfig()
   const [
     { data: _saveResult, loading: isSaving, error: _saveError },
     save,
     _cancelSave,
-  ] = usePutConfig();
+  ] = usePutConfig()
 
-  const vrmDiscovered = useSelector((state) => state.vrmDiscovered);
-  const vrmStatus = useSelector((state) => state.vrmStatus);
+  const vrmDiscovered = useSelector((state) => state.vrmDiscovered)
+  const vrmStatus = useSelector((state) => state.vrmStatus)
 
   const [
     {
@@ -57,7 +57,7 @@ function VRM() {
     },
     vrmLogin,
     _cancelVrmLogin,
-  ] = useVRMLogin();
+  ] = useVRMLogin()
   const [
     {
       data: _vrmLogoutResult,
@@ -66,7 +66,7 @@ function VRM() {
     },
     vrmLogout,
     _cancelVrmLogout,
-  ] = useVRMLogout();
+  ] = useVRMLogout()
   const [
     {
       data: _vrmRefreshResult,
@@ -75,76 +75,76 @@ function VRM() {
     },
     vrmRefresh,
     _cancelVrmRefresh,
-  ] = useVRMRefresh();
+  ] = useVRMRefresh()
 
   const isSaveEnabled = useFormValidation(() => {
-    return config;
-  });
+    return config
+  })
 
   function handleEnableChange(event) {
-    const clone = { ...config };
+    const clone = { ...config }
 
-    const [name, value] = extractParameterNameAndValue(event);
-    clone[type][name] = value;
+    const [name, value] = extractParameterNameAndValue(event)
+    clone[type][name] = value
     if (!value) {
-      clone[type].enabledPortalIds = [];
+      clone[type].enabledPortalIds = []
     }
 
-    setConfig(clone);
+    setConfig(clone)
   }
 
   function handleEnablePortalChange(event) {
-    const clone = { ...config };
-    const [_name, value] = extractParameterNameAndValue(event);
+    const clone = { ...config }
+    const [_name, value] = extractParameterNameAndValue(event)
 
-    const list = clone[type].enabledPortalIds;
+    const list = clone[type].enabledPortalIds
     if (!value) {
-      const idx = list.indexOf(event.target.id);
+      const idx = list.indexOf(event.target.id)
       if (idx !== -1) {
-        list.splice(idx, 1);
+        list.splice(idx, 1)
       }
     } else {
-      list.push(event.target.id);
+      list.push(event.target.id)
     }
-    clone[type].enabledPortalIds = list;
+    clone[type].enabledPortalIds = list
 
-    setConfig(clone);
+    setConfig(clone)
   }
 
   function handleEnableAllPortalsChange(event) {
-    const clone = { ...config };
+    const clone = { ...config }
 
     if (event.target.checked) {
       clone[type].enabledPortalIds = vrmDiscovered.map((element) => {
-        return element.portalId ? element.portalId : element;
-      });
+        return element.portalId ? element.portalId : element
+      })
     } else {
-      clone[type].enabledPortalIds = [];
+      clone[type].enabledPortalIds = []
     }
 
-    setConfig(clone);
+    setConfig(clone)
   }
 
   function handleVRMLogin(username, password, tokenName) {
     vrmLogin({
       data: { username: username, password: password, tokenName: tokenName },
     }).then(() => {
-      const clone = { ...config };
-      clone[type].hasToken = true;
-      setConfig(clone);
-    });
+      const clone = { ...config }
+      clone[type].hasToken = true
+      setConfig(clone)
+    })
   }
 
   function handleVRMLogout() {
     vrmLogout({}).then(() => {
-      const clone = { ...config };
-      clone[type].hasToken = false;
-      setConfig(clone);
-    });
+      const clone = { ...config }
+      clone[type].hasToken = false
+      setConfig(clone)
+    })
   }
 
   function handleVRMRefresh() {
-    vrmRefresh({});
+    vrmRefresh({})
   }
 
   return (
@@ -209,32 +209,32 @@ function VRM() {
         </CCardFooter>
       </CCard>
     )
-  );
+  )
 }
 
 VRM.propTypes = {
   vrmDiscovered: PropTypes.array,
   vrmStatus: PropTypes.object,
-};
+}
 
 function VRMDetails(props) {
   const [state, setState] = useState({
     username: "",
     password: "",
     tokenName: `Venus Influx Loader Token (${new Date().toISOString()})`,
-  });
+  })
 
   const isLoginEnabled = useFormValidation(() => {
     return (
       state.username !== "" && state.password !== "" && state.tokenName !== ""
-    );
-  });
+    )
+  })
 
   function handleFormInputChange(event) {
-    const clone = { ...state };
-    const [name, value] = extractParameterNameAndValue(event);
-    clone[name] = value;
-    setState(clone);
+    const clone = { ...state }
+    const [name, value] = extractParameterNameAndValue(event)
+    clone[name] = value
+    setState(clone)
   }
 
   return (
@@ -287,7 +287,7 @@ function VRMDetails(props) {
         </CForm>
       )}
     </div>
-  );
+  )
 }
 
 VRMDetails.propTypes = {
@@ -298,7 +298,7 @@ VRMDetails.propTypes = {
   loginInProgress: PropTypes.bool,
   logoutInProgress: PropTypes.bool,
   vrmStatus: PropTypes.object,
-};
+}
 
 function VRMStatus(props) {
   return (
@@ -314,12 +314,12 @@ function VRMStatus(props) {
         <small>VRM Status: {props.status && props.status.message}</small>
       </CAlert>
     </div>
-  );
+  )
 }
 
 VRMStatus.propTypes = {
   hidden: PropTypes.bool,
   status: PropTypes.object,
-};
+}
 
-export default VRM;
+export default VRM

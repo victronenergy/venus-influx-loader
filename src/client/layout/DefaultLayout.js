@@ -3,7 +3,7 @@ import {
   AppSidebar,
   AppFooter,
   AppHeader,
-} from "../components/index";
+} from "../components/index"
 
 const DefaultLayout = () => {
   return (
@@ -17,7 +17,7 @@ const DefaultLayout = () => {
         <AppFooter />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DefaultLayout;
+export default DefaultLayout
