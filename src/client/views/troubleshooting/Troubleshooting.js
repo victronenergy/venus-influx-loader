@@ -1,6 +1,5 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { useSelector } from 'react-redux'
+import PropTypes from "prop-types";
+import { useSelector } from "react-redux";
 import {
   CCard,
   CCardBody,
@@ -14,26 +13,34 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
-} from '@coreui/react'
+} from "@coreui/react";
 
-import { usePutDebug } from '../../hooks/useAdminApi'
+import { usePutDebug } from "../../hooks/useAdminApi";
 
-function Troubleshooting (props) {
+function Troubleshooting() {
+  const log = useSelector((state) => state.log);
+  const isDebugLevelEnabled = useSelector((state) => state.debug);
 
-  const log = useSelector(state => state.log)
-  const isDebugLevelEnabled = useSelector(state => state.debug)
-
-  const [{ data, loading, error }, toggleDebugLevel, cancelToggleDebugLevel] = usePutDebug()
+  const [
+    { _data, _loading, _error },
+    toggleDebugLevel,
+    _cancelToggleDebugLevel,
+  ] = usePutDebug();
 
   return (
-    log && log.entries && (
+    log &&
+    log.entries && (
       <CCard>
         <CCardHeader>
           <CForm>
             <CInputGroup>
-              <CFormCheck id="debug" label="Enable debugging"
+              <CFormCheck
+                id="debug"
+                label="Enable debugging"
                 checked={isDebugLevelEnabled}
-                onChange={event => toggleDebugLevel({ data: { value: event.target.checked } })}
+                onChange={(event) =>
+                  toggleDebugLevel({ data: { value: event.target.checked } })
+                }
               />
             </CInputGroup>
           </CForm>
@@ -43,10 +50,10 @@ function Troubleshooting (props) {
         </CCardBody>
       </CCard>
     )
-  )
+  );
 }
 
-function LogList (props) {
+function LogList(props) {
   return (
     <CTable bordered>
       <CTableHead>
@@ -58,18 +65,17 @@ function LogList (props) {
         </CTableRow>
       </CTableHead>
       <CTableBody>
-
-        {
-          props.entries && props.entries.map((entry, index) => {
-            let levelClass
-            if (entry.level === 'error') {
-              levelClass = 'text-danger'
-            } else if (entry.level === 'info') {
-              levelClass = 'text-info'
-            } else if (entry.level === 'warn') {
-              levelClass = 'text-warning'
+        {props.entries &&
+          props.entries.map((entry, index) => {
+            let levelClass;
+            if (entry.level === "error") {
+              levelClass = "text-danger";
+            } else if (entry.level === "info") {
+              levelClass = "text-info";
+            } else if (entry.level === "warn") {
+              levelClass = "text-warning";
             } else {
-              levelClass = 'text-success'
+              levelClass = "text-success";
             }
 
             return (
@@ -81,18 +87,15 @@ function LogList (props) {
                 <CTableDataCell>{entry.label}</CTableDataCell>
                 <CTableDataCell>{entry.message}</CTableDataCell>
               </CTableRow>
-            )
-          })
-
-        }
-
+            );
+          })}
       </CTableBody>
     </CTable>
-  )
+  );
 }
 
 LogList.propTypes = {
   entries: PropTypes.array,
-}
+};
 
-export default Troubleshooting
+export default Troubleshooting;

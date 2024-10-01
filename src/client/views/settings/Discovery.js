@@ -1,5 +1,4 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector } from "react-redux";
 import {
   CCard,
   CCardBody,
@@ -8,68 +7,82 @@ import {
   CForm,
   CButton,
   CFormCheck,
-} from '@coreui/react'
+} from "@coreui/react";
 
-import { useGetConfig, usePutConfig } from '../../hooks/useAdminApi'
-import { useFormValidation, extractParameterNameAndValue } from '../../hooks/useFormValidation'
-import { DeviceList } from './DeviceList'
+import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi";
+import {
+  useFormValidation,
+  extractParameterNameAndValue,
+} from "../../hooks/useFormValidation";
+import { DeviceList } from "./DeviceList";
 
-function Discovery (props) {
-  const type = 'upnp'
+function Discovery() {
+  const type = "upnp";
 
-  const [{ data: config, setData: setConfig, loading: isLoading, error: loadError }, load, cancelLoad] = useGetConfig()
-  const [{ data: saveResult, loading: isSaving, error: saveError }, save, cancelSave] = usePutConfig()
+  const [
+    {
+      data: config,
+      setData: setConfig,
+      loading: _isLoading,
+      error: _loadError,
+    },
+    _load,
+    _cancelLoad,
+  ] = useGetConfig();
+  const [
+    { data: _saveResult, loading: isSaving, error: _saveError },
+    save,
+    _cancelSave,
+  ] = usePutConfig();
 
-  const upnpDiscovered = useSelector(state => state.upnpDiscovered)
+  const upnpDiscovered = useSelector((state) => state.upnpDiscovered);
 
   const isSaveEnabled = useFormValidation(() => {
-    return (
-      config
-    )
-  })
+    return config;
+  });
 
-  function handleEnableChange (event) {
-    const clone = { ...config }
+  function handleEnableChange(event) {
+    const clone = { ...config };
 
-    const [name, value] = extractParameterNameAndValue(event)
-    clone[type][name] = value
+    const [name, value] = extractParameterNameAndValue(event);
+    clone[type][name] = value;
     if (!value) {
-      clone[type].enabledPortalIds = []
+      clone[type].enabledPortalIds = [];
     }
 
-    setConfig(clone)
+    setConfig(clone);
   }
 
-  function handleEnablePortalChange (event) {
-    const clone = { ...config }
-    const [name, value] = extractParameterNameAndValue(event)
+  function handleEnablePortalChange(event) {
+    const clone = { ...config };
+    const [_name, value] = extractParameterNameAndValue(event);
 
-    const list = clone[type].enabledPortalIds
+    const list = clone[type].enabledPortalIds;
     if (!value) {
-      const idx = list.indexOf(event.target.id)
+      const idx = list.indexOf(event.target.id);
       if (idx !== -1) {
-        list.splice(idx, 1)
+        list.splice(idx, 1);
       }
     } else {
-      list.push(event.target.id)
+      list.push(event.target.id);
     }
-    clone[type].enabledPortalIds = list
+    clone[type].enabledPortalIds = list;
 
-    setConfig(clone)
+    setConfig(clone);
   }
 
-  function handleEnableAllPortalsChange (event) {
-    const clone = { ...config }
+  function handleEnableAllPortalsChange(event) {
+    const clone = { ...config };
 
     if (event.target.checked) {
       clone[type].enabledPortalIds = upnpDiscovered.map((element) => {
-        return (element.portalId ? element.portalId : element)
-      })
+        return element.portalId ? element.portalId : element;
+      });
     } else {
-      clone[type].enabledPortalIds = []
+      clone[type].enabledPortalIds = [];
     }
 
-    setConfig(clone)
+    setConfig(clone);
   }
 
   return (
@@ -77,8 +90,11 @@ function Discovery (props) {
       <CCard>
         <CCardHeader>
           <CForm>
-            <CFormCheck name="enabled" id="enabled" label="Enable Connection to Nearby Venus OS Devices"
-              onChange={event => handleEnableChange(event)}
+            <CFormCheck
+              name="enabled"
+              id="enabled"
+              label="Enable Connection to Nearby Venus OS Devices"
+              onChange={(event) => handleEnableChange(event)}
               checked={config[type].enabled}
             />
           </CForm>
@@ -88,19 +104,25 @@ function Discovery (props) {
             <DeviceList
               settings={config[type]}
               availablePortalIds={upnpDiscovered}
-              onEnablePortalChange={event => handleEnablePortalChange(event)}
-              onEnableAllPortalsChange={event => handleEnableAllPortalsChange(event)}
+              onEnablePortalChange={(event) => handleEnablePortalChange(event)}
+              onEnableAllPortalsChange={(event) =>
+                handleEnableAllPortalsChange(event)
+              }
             />
           </CForm>
         </CCardBody>
         <CCardFooter>
-          <CButton color='primary' onClick={() => save({ data: config })} disabled={!isSaveEnabled}>
-            {isSaving ? 'Saving...' : 'Save'}
+          <CButton
+            color="primary"
+            onClick={() => save({ data: config })}
+            disabled={!isSaveEnabled}
+          >
+            {isSaving ? "Saving..." : "Save"}
           </CButton>
         </CCardFooter>
       </CCard>
     )
-  )
+  );
 }
 
-export default Discovery
+export default Discovery;
