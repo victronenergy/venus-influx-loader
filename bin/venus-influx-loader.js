@@ -21,6 +21,10 @@ program
     'disable Admin Web User Interface and /admin-api/ endpoint'
   )
   .option(
+    '--disable-admin-api-auth',
+    'disable password protection for Admin Web User Interface and /admin-api/ endpoint'
+  )
+  .option(
     '--disable-grafana-api',
     'disable Grafana JSON datasource /grafana-api/ endpoint'
   )
@@ -45,6 +49,7 @@ const discoveryApiEndpoint = options.enableDiscoveryApi
   ? '/discovery-api/'
   : undefined
 const adminApiEndpoint = options.disableAdminApi ? undefined : '/admin-api/'
+const adminApiEndpointAuthEnabled = options.disableAdminApiAuth ? false : true
 const grafanaApiEndpoint = options.disableGrafanaApi
   ? undefined
   : '/grafana-api/'
@@ -68,6 +73,7 @@ const server = new Server({
   port: port,
   discoveryApiEndpoint: discoveryApiEndpoint,
   adminApiEndpoint: adminApiEndpoint,
+  adminApiEndpointAuthEnabled: adminApiEndpointAuthEnabled,
   grafanaApiEndpoint: grafanaApiEndpoint
 })
 
