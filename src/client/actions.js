@@ -18,11 +18,11 @@ export function openServerEventsConnection(dispatch) {
   ws.onclose = () => {
     console.log("closed");
     dispatch({
-      type: 'WEBSOCKET_CLOSE'
-    })
-  }
-  ws.onerror = error => {
-    console.log(`error: ${JSON.stringify(error)}`)
+      type: "WEBSOCKET_CLOSE",
+    });
+  };
+  ws.onerror = (error) => {
+    console.log(`error: ${JSON.stringify(error)}`);
     dispatch({
       type: "WEBSOCKET_ERROR",
     });
