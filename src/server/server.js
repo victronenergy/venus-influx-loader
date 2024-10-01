@@ -239,6 +239,27 @@ class Server {
     app.on("settingsChanged", settingsChanged)
     app.emit("settingsChanged", app.config.settings)
 
+    app.emit("serverevent", {
+      type: "EDIT_SECURITY_SETTINGS_ENABLED",
+      data: app.options.showEditSecuritySettings
+    })
+    app.emit("serverevent", {
+      type: "EDIT_INFLUXDB_SETTINGS_ENABLED",
+      data: app.options.showEditInfluxDBSettings
+    })
+    app.emit("serverevent", {
+      type: "EDIT_DISCOVERY_SETTINGS_ENABLED",
+      data: app.options.showEditDiscoverySettings
+    })
+    app.emit("serverevent", {
+      type: "EDIT_MANUAL_SETTINGS_ENABLED",
+      data: app.options.showEditManualSettings
+    })
+    app.emit("serverevent", {
+      type: "EDIT_VRM_SETTINGS_ENABLED",
+      data: app.options.showEditVRMSettings
+    })
+
     return new Promise((resolve, _reject) => {
       app.server = http.createServer(app)
 

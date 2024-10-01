@@ -73,20 +73,25 @@ Configuration details and necessary usernames and passwords are stored in `confi
 Configuration files can either be created manually, or by starting the Venus Influx Loader, and accessing the Admin UI by browsing to `http://localhost:8088`. The default usernname and password is `admin`, `admin`.
 
 ```
-€ npx venus-influx-loader --help
+ € npx venus-influx-loader --help
 Usage: venus-influx-loader [options]
 
 Monitor Venus devices and capture & store realtime data to serve Grafana
 
 Options:
-  -V, --version             output the version number
-  -c, --config-path <path>  path to store config.json and secrets.json (default: "/config")
-  --disable-admin-api       disable Admin Web User Interface and /admin-api/ endpoint
-  --disable-admin-api-auth  disable password protection for Admin Web User Interface and /admin-api/ endpoint
-  --disable-grafana-api     disable Grafana JSON datasource /grafana-api/ endpoint
-  --enable-discovery-api    enable venus-upnp-browser /discovery-api/ endpoint
-  -p, --port <port>         http port used by Admin Web User Interface and Grafana JSON datasource (default: 8088)
-  -h, --help                display help for command
+  -V, --version                    output the version number
+  -c, --config-path <path>         path to store config.json and secrets.json (default: "/config")
+  -p, --port <port>                http port used by Admin Web User Interface and Grafana JSON datasource (default: 8088)
+  --disable-admin-api              disable Admin Web User Interface and /admin-api/ endpoint
+  --disable-admin-api-auth         disable password protection for Admin Web User Interface and /admin-api/ endpoint
+  --disable-grafana-api            disable Grafana JSON datasource /grafana-api/ endpoint
+  --enable-discovery-api           enable venus-upnp-browser /discovery-api/ endpoint
+  --hide-settings-influxdb
+  --hide-settings-security
+  --hide-settings-venus-discovery
+  --hide-settings-venus-manual
+  --hide-settings-venus-vrm
+  -h, --help                       display help for command
 ```
 
 For production use, once the system is configured `--disable-admin-api` can be used to run the `venus-influx-loader` headless.

@@ -13,6 +13,7 @@ import navigation from "../navigation"
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
+  const editSettings = useSelector((state) => state.editSettings)
 
   return (
     <CSidebar
@@ -29,7 +30,7 @@ const AppSidebar = () => {
           <CImage src={logo} width="100%" className="sidebar-brand-narrow" />
         </CSidebarBrand>
       </CSidebarHeader>
-      <AppSidebarNav items={navigation} />
+      <AppSidebarNav items={navigation(editSettings)} />
     </CSidebar>
   )
 }

@@ -14,6 +14,14 @@ const initialState = {
     entries: [],
   },
   sidebarShow: true,
+
+  editSettings: {
+    showEditDiscoverySettings: true,
+    showEditVRMSettings: true,
+    showEditManualSettings: true,
+    showEditSecuritySettings: true,
+    showEditInfluxDBSettings: true,
+  }
 }
 
 const changeState = (state = initialState, action) => {
@@ -57,6 +65,51 @@ const changeState = (state = initialState, action) => {
     return {
       ...state,
       debug: action.data,
+    }
+  }
+  if (action.type === "EDIT_SECURITY_SETTINGS_ENABLED") {
+    return {
+      ...state,
+      editSettings: {
+        ...state.editSettings,
+        showEditSecuritySettings: action.data,
+      }
+    }
+  }
+  if (action.type === "EDIT_INFLUXDB_SETTINGS_ENABLED") {
+    return {
+      ...state,
+      editSettings: {
+        ...state.editSettings,
+        showEditInfluxDBSettings: action.data,
+      }
+    }
+  }
+  if (action.type === "EDIT_DISCOVERY_SETTINGS_ENABLED") {
+    return {
+      ...state,
+      editSettings: {
+        ...state.editSettings,
+        showEditDiscoverySettings: action.data,
+      }
+    }
+  }
+  if (action.type === "EDIT_MANUAL_SETTINGS_ENABLED") {
+    return {
+      ...state,
+      editSettings: {
+        ...state.editSettings,
+        showEditManualSettings: action.data,
+      }
+    }
+  }
+  if (action.type === "EDIT_VRM_SETTINGS_ENABLED") {
+    return {
+      ...state,
+      editSettings: {
+        ...state.editSettings,
+        showEditVRMSettings: action.data,
+      }
     }
   }
   if (action.type === "LOG") {

@@ -17,6 +17,11 @@ program
     '/config'
   )
   .option(
+    '-p, --port <port>',
+    'http port used by Admin Web User Interface and Grafana JSON datasource',
+    8088
+  )
+  .option(
     '--disable-admin-api',
     'disable Admin Web User Interface and /admin-api/ endpoint'
   )
@@ -33,9 +38,19 @@ program
     'enable venus-upnp-browser /discovery-api/ endpoint'
   )
   .option(
-    '-p, --port <port>',
-    'http port used by Admin Web User Interface and Grafana JSON datasource',
-    8088
+    '--hide-settings-influxdb'
+  )
+  .option(
+    '--hide-settings-security'
+  )
+  .option(
+    '--hide-settings-venus-discovery'
+  )
+  .option(
+    '--hide-settings-venus-manual'
+  )
+  .option(
+    '--hide-settings-venus-vrm'
   )
 
 program.parse()
@@ -74,7 +89,12 @@ const server = new Server({
   discoveryApiEndpoint: discoveryApiEndpoint,
   adminApiEndpoint: adminApiEndpoint,
   adminApiEndpointAuthEnabled: adminApiEndpointAuthEnabled,
-  grafanaApiEndpoint: grafanaApiEndpoint
+  grafanaApiEndpoint: grafanaApiEndpoint,
+  showEditDiscoverySettings: !options.hideSettingsVenusDiscovery,
+  showEditVRMSettings: !options.hideSettingsVenusVRM,
+  showEditManualSettings: !options.hideSettingsVenusManual,
+  showEditSecuritySettings: (!options.hideSettingsSecurity && adminApiEndpointAuthEnabled),
+  showEditInfluxDBSettings: !options.hideSettingsInfluxdb,
 })
 
 // start server

@@ -7,7 +7,7 @@ import {
 } from "@coreui/icons"
 import { CNavGroup, CNavItem } from "@coreui/react"
 
-const navigation = [
+const navigation = ({ showEditDiscoverySettings, showEditVRMSettings, showEditManualSettings, showEditSecuritySettings, showEditInfluxDBSettings }) => [
   {
     component: CNavItem,
     name: "Dashboard",
@@ -20,32 +20,32 @@ const navigation = [
     to: "/settings",
     icon: <CIcon icon={cilSettings} customClassName="nav-icon" />,
     items: [
-      {
+      showEditDiscoverySettings && {
         component: CNavItem,
         name: "Discovery",
         to: "/settings/discovery",
       },
-      {
+      showEditVRMSettings && {
         component: CNavItem,
         name: "VRM",
         to: "/settings/VRM",
       },
-      {
+      showEditManualSettings && {
         component: CNavItem,
         name: "Manual",
         to: "/settings/manual",
       },
-      {
+      showEditInfluxDBSettings && {
         component: CNavItem,
         name: "InfluxDB",
         to: "/settings/influxdb",
       },
-      {
+      showEditSecuritySettings && {
         component: CNavItem,
         name: "Security",
         to: "/settings/security",
       },
-    ],
+    ].filter(Boolean),
   },
   {
     component: CNavItem,
