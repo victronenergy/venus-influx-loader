@@ -1,20 +1,20 @@
-const axios = require('axios')
-const fs = require('node:fs')
-const _ = require('lodash')
-const bodyParser = require('body-parser')
+const axios = require("axios")
+const fs = require("node:fs")
+const _ = require("lodash")
+const bodyParser = require("body-parser")
 
-const apiUrl = 'https://vrmapi.victronenergy.com'
+const apiUrl = "https://vrmapi.victronenergy.com"
 
 module.exports = function (app) {
-  const logger = app.getLogger('vrm')
+  const logger = app.getLogger("vrm")
 
-  function good (msg) {
-    app.emit('vrmStatus', { status: 'success', message: msg })
+  function good(msg) {
+    app.emit("vrmStatus", { status: "success", message: msg })
     logger.info(msg)
   }
 
-  function fail (msg) {
-    app.emit('vrmStatus', { status: 'failure', message: msg })
+  function fail(msg) {
+    app.emit("vrmStatus", { status: "failure", message: msg })
     logger.error(msg)
   }
 
@@ -27,42 +27,42 @@ module.exports = function (app) {
 
   // TODO: expose VRM routes same way as admin api in general
   // TODO: make admin api optional while allowing vrm reload?
-  app.post('/admin-api/vrmLogin', (req, res, next) => {
+  app.post("/admin-api/vrmLogin", (req, res, _next) => {
     if (!req.body.tokenName || req.body.tokenName.length === 0) {
-      good('Please enter a token name')
+      good("Please enter a token name")
       res.status(500).send()
       return
     }
 
-    good('Logging In')
+    good("Logging In")
     axios
       .put(`${apiUrl}/v2/auth/login`, {
         username: req.body.username,
-        password: req.body.password
+        password: req.body.password,
       })
-      .then(response => response.data)
-      .then(response => {
+      .then((response) => response.data)
+      .then((response) => {
         if (!_.isUndefined(response.success) && !response.success) {
           fail(response.errors.name || response.errors)
           logger.error(response.errors.name || response.errors)
           res.status(500).send()
         } else {
-          const token = response['token']
-          const idUser = response['idUser']
+          const token = response["token"]
+          const idUser = response["idUser"]
           axios
             .post(
               `${apiUrl}/v2/users/${idUser}/accesstokens/create`,
               { name: req.body.tokenName },
-              { headers: { 'X-Authorization': `Bearer ${token}` } }
+              { headers: { "X-Authorization": `Bearer ${token}` } },
             )
-            .then(response => response.data)
-            .then(response => {
+            .then((response) => response.data)
+            .then((response) => {
               if (!_.isUndefined(response.success) && !response.success) {
                 fail(response.errors.name || response.errors)
                 logger.error(response.errors.name || response.errors)
                 res.status(500).send()
               } else {
-                good('Token Created')
+                good("Token Created")
                 app.config.secrets.vrmToken = response.token
                 app.config.secrets.vrmTokenId = response.idAccessToken
                 app.config.secrets.vrmUserId = idUser
@@ -70,19 +70,19 @@ module.exports = function (app) {
                 fs.writeFile(
                   app.config.secretsLocation,
                   JSON.stringify(app.config.secrets, null, 2),
-                  err => {
+                  (err) => {
                     if (err) {
                       logger.error(err)
-                      res.status(500).send('Unable to write secrets file')
+                      res.status(500).send("Unable to write secrets file")
                     } else {
                       res.send()
                       loadPortalIDs()
                     }
-                  }
+                  },
                 )
               }
             })
-            .catch(err => {
+            .catch((err) => {
               logger.error(err)
               fail(err.message)
               res.status(500).send()
@@ -91,8 +91,8 @@ module.exports = function (app) {
       })
   })
 
-  app.post('/admin-api/vrmLogout', (req, res, next) => {
-    logger.info('Logging Out of VRM')
+  app.post("/admin-api/vrmLogout", (req, res, _next) => {
+    logger.info("Logging Out of VRM")
 
     const scopy = JSON.parse(JSON.stringify(app.config.secrets))
     delete scopy.vrmToken
@@ -103,24 +103,24 @@ module.exports = function (app) {
     fs.writeFile(
       app.config.secretsLocation,
       JSON.stringify(scopy, null, 2),
-      err => {
+      (err) => {
         if (err) {
           logger.error(err)
           fail(err.message)
-          res.status(500).send('Unable to write secrets file')
+          res.status(500).send("Unable to write secrets file")
         } else {
-          good('Logged Out')
+          good("Logged Out")
           delete app.config.secrets.vrmToken
           delete app.config.secrets.vrmTokenId
           delete app.config.secrets.vrmUserId
           delete app.config.secrets.vrmUsername
           res.send()
         }
-      }
+      },
     )
   })
 
-  app.put('/admin-api/vrmRefresh', (req, res, next) => {
+  app.put("/admin-api/vrmRefresh", (req, res, _next) => {
     app.vrmDiscovered = []
     /*
     app.emit('serverevent', {
@@ -132,48 +132,48 @@ module.exports = function (app) {
     res.status(200).send()
   })
 
-  function loadPortalIDs () {
+  function loadPortalIDs() {
     if (!app.config.secrets.vrmToken) {
-      fail('Please login')
+      fail("Please login")
       return
     }
 
-    good('Getting installations')
+    good("Getting installations")
 
     axios
       .get(`${apiUrl}/v2/users/${app.config.secrets.vrmUserId}/installations`, {
-        headers: { 'X-Authorization': `Token ${app.config.secrets.vrmToken}` }
+        headers: { "X-Authorization": `Token ${app.config.secrets.vrmToken}` },
       })
-      .then(response => response.data)
-      .then(response => {
+      .then((response) => response.data)
+      .then((response) => {
         if (!_.isUndefined(response.success) && !response.success) {
           fail(response.errors)
         } else {
-          const devices = response.records.map(record => {
+          const devices = response.records.map((record) => {
             return { portalId: String(record.identifier), name: record.name }
           })
-          logger.debug('got response %j', response)
+          logger.debug("got response %j", response)
 
           if (!_.isUndefined(app.config.settings.vrm.disabled)) {
             //convert from old method of storing the disabled ids
-            const enabledPortalIds = devices.map(info => {
+            const enabledPortalIds = devices.map((info) => {
               return app.config.settings.vrm.disabled.indexOf(info.portalId) ===
                 -1
                 ? info.portalId
                 : null
             })
             app.config.settings.vrm.enabledPortalIds = enabledPortalIds.filter(
-              id => id != null
+              (id) => id != null,
             )
             delete app.config.settings.vrm.disabled
             app.saveSettings()
           }
 
-          app.emit('vrmDiscovered', devices)
-          good('Installations Retrieved')
+          app.emit("vrmDiscovered", devices)
+          good("Installations Retrieved")
         }
       })
-      .catch(err => {
+      .catch((err) => {
         logger.error(err)
         fail(err.message)
       })

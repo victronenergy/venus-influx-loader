@@ -1,1 +1,1 @@
-module.exports = ['solarcharger/History/Daily']
+module.exports = ["solarcharger/History/Daily"]

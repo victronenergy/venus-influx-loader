@@ -1,18 +1,16 @@
-import React, { useEffect, useRef } from 'react'
-import { NavLink } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
+import { useRef } from "react"
+import { useSelector, useDispatch } from "react-redux"
 import {
   CContainer,
   CHeader,
   CHeaderBrand,
-  CHeaderDivider,
   CHeaderNav,
   CHeaderToggler,
-} from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilMenu } from '@coreui/icons'
+} from "@coreui/react"
+import CIcon from "@coreui/icons-react"
+import { cilMenu } from "@coreui/icons"
 
-import { AppBreadcrumb } from './index'
+import { AppBreadcrumb } from "./index"
 
 const AppHeader = () => {
   const headerRef = useRef()
@@ -24,14 +22,12 @@ const AppHeader = () => {
       <CContainer className="border-bottom px-4" fluid>
         <CHeaderToggler
           className="ps-1"
-          onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
+          onClick={() => dispatch({ type: "set", sidebarShow: !sidebarShow })}
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderBrand className="mx-auto d-md-none" to="/">
-        </CHeaderBrand>
-        <CHeaderNav className="d-none d-md-flex me-auto">
-        </CHeaderNav>
+        <CHeaderBrand className="mx-auto d-md-none" to="/"></CHeaderBrand>
+        <CHeaderNav className="d-none d-md-flex me-auto"></CHeaderNav>
       </CContainer>
       <CContainer fluid>
         <AppBreadcrumb />
