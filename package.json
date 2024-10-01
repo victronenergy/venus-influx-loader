@@ -94,7 +94,7 @@
     "html-loader": "5.0.0",
     "html-webpack-plugin": "^5.6.0",
     "husky": "^9.1.6",
-    "lint-staged": "^15.2.7",
+    "lint-staged": "^15.2.10",
     "mini-css-extract-plugin": "^2.9.0",
     "postcss-loader": "^8.1.1",
     "prettier-standard": "^15.0.1",
