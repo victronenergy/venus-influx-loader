@@ -41,6 +41,7 @@ module.exports = [
       globals: {
         ...globals.browser,
         VENUS_INFLUX_LOADER_ADMIN_API_PORT: true,
+        VENUS_INFLUX_LOADER_BUILD_VERSION: true,
       },
     },
     rules: {
