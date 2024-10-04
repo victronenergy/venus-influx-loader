@@ -3,14 +3,19 @@
   "version": "1.0.0",
   "description": ".",
   "scripts": {
-    "start": "bin/venus-influx-loader.js",
+    "prebuild": "./generateBuildInfo.sh",
+    "build:bin": "tsc",
+    "postbuild:bin": "chmod +x dist/bin/*.js",
+    "build:client": "webpack build --mode production --env production --progress",
+    "build": "npm run build:bin && npm run build:client",
+    "clean": "rimraf ./dist",
     "lint": "eslint src/ --fix",
-    "clean": "rimraf ./build",
+    "type-check": "tsc --noEmit",
     "watch-client": "webpack serve --mode development --progress --hot",
-    "watch-influx-loader": "babel-watch bin/venus-influx-loader.js -- --config-path ./config/ --port 8088",
-    "watch-upnp-browser": "babel-watch bin/venus-upnp-browser.js",
-    "build": "webpack build --mode production --env production --progress",
-    "dev": "VIL_INFLUXDB_URL=http://localhost:8086 VIL_INFLUXDB_USERNAME=s3cr4t VIL_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-influx-loader npm:watch-client"
+    "watch-influx-loader": "concurrently npm:build:bin \"babel-watch dist/bin/venus-influx-loader.js -- --config-path ./config/ --port 8088\"",
+    "watch-upnp-browser": "concurrently npm:build:bin \"babel-watch dist/bin/venus-upnp-browser.js\"",
+    "start": "VIL_INFLUXDB_URL=http://localhost:8086 VIL_INFLUXDB_USERNAME=s3cr4t VIL_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-influx-loader npm:watch-client",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -32,8 +37,8 @@
     }
   },
   "bin": {
-    "venus-influx-loader": "./bin/venus-influx-loader.js",
-    "venus-upnp-browser": "./bin/venus-upnp-browser.js"
+    "venus-influx-loader": "./dist/bin/venus-influx-loader.js",
+    "venus-upnp-browser": "./dist/bin/venus-upnp-browser.js"
   },
   "author": "Scott Bender <scott@scottbender.net>",
   "contributors": [
@@ -70,11 +75,13 @@
     "@babel/eslint-parser": "^7.25.1",
     "@babel/preset-env": "^7.25.4",
     "@babel/preset-react": "^7.24.7",
+    "@babel/preset-typescript": "^7.25.7",
     "@coreui/coreui": "^5",
     "@coreui/icons": "^3.0.1",
     "@coreui/icons-react": "^2.3.0",
     "@coreui/react": "^5",
     "@popperjs/core": "^2.11.8",
+    "@types/node": "^22.7.4",
     "autoprefixer": "^10.4.20",
     "axios-hooks": "^5.0.2",
     "babel-loader": "^9.2.1",
@@ -106,10 +113,10 @@
     "sass-loader": "^16.0.1",
     "source-list-map": "2.0.1",
     "style-loader": "^4.0.0",
+    "typescript": "^5.6.2",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.1.0",
-    "webpack-shell-plugin-next": "^2.3.2"
+    "webpack-dev-server": "^5.1.0"
   },
   "browser": {
     "fs": false,
