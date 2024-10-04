@@ -4,7 +4,7 @@ import { CFooter } from "@coreui/react"
 const AppFooter = () => {
   return (
     <CFooter>
-       <div>
+      <div>
         <span className="text-muted">
           Version: {VENUS_INFLUX_LOADER_BUILD_VERSION}
         </span>

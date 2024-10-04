@@ -241,23 +241,23 @@ class Server {
 
     app.emit("serverevent", {
       type: "EDIT_SECURITY_SETTINGS_ENABLED",
-      data: app.options.showEditSecuritySettings
+      data: app.options.showEditSecuritySettings,
     })
     app.emit("serverevent", {
       type: "EDIT_INFLUXDB_SETTINGS_ENABLED",
-      data: app.options.showEditInfluxDBSettings
+      data: app.options.showEditInfluxDBSettings,
     })
     app.emit("serverevent", {
       type: "EDIT_DISCOVERY_SETTINGS_ENABLED",
-      data: app.options.showEditDiscoverySettings
+      data: app.options.showEditDiscoverySettings,
     })
     app.emit("serverevent", {
       type: "EDIT_MANUAL_SETTINGS_ENABLED",
-      data: app.options.showEditManualSettings
+      data: app.options.showEditManualSettings,
     })
     app.emit("serverevent", {
       type: "EDIT_VRM_SETTINGS_ENABLED",
-      data: app.options.showEditVRMSettings
+      data: app.options.showEditVRMSettings,
     })
 
     return new Promise((resolve, _reject) => {
@@ -295,18 +295,18 @@ class Server {
 
         // setup /admin-api basic auth, if enabled
         if (app.options.adminApiEndpointAuthEnabled) {
-          app.use('/admin', adminCredentials)
+          app.use("/admin", adminCredentials)
         }
-        app.use('/admin', express.static(path.join(__dirname, '../../dist')))
-        app.get('/', (req, res) => {
-          res.redirect('/admin')
+        app.use("/admin", express.static(path.join(__dirname, "../../dist")))
+        app.get("/", (req, res) => {
+          res.redirect("/admin")
         })
 
         // setup /admin-api basic auth, if enabled
         if (app.options.adminApiEndpointAuthEnabled) {
           app.use(app.options.adminApiEndpoint, adminCredentials)
         }
-        app.use(app.options.adminApiEndpoint, require('./admin-api')(app))
+        app.use(app.options.adminApiEndpoint, require("./admin-api")(app))
 
         app.websocket = require("./websocket")(app)
         app.websocket.start()

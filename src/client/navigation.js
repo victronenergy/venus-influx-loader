@@ -7,7 +7,13 @@ import {
 } from "@coreui/icons"
 import { CNavGroup, CNavItem } from "@coreui/react"
 
-const navigation = ({ showEditDiscoverySettings, showEditVRMSettings, showEditManualSettings, showEditSecuritySettings, showEditInfluxDBSettings }) => [
+const navigation = ({
+  showEditDiscoverySettings,
+  showEditVRMSettings,
+  showEditManualSettings,
+  showEditSecuritySettings,
+  showEditInfluxDBSettings,
+}) => [
   {
     component: CNavItem,
     name: "Dashboard",
