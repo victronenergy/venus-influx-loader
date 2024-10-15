@@ -1,12 +1,12 @@
-import { configs } from "@eslint/js"
+import { configs as jsConfigs } from "@eslint/js"
 import babelParser from "@babel/eslint-parser"
-import reactPlugin, { configs as _configs } from "eslint-plugin-react"
+import reactPlugin, { configs as reactConfigs } from "eslint-plugin-react"
 import prettierPluginRecommended from "eslint-plugin-prettier/recommended"
 import { node, browser } from "globals"
 import confusingBrowserGlobals from "confusing-browser-globals"
 
 export default [
-  configs.recommended,
+  jsConfigs.recommended,
   prettierPluginRecommended,
   {
     files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"],
@@ -14,8 +14,8 @@ export default [
       react: reactPlugin,
     },
     rules: {
-      ..._configs.recommended.rules,
-      ..._configs["jsx-runtime"].rules,
+      ...reactConfigs.recommended.rules,
+      ...reactConfigs["jsx-runtime"].rules,
       "no-unused-vars": [
         "error",
         { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
@@ -40,6 +40,7 @@ export default [
     languageOptions: {
       globals: {
         ...browser,
+        ...reactConfigs.settings.react.globals,
         VENUS_INFLUX_LOADER_ADMIN_API_PORT: true,
         VENUS_INFLUX_LOADER_BUILD_VERSION: true,
       },
