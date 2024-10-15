@@ -16,7 +16,7 @@ console.log("BUILD_VERSION", BUILD_VERSION)
 module.exports = (env, argv) => {
   return {
     mode: "development",
-    entry: [path.join(SRC_DIR, "index.js")],
+    entry: [path.join(SRC_DIR, "index.tsx")],
     output: {
       path: BUILD_DIR,
       filename: "[name].bundle.js",
@@ -42,10 +42,14 @@ module.exports = (env, argv) => {
         },
       ],
     },
+    resolve: {
+      extensions: ['.tsx', '.ts', '.jsx', '.js'],
+      modules: [path.resolve('./src'), 'node_modules'],
+    },
     module: {
       rules: [
         {
-          test: /\.(js|jsx)$/,
+          test: /\.(js|jsx|ts|tsx)$/,
           exclude: /node_modules/,
           use: {
             loader: "babel-loader",
