@@ -19,6 +19,7 @@ import {
 import CIcon from "@coreui/icons-react"
 import { cilRss } from "@coreui/icons"
 import { AppState } from "../../store"
+import { WebSocketStatus } from "../settings/WebsocketStatus"
 
 function Dashboard() {
   const { measurementRate, measurementCount, deviceStatistics } = useSelector((state: AppState) => {
@@ -100,7 +101,7 @@ function Dashboard() {
         </div>
       )}
 
-      {websocketStatus !== "open" && <CAlert color="danger">Not connected to the server</CAlert>}
+      <WebSocketStatus websocketStatus={websocketStatus} />
     </div>
   )
 }
