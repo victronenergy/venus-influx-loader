@@ -1,3 +1,4 @@
+import React from "react"
 import { useState, useEffect } from "react"
 
 export function useFormValidation(validate: () => boolean) {
@@ -10,9 +11,10 @@ export function useFormValidation(validate: () => boolean) {
   return isValid
 }
 
-export function extractParameterNameAndValue<AppConfigNestedKey>(event: React.ChangeEvent<HTMLInputElement>): [AppConfigNestedKey, string | number | boolean] {
-  let value: string | number | boolean =
-    event.target.type === "checkbox" ? event.target.checked : event.target.value
+export function extractParameterNameAndValue<AppConfigNestedKey>(
+  event: React.ChangeEvent<HTMLInputElement>,
+): [AppConfigNestedKey, string | number | boolean] {
+  let value: string | number | boolean = event.target.type === "checkbox" ? event.target.checked : event.target.value
   // TODO: figure how to better handle this ???
   if (event.target.name === "port") {
     value = Number(value)

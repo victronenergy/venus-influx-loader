@@ -1,10 +1,5 @@
 import CIcon from "@coreui/icons-react"
-import {
-  cilChartLine,
-  cilSettings,
-  cilSpeedometer,
-  cilHistory,
-} from "@coreui/icons"
+import { cilChartLine, cilSettings, cilSpeedometer, cilHistory } from "@coreui/icons"
 import { CNavGroup, CNavItem } from "@coreui/react"
 
 interface NavigationProps {

@@ -18,7 +18,7 @@ export interface AppState {
   loaderStatistics: LoaderStatistics
 
   vrmStatus: VRMStatus
-  vrmDiscovered: { portalId: string, name: string }[]
+  vrmDiscovered: { portalId: string; name: string }[]
 
   upnpDiscovered: string[]
 
@@ -34,7 +34,7 @@ export interface AppState {
     showEditManualSettings: boolean
     showEditSecuritySettings: boolean
     showEditInfluxDBSettings: boolean
-  },
+  }
 }
 
 const initialState: AppState = {
@@ -63,7 +63,6 @@ const initialState: AppState = {
     showEditInfluxDBSettings: true,
   },
 }
-
 
 const changeState = (state = initialState, action: AppStateAction): AppState => {
   if (action.type === "set") {

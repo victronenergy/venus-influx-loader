@@ -21,17 +21,15 @@ import { cilRss } from "@coreui/icons"
 import { AppState } from "../../store"
 
 function Dashboard() {
-  const { measurementRate, measurementCount, deviceStatistics } = useSelector(
-    (state: AppState) => {
-      return (
-        state.loaderStatistics || {
-          measurementRate: 0,
-          measurementCount: 0,
-          deviceStatistics: [],
-        }
-      )
-    },
-  )
+  const { measurementRate, measurementCount, deviceStatistics } = useSelector((state: AppState) => {
+    return (
+      state.loaderStatistics || {
+        measurementRate: 0,
+        measurementCount: 0,
+        deviceStatistics: [],
+      }
+    )
+  })
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
 
   return (
@@ -44,18 +42,14 @@ function Dashboard() {
               <CRow>
                 <CCol xs="12" md="6">
                   <CCallout color="info">
-                    <small className="text-muted">
-                      Total Measurement Rate (measurements/second)
-                    </small>
+                    <small className="text-muted">Total Measurement Rate (measurements/second)</small>
                     <br />
                     <strong className="h4">{measurementRate.toFixed(1)}</strong>
                   </CCallout>
                 </CCol>
                 <CCol xs="12" md="6">
                   <CCallout color="info">
-                    <small className="text-muted">
-                      Total Number of Measurements
-                    </small>
+                    <small className="text-muted">Total Number of Measurements</small>
                     <br />
                     <strong className="h4">{measurementCount}</strong>
                   </CCallout>
@@ -77,21 +71,11 @@ function Dashboard() {
                           <CContainer>
                             <CRow className="align-items-start">
                               <CCol>
-                                <CIcon
-                                  className="text-muted"
-                                  icon={cilRss}
-                                  size="lg"
-                                />{" "}
-                                {deviceStats.name}
+                                <CIcon className="text-muted" icon={cilRss} size="lg" /> {deviceStats.name}
                               </CCol>
                               <CCol xs="auto">
-                                <strong> {deviceStats.measurementRate} </strong>
-                                (
-                                {(
-                                  (deviceStats.measurementRate /
-                                    measurementRate) *
-                                  100
-                                ).toFixed(0)}
+                                <strong> {deviceStats.measurementRate} </strong>(
+                                {((deviceStats.measurementRate / measurementRate) * 100).toFixed(0)}
                                 %)
                               </CCol>
                             </CRow>
@@ -100,11 +84,7 @@ function Dashboard() {
                                 <CProgress
                                   className="progress-xs"
                                   color="warning"
-                                  value={
-                                    (deviceStats.measurementRate /
-                                      measurementRate) *
-                                    100
-                                  }
+                                  value={(deviceStats.measurementRate / measurementRate) * 100}
                                 />
                               </CCol>
                             </CRow>
@@ -120,9 +100,7 @@ function Dashboard() {
         </div>
       )}
 
-      {websocketStatus !== "open" && (
-        <CAlert color="danger">Not connected to the server</CAlert>
-      )}
+      {websocketStatus !== "open" && <CAlert color="danger">Not connected to the server</CAlert>}
     </div>
   )
 }

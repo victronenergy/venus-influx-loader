@@ -22,7 +22,7 @@ function Troubleshooting() {
   const log = useSelector((state: AppState) => state.log)
   const isDebugLevelEnabled = useSelector((state: AppState) => state.debug)
 
-  const [{ }, toggleDebugLevel, _cancelToggleDebugLevel] = usePutDebug()
+  const [, toggleDebugLevel, _cancelToggleDebugLevel] = usePutDebug()
 
   return (
     log &&
@@ -35,9 +35,7 @@ function Troubleshooting() {
                 id="debug"
                 label="Enable debugging"
                 checked={isDebugLevelEnabled}
-                onChange={(event) =>
-                  toggleDebugLevel({ data: { debug: event.target.checked } })
-                }
+                onChange={(event) => toggleDebugLevel({ data: { debug: event.target.checked } })}
               />
             </CInputGroup>
           </CForm>
@@ -66,29 +64,30 @@ function LogList(props: LogListProps) {
         </CTableRow>
       </CTableHead>
       <CTableBody>
-        {props.entries && props.entries.map((entry, index) => {
-          let levelClass
-          if (entry.level === "error") {
-            levelClass = "text-danger"
-          } else if (entry.level === "info") {
-            levelClass = "text-info"
-          } else if (entry.level === "warn") {
-            levelClass = "text-warning"
-          } else {
-            levelClass = "text-success"
-          }
+        {props.entries &&
+          props.entries.map((entry, index) => {
+            let levelClass
+            if (entry.level === "error") {
+              levelClass = "text-danger"
+            } else if (entry.level === "info") {
+              levelClass = "text-info"
+            } else if (entry.level === "warn") {
+              levelClass = "text-warning"
+            } else {
+              levelClass = "text-success"
+            }
 
-          return (
-            <CTableRow key={index}>
-              <CTableDataCell>{entry.timestamp}</CTableDataCell>
-              <CTableDataCell>
-                <p className={levelClass}>{entry.level}</p>
-              </CTableDataCell>
-              <CTableDataCell>{entry.label}</CTableDataCell>
-              <CTableDataCell>{entry.message}</CTableDataCell>
-            </CTableRow>
-          )
-        })}
+            return (
+              <CTableRow key={index}>
+                <CTableDataCell>{entry.timestamp}</CTableDataCell>
+                <CTableDataCell>
+                  <p className={levelClass}>{entry.level}</p>
+                </CTableDataCell>
+                <CTableDataCell>{entry.label}</CTableDataCell>
+                <CTableDataCell>{entry.message}</CTableDataCell>
+              </CTableRow>
+            )
+          })}
       </CTableBody>
     </CTable>
   )

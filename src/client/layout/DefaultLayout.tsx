@@ -1,9 +1,4 @@
-import {
-  AppContent,
-  AppSidebar,
-  AppFooter,
-  AppHeader,
-} from "../components/index"
+import { AppContent, AppSidebar, AppFooter, AppHeader } from "../components/index"
 
 const DefaultLayout = () => {
   return (
