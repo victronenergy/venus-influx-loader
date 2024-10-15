@@ -34,18 +34,16 @@ export interface AppStateWebSocketOpenAction extends AppStateBaseAction {
   data: WebSocket
 }
 
-export type UPNPDiscoveredDevice = string
+export type DiscoveredDevice = { portalId: string; name?: string; address?: string }
 
 export interface AppStateUPNPDiscoveryAction extends AppStateBaseAction {
   type: "UPNPDISCOVERY"
-  data: UPNPDiscoveredDevice[]
+  data: DiscoveredDevice[]
 }
-
-export type VRMDiscoveredDevice = { portalId: string; name: string }
 
 export interface AppStateVRMDiscoveryAction extends AppStateBaseAction {
   type: "VRMDISCOVERY"
-  data: VRMDiscoveredDevice[]
+  data: DiscoveredDevice[]
 }
 
 export interface VRMStatus {

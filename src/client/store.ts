@@ -1,15 +1,16 @@
 import { createStore } from "redux"
 import { openServerEventsConnection } from "./actions"
 import { AppConfig, LogEntry } from "../shared/types"
-import { AppStateAction, LoaderStatistics, VRMStatus } from "../shared/state"
+import { AppStateAction, DiscoveredDevice, LoaderStatistics, VRMStatus } from "../shared/state"
 
 // TODO: migrate store.js to redux toolkit
 // TODO: specify slices with concrete state + actions
 // TODO: figure out where to handle live server connection
 // TODO: initial connect and reconnect
 
+export type AppWebSocketStatus = "initial" | "open" | "connected" | "error" | "closed"
 export interface AppState {
-  websocketStatus: "initial" | "open" | "connected" | "error" | "closed"
+  websocketStatus: AppWebSocketStatus
   webSocket?: WebSocket
   webSocketTimer?: any // TODO: what is the proper type in browser context
   restarting: boolean
@@ -18,9 +19,9 @@ export interface AppState {
   loaderStatistics: LoaderStatistics
 
   vrmStatus: VRMStatus
-  vrmDiscovered: { portalId: string; name: string }[]
+  vrmDiscovered: DiscoveredDevice[]
 
-  upnpDiscovered: string[]
+  upnpDiscovered: DiscoveredDevice[]
 
   debug: boolean
   log: {
