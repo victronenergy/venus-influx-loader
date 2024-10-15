@@ -4,7 +4,7 @@
   "description": ".",
   "scripts": {
     "prebuild": "./generateBuildInfo.sh",
-    "build:bin": "tsc",
+    "build:bin": "tsc -p tsconfig.build.json",
     "postbuild:bin": "chmod +x dist/bin/*.js",
     "build:client": "webpack build --mode production --env production --progress",
     "build": "npm run build:bin && npm run build:client",
@@ -82,6 +82,8 @@
     "@coreui/react": "^5",
     "@popperjs/core": "^2.11.8",
     "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.20",
     "axios-hooks": "^5.0.2",
     "babel-loader": "^9.2.1",
