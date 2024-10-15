@@ -21,10 +21,7 @@ module.exports = (env, argv) => {
       path: BUILD_DIR,
       filename: "[name].bundle.js",
     },
-    devtool:
-      argv.mode === "production"
-        ? "source-map"
-        : "eval-cheap-module-source-map",
+    devtool: argv.mode === "production" ? "source-map" : "eval-cheap-module-source-map",
     devServer: {
       static: BUILD_DIR,
       compress: true,
@@ -43,8 +40,8 @@ module.exports = (env, argv) => {
       ],
     },
     resolve: {
-      extensions: ['.tsx', '.ts', '.jsx', '.js'],
-      modules: [path.resolve('./src'), 'node_modules'],
+      extensions: [".tsx", ".ts", ".jsx", ".js"],
+      modules: [path.resolve("./src"), "node_modules"],
     },
     module: {
       rules: [
@@ -89,9 +86,7 @@ module.exports = (env, argv) => {
           test: /\.(scss)$/,
           use: [
             {
-              loader: env.production
-                ? MiniCssExtractPlugin.loader
-                : "style-loader",
+              loader: env.production ? MiniCssExtractPlugin.loader : "style-loader",
             },
             {
               loader: "css-loader",
