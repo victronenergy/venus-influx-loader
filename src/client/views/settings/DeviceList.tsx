@@ -1,15 +1,17 @@
-import PropTypes from "prop-types"
-import {
-  CFormCheck,
-  CTable,
-  CTableHead,
-  CTableBody,
-  CTableHeaderCell,
-  CTableDataCell,
-  CTableRow,
-} from "@coreui/react"
+import React from "react"
+import { CFormCheck, CTable, CTableHead, CTableBody, CTableHeaderCell, CTableDataCell, CTableRow } from "@coreui/react"
+import { AppUPNPConfig, AppVRMConfig } from "../../../shared/types"
+import { DiscoveredDevice } from "../../../shared/state"
 
-function DeviceList(props) {
+interface DeviceListProps {
+  hidden?: boolean
+  settings: AppUPNPConfig | AppVRMConfig
+  onEnablePortalChange: React.ChangeEventHandler<HTMLInputElement>
+  onEnableAllPortalsChange: React.ChangeEventHandler<HTMLInputElement>
+  availablePortalIds: DiscoveredDevice[]
+}
+
+function DeviceList(props: DeviceListProps) {
   return (
     <CTable bordered striped hidden={props.hidden}>
       <CTableHead>
@@ -24,8 +26,7 @@ function DeviceList(props) {
               checked={
                 props.availablePortalIds &&
                 props.availablePortalIds.length > 0 &&
-                props.settings.enabledPortalIds.length ===
-                  props.availablePortalIds.length
+                props.settings.enabledPortalIds.length === props.availablePortalIds.length
               }
             />
           </CTableHeaderCell>
@@ -34,19 +35,17 @@ function DeviceList(props) {
       <CTableBody>
         {props.availablePortalIds &&
           props.availablePortalIds.map((element, _index) => {
-            const id = element.portalId ? element.portalId : element
-            const name = element.name ? element.name : "Unknown"
             return (
-              <CTableRow key={id}>
-                <CTableDataCell>{name}</CTableDataCell>
-                <CTableDataCell>{id}</CTableDataCell>
+              <CTableRow key={element.portalId}>
+                <CTableDataCell>{element.name}</CTableDataCell>
+                <CTableDataCell>{element.portalId}</CTableDataCell>
                 <CTableDataCell>
                   <CFormCheck
                     name="enablePortal"
-                    id={id}
+                    id={element.portalId}
                     label="Enabled"
                     onChange={props.onEnablePortalChange}
-                    checked={props.settings.enabledPortalIds.indexOf(id) !== -1}
+                    checked={props.settings.enabledPortalIds.indexOf(element.portalId) !== -1}
                   />
                 </CTableDataCell>
               </CTableRow>
@@ -55,16 +54,6 @@ function DeviceList(props) {
       </CTableBody>
     </CTable>
   )
-}
-
-DeviceList.propTypes = {
-  hidden: PropTypes.bool,
-  settings: PropTypes.object,
-  onEnablePortalChange: PropTypes.func,
-  onEnableAllPortalsChange: PropTypes.func,
-  // NOTE: In UPNP Discovery, availablePortalIds will be array of portalId: string
-  // NOTE: In VRM Discovery, availablePortalIds will be array of object with { portalId: string, name: string }
-  availablePortalIds: PropTypes.array,
 }
 
 export { DeviceList }
