@@ -6,9 +6,7 @@ const VRM = React.lazy(() => import("./views/settings/VRM"))
 const Manual = React.lazy(() => import("./views/settings/Manual"))
 const InfluxDB = React.lazy(() => import("./views/settings/InfluxDB"))
 const Security = React.lazy(() => import("./views/settings/Security"))
-const Troubleshooting = React.lazy(
-  () => import("./views/troubleshooting/Troubleshooting"),
-)
+const Troubleshooting = React.lazy(() => import("./views/troubleshooting/Troubleshooting"))
 
 const routes = [
   { path: "/", name: "Home", exact: true },

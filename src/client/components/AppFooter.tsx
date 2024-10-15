@@ -1,5 +1,7 @@
-import React from "react"
 import { CFooter } from "@coreui/react"
+
+// NOTE: defined as global via webpack.DefinePlugin
+declare const VENUS_INFLUX_LOADER_BUILD_VERSION: string
 
 const AppFooter = () => {
   return (
@@ -23,4 +25,4 @@ const AppFooter = () => {
   )
 }
 
-export default React.memo(AppFooter)
+export default AppFooter

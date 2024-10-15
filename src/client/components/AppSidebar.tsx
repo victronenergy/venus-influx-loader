@@ -8,12 +8,13 @@ import logo from "../public/img/victron-logo-footer.svg"
 import { AppSidebarNav } from "./AppSidebarNav"
 
 // sidebar nav config
-import navigation from "../navigation"
+import Navigation from "../Navigation"
+import { AppState } from "../store"
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
-  const sidebarShow = useSelector((state) => state.sidebarShow)
-  const editSettings = useSelector((state) => state.editSettings)
+  const sidebarShow = useSelector((state: AppState) => state.sidebarShow)
+  const editSettings = useSelector((state: AppState) => state.editSettings)
 
   return (
     <CSidebar
@@ -25,12 +26,12 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="border-bottom px-4">
-        <CSidebarBrand to="/">
+        <CSidebarBrand href="/">
           <CImage src={logo} width="100%" className="sidebar-brand-full" />
           <CImage src={logo} width="100%" className="sidebar-brand-narrow" />
         </CSidebarBrand>
       </CSidebarHeader>
-      <AppSidebarNav items={navigation(editSettings)} />
+      <AppSidebarNav items={Navigation(editSettings)} />
     </CSidebar>
   )
 }

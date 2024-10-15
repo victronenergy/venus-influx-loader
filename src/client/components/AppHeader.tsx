@@ -11,14 +11,14 @@ import CIcon from "@coreui/icons-react"
 import { cilMenu } from "@coreui/icons"
 
 import { AppBreadcrumb } from "./index"
+import { AppState } from "../store"
 
 const AppHeader = () => {
-  const headerRef = useRef()
   const dispatch = useDispatch()
-  const sidebarShow = useSelector((state) => state.sidebarShow)
+  const sidebarShow = useSelector((state: AppState) => state.sidebarShow)
 
   return (
-    <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
+    <CHeader position="sticky" className="mb-4 p-0">
       <CContainer className="border-bottom px-4" fluid>
         <CHeaderToggler
           className="ps-1"
@@ -26,7 +26,7 @@ const AppHeader = () => {
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderBrand className="mx-auto d-md-none" to="/"></CHeaderBrand>
+        <CHeaderBrand className="mx-auto d-md-none" href="/"></CHeaderBrand>
         <CHeaderNav className="d-none d-md-flex me-auto"></CHeaderNav>
       </CContainer>
       <CContainer fluid>

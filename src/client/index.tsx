@@ -4,7 +4,7 @@ import store from "./store"
 
 import App from "./App"
 
-createRoot(document.getElementById("root")).render(
+createRoot(document.getElementById("root")!!).render(
   <Provider store={store}>
     <App />
   </Provider>,

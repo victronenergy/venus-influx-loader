@@ -7,13 +7,21 @@ import {
 } from "@coreui/icons"
 import { CNavGroup, CNavItem } from "@coreui/react"
 
-const navigation = ({
+interface NavigationProps {
+  showEditDiscoverySettings: boolean
+  showEditVRMSettings: boolean
+  showEditManualSettings: boolean
+  showEditSecuritySettings: boolean
+  showEditInfluxDBSettings: boolean
+}
+
+const Navigation = ({
   showEditDiscoverySettings,
   showEditVRMSettings,
   showEditManualSettings,
   showEditSecuritySettings,
   showEditInfluxDBSettings,
-}) => [
+}: NavigationProps) => [
   {
     component: CNavItem,
     name: "Dashboard",
@@ -67,4 +75,4 @@ const navigation = ({
   },
 ]
 
-export default navigation
+export default Navigation
