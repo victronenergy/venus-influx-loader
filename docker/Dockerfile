@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y curl
 WORKDIR /venus-influx-loader
 
 COPY --from=build /venus-influx-loader/package*.json ./
-COPY --from=build /venus-influx-loader/dist/* ./
+COPY --from=build /venus-influx-loader/dist/ ./
 
 RUN npm install --omit=dev --ignore-scripts
 
