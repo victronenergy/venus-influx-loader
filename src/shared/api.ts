@@ -14,7 +14,7 @@ export type PutConfigResponse = {}
 export const API_SECURITY = "security"
 export const ADMIN_API_SECURITY = `${ADMIN_API}/${API_SECURITY}`
 
-export type PostSecurityRequest = { username: string, password: string }
+export type PostSecurityRequest = { username: string; password: string }
 export type PostSecurityResponse = {}
 
 export const API_LOG = "log"

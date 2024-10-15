@@ -4,10 +4,22 @@ export type WebSocketActions = "WEBSOCKET_CONNECTED" | "WEBSOCKET_OPEN" | "WEBSO
 export type DiscoveryActions = "UPNPDISCOVERY" | "VRMDISCOVERY"
 export type VRMActions = "VRMSTATUS"
 export type DebugActions = "DEBUG" | "LOG"
-export type SettingsActions = "SETTINGSCHANGED" | "EDIT_SECURITY_SETTINGS_ENABLED" | "EDIT_INFLUXDB_SETTINGS_ENABLED" | "EDIT_DISCOVERY_SETTINGS_ENABLED" | "EDIT_MANUAL_SETTINGS_ENABLED" | "EDIT_VRM_SETTINGS_ENABLED"
+export type SettingsActions =
+  | "SETTINGSCHANGED"
+  | "EDIT_SECURITY_SETTINGS_ENABLED"
+  | "EDIT_INFLUXDB_SETTINGS_ENABLED"
+  | "EDIT_DISCOVERY_SETTINGS_ENABLED"
+  | "EDIT_MANUAL_SETTINGS_ENABLED"
+  | "EDIT_VRM_SETTINGS_ENABLED"
 export type MiscActions = "set" | "LOADERSTATISTICS"
 
-export type AppStateActionType = MiscActions | WebSocketActions | DiscoveryActions | VRMActions | SettingsActions | DebugActions
+export type AppStateActionType =
+  | MiscActions
+  | WebSocketActions
+  | DiscoveryActions
+  | VRMActions
+  | SettingsActions
+  | DebugActions
 
 export interface AppStateBaseAction {
   type: AppStateActionType
@@ -29,7 +41,7 @@ export interface AppStateUPNPDiscoveryAction extends AppStateBaseAction {
   data: UPNPDiscoveredDevice[]
 }
 
-export type VRMDiscoveredDevice = { portalId: string, name: string }
+export type VRMDiscoveredDevice = { portalId: string; name: string }
 
 export interface AppStateVRMDiscoveryAction extends AppStateBaseAction {
   type: "VRMDISCOVERY"
@@ -75,8 +87,12 @@ export interface AppStateSettingsChangedAction extends AppStateBaseAction {
 }
 
 export interface AppStateSettingsEnabledAction extends AppStateBaseAction {
-  type: "EDIT_SECURITY_SETTINGS_ENABLED" | "EDIT_INFLUXDB_SETTINGS_ENABLED" | "EDIT_DISCOVERY_SETTINGS_ENABLED"
-    | "EDIT_MANUAL_SETTINGS_ENABLED" | "EDIT_VRM_SETTINGS_ENABLED"
+  type:
+    | "EDIT_SECURITY_SETTINGS_ENABLED"
+    | "EDIT_INFLUXDB_SETTINGS_ENABLED"
+    | "EDIT_DISCOVERY_SETTINGS_ENABLED"
+    | "EDIT_MANUAL_SETTINGS_ENABLED"
+    | "EDIT_VRM_SETTINGS_ENABLED"
   data: boolean
 }
 
@@ -96,4 +112,15 @@ export interface AppStateSetAction extends AppStateBaseAction {
   data: any
 }
 
-export type AppStateAction = AppStateWebSocketAction | AppStateWebSocketOpenAction | AppStateUPNPDiscoveryAction | AppStateVRMDiscoveryAction | AppStateVRMStatusAction | AppStateLoaderStatisticsAction | AppStateSettingsEnabledAction | AppStateSettingsChangedAction | AppStateDebugAction | AppStateLogAction | AppStateSetAction
+export type AppStateAction =
+  | AppStateWebSocketAction
+  | AppStateWebSocketOpenAction
+  | AppStateUPNPDiscoveryAction
+  | AppStateVRMDiscoveryAction
+  | AppStateVRMStatusAction
+  | AppStateLoaderStatisticsAction
+  | AppStateSettingsEnabledAction
+  | AppStateSettingsChangedAction
+  | AppStateDebugAction
+  | AppStateLogAction
+  | AppStateSetAction
