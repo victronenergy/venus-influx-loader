@@ -1,7 +1,6 @@
 import PropTypes from "prop-types"
 import { useSelector } from "react-redux"
 import {
-  CAlert,
   CCard,
   CCardBody,
   CCardHeader,

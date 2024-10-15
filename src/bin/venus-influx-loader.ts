@@ -1,42 +1,23 @@
 #!/usr/bin/env node
 
-import commander from "commander"
-const program = commander.program
-const buildVersion = require("../buildInfo").buildVersion
+import { program } from "commander"
+// @ts-expect-error
+const buildInfo = await import("../buildInfo.cjs")
 
-import Server from "../server/server.js"
+import Server from "../server/server.cjs"
 
 program
-  .version(buildVersion)
-  .description(
-    "Monitor Venus devices and capture & store realtime data to serve Grafana",
-  )
-  .option(
-    "-c, --config-path <path>",
-    "path to store config.json and secrets.json",
-    "/config",
-  )
-  .option(
-    "-p, --port <port>",
-    "http port used by Admin Web User Interface and Grafana JSON datasource",
-    "8088",
-  )
-  .option(
-    "--disable-admin-api",
-    "disable Admin Web User Interface and /admin-api/ endpoint",
-  )
+  .version(buildInfo.buildVersion)
+  .description("Monitor Venus devices and capture & store realtime data to serve Grafana")
+  .option("-c, --config-path <path>", "path to store config.json and secrets.json", "/config")
+  .option("-p, --port <port>", "http port used by Admin Web User Interface and Grafana JSON datasource", "8088")
+  .option("--disable-admin-api", "disable Admin Web User Interface and /admin-api/ endpoint")
   .option(
     "--disable-admin-api-auth",
     "disable password protection for Admin Web User Interface and /admin-api/ endpoint",
   )
-  .option(
-    "--disable-grafana-api",
-    "disable Grafana JSON datasource /grafana-api/ endpoint",
-  )
-  .option(
-    "--enable-discovery-api",
-    "enable venus-upnp-browser /discovery-api/ endpoint",
-  )
+  .option("--disable-grafana-api", "disable Grafana JSON datasource /grafana-api/ endpoint")
+  .option("--enable-discovery-api", "enable venus-upnp-browser /discovery-api/ endpoint")
   .option("--hide-settings-influxdb")
   .option("--hide-settings-security")
   .option("--hide-settings-venus-discovery")
@@ -79,8 +60,7 @@ const server = new Server({
   showEditDiscoverySettings: !options.hideSettingsVenusDiscovery,
   showEditVRMSettings: !options.hideSettingsVenusVRM,
   showEditManualSettings: !options.hideSettingsVenusManual,
-  showEditSecuritySettings:
-    !options.hideSettingsSecurity && adminApiAuthEnabled,
+  showEditSecuritySettings: !options.hideSettingsSecurity && adminApiAuthEnabled,
   showEditInfluxDBSettings: !options.hideSettingsInfluxdb,
 })
 

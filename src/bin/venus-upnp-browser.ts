@@ -1,21 +1,17 @@
 #!/usr/bin/env node
 
-import commander from "commander"
-const program = commander.program
-const buildVersion = require("../buildInfo").buildVersion
+import { program } from "commander"
+// @ts-expect-error
+const buildInfo = await import("../buildInfo.cjs")
 
 import axios from "axios"
 
-import upnp from "../server/upnp.js"
+import upnp from "../server/upnp.cjs"
 
 program
-  .version(buildVersion)
+  .version(buildInfo.buildVersion)
   .description("Discover Venus devices running on local network using UPNP")
-  .option(
-    "-d, --discovery-api <url>",
-    "discovery api endpoint",
-    "http://localhost:8088/discovery-api/",
-  )
+  .option("-d, --discovery-api <url>", "discovery api endpoint", "http://localhost:8088/discovery-api/")
 
 program.parse()
 const options = program.opts()
