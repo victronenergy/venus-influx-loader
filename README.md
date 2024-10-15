@@ -25,6 +25,81 @@ Venus Influx Loader is distributed as:
 - NPM module: https://www.npmjs.com/package/venus-influx-loader
 - Docker Image: https://hub.docker.com/r/victronenergy/venus-influx-loader
 
+## Advanced Configuration
+
+### Venus Influx Loader
+
+Venus Influx Loader allows MQTT connection to the Venus devices running on the same network and discovered via UPNP, configured manually using their IP address, or by accessing them via VRM.
+
+Configuration details and necessary usernames and passwords are stored in `config.json`, and `secrets.json` that are looked up under `--config-path` (`/config` by default). Config Path needs to be writable.
+
+> TODO: should not be needed for config path to be writable in production deployments.
+
+Configuration files can either be created manually, or by starting the Venus Influx Loader, and accessing the Admin UI by browsing to `http://localhost:8088`. The default usernname and password is `admin`, `admin`.
+
+```
+ € npx venus-influx-loader --help
+Usage: venus-influx-loader [options]
+
+Monitor Venus devices and capture & store realtime data to serve Grafana
+
+Options:
+  -V, --version                    output the version number
+  -c, --config-path <path>         path to store config.json and secrets.json (default: "/config")
+  -p, --port <port>                http port used by Admin Web User Interface and Grafana JSON datasource (default: 8088)
+  --disable-admin-api              disable Admin Web User Interface and /admin-api/ endpoint
+  --disable-admin-api-auth         disable password protection for Admin Web User Interface and /admin-api/ endpoint
+  --disable-grafana-api            disable Grafana JSON datasource /grafana-api/ endpoint
+  --enable-discovery-api           enable venus-upnp-browser /discovery-api/ endpoint
+  --hide-settings-influxdb
+  --hide-settings-security
+  --hide-settings-venus-discovery
+  --hide-settings-venus-manual
+  --hide-settings-venus-vrm
+  -h, --help                       display help for command
+```
+
+#### Tip: Run Influx Loader headless
+
+For production use, once the system is configured `--disable-admin-api` can be used to run the `venus-influx-loader` headless.
+
+#### Tip: Run Influx Loader behind Load Balancer with your own authentication
+
+Use `--disable-admin-api-auth` to skip basic authentication mechanism protecting access to Admin Web User Interface. That way you can implement your own authentication mechanism.
+
+#### Tip: Customize Admin UI
+
+Use `--hide-settings-*` options to tweak the Admin UI and hide parts of the settings that you do not want to accidentally change. For example InfluxDB settings do not need to be overriden once configured.
+
+### Venus UPNP Browser
+
+Venus Influx Loader contains built in mechanism to discover Venus devices running on the same network via UPNP, that is enabled by default.
+
+In cases where `venus-influx-loader` may not have access to local network UPNP, such as when it runs in isolated docker network, or in docker bridge mode, `venus-upnp-browser` can be used to discover Venus devices over UPNP.
+
+The reason behind spliting the UPNP discovery into separate binary is:
+
+  - ~~Docker container running in host networking mode can not expose ports under Docker Desktop for Mac and Windows (https://github.com/docker/for-mac/issues/6185). So `venus-influx-loader` running in `host` networking mode can access UPNP, but will not get access to port `8088` to enable Admin UI.~~
+  - Docker Desktop since version 4.29 (https://docs.docker.com/network/drivers/host/#docker-desktop) allows to experimentally enable host networking mode in which a container running in host network mode can actually expose UDP/TCP ports and gain access to the host network.
+  - Docker container running in bridge networking mode does not support UPNP. So `venus-influx-loader` running in `bridge` networking mode will properly map port 8088 for Admin UI, but will not have access to UPNP.
+  - Docker container running in isolated networking mode can expose port `8088`, but does not have access to UPNP.
+
+To workaround the limitations, `venus-upnp-browser` actually runs in docker host mode network - having access to both local area UPNP, as well as `venus-influx-loader` admin port exposed via docker, `venus-upnp-browser` communicates discovered Venus devices and diagnostic information to `venus-influx-loader` via `--discovery-api`.
+
+Note: `host` and `bridge` network mode work properly only on Linux, support is being added to Docker Desktop for Windows and Mac incrementally. UPNP does not work in Docker Desktop for Mac at all.
+
+```
+€ npx venus-upnp-browser --help
+Usage: venus-upnp-browser [options]
+
+Discover Venus devices running on local network using UPNP
+
+Options:
+  -V, --version              output the version number
+  -d, --discovery-api <url>  discovery api endpoint (default: "http://localhost:8088/discovery-api/")
+  -h, --help                 display help for command
+```
+
 ## Development
 
 To start experimenting, please install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and use the following steps to spin up a quick dev environment:
@@ -60,93 +135,31 @@ The repository is spit into the following components:
 
 ## Server
 
-The directory `src/server` contains node.js based server watching Venus devices using MQTT and storing real time measurements into InfluxDB. It vends two binaries: `bin/venus-influx-loader`, and `bin/venus-upnp-browser`.
+The directory `src/bin`, and `src/server` contains node.js based server watching Venus devices using MQTT and storing real time measurements into InfluxDB. It vends two binaries: `venus-influx-loader`, and `venus-upnp-browser`.
 
-### Venus Influx Loader
-
-Venus Influx Loader allows MQTT connection to the Venus devices running on the same network and discovered via UPNP, configured manually using their IP address, or by accessing them via VRM.
-
-Configuration details and necessary usernames and passwords are stored in `config.json`, and `secrets.json` that are looked up under `--config-path` (`/config` by default). Config Path needs to be writable.
-
-> TODO: should not be needed to config path to be writable in production deployments.
-
-Configuration files can either be created manually, or by starting the Venus Influx Loader, and accessing the Admin UI by browsing to `http://localhost:8088`. The default usernname and password is `admin`, `admin`.
-
-```
- € npx venus-influx-loader --help
-Usage: venus-influx-loader [options]
-
-Monitor Venus devices and capture & store realtime data to serve Grafana
-
-Options:
-  -V, --version                    output the version number
-  -c, --config-path <path>         path to store config.json and secrets.json (default: "/config")
-  -p, --port <port>                http port used by Admin Web User Interface and Grafana JSON datasource (default: 8088)
-  --disable-admin-api              disable Admin Web User Interface and /admin-api/ endpoint
-  --disable-admin-api-auth         disable password protection for Admin Web User Interface and /admin-api/ endpoint
-  --disable-grafana-api            disable Grafana JSON datasource /grafana-api/ endpoint
-  --enable-discovery-api           enable venus-upnp-browser /discovery-api/ endpoint
-  --hide-settings-influxdb
-  --hide-settings-security
-  --hide-settings-venus-discovery
-  --hide-settings-venus-manual
-  --hide-settings-venus-vrm
-  -h, --help                       display help for command
-```
-
-For production use, once the system is configured `--disable-admin-api` can be used to run the `venus-influx-loader` headless.
-
-### Venus UPNP Browser
-
-Venus Influx Loader contains built in mechanism to discover Venus devices running on the same network via UPNP, that is enabled by default.
-
-In cases where `venus-influx-loader` may not have access to local network UPNP, such as when it runs in isolated docker network, or in docker bridge mode, `venus-upnp-browser` can be used to discover Venus devices over UPNP.
-
-The reason behind spliting these two functionalities among two binaries is:
-
-  - ~~Docker container running in host networking mode can not expose ports under Docker Desktop for Mac and Windows (https://github.com/docker/for-mac/issues/6185). So `venus-influx-loader` running in `host` networking mode can access UPNP, but will not get access to port `8088` to enable Admin UI.~~
-  - Docker Desktop since version 4.29 (https://docs.docker.com/network/drivers/host/#docker-desktop) allows to experimentally enable host networking mode in which a container running in host network mode can actually expose UDP/TCP ports and gain access to the host network.
-  - Docker container running in bridge networking mode does not support UPNP. So `venus-influx-loader` running in `bridge` networking mode will properly map port 8088 for Admin UI, but will not have access to UPNP.
-  - Docker container running in isolated networking mode can expose port `8088`, but does not have access to UPNP.
-
-To workaround the limitations, `venus-upnp-browser` actually runs in docker host mode network - having access to both local area UPNP, as well as `venus-influx-loader` admin port exposed via docker, `venus-upnp-browser` communicates discovered Venus devices and diagnostic information to `venus-influx-loader` via `--discovery-api`.
-
-Note: `host` and `bridge` network mode work properly only on Linux. UPNP does not work in Docker Desktop for Mac at all.
-
-```
-€ npx venus-upnp-browser --help
-Usage: venus-upnp-browser [options]
-
-Discover Venus devices running on local network using UPNP
-
-Options:
-  -V, --version              output the version number
-  -d, --discovery-api <url>  discovery api endpoint (default: "http://localhost:8088/discovery-api/")
-  -h, --help                 display help for command
-```
+Server is written in TypeScript/JavaScript and compiled using `tsc`.
 
 ### Venus Influx Loader Admin UI
 
-The directory `src/client` contains react.js based web admin interface to manage configuration of `src/server`. Client Admin UI app uses `webpack` to compile the browser JavaScript, HTML, and CSS code.
+The directory `src/client` contains react.js based web admin interface to manage configuration of `src/server`. Influx Loader Admin UI app uses `webpack` to compile the browser JavaScript, HTML, and CSS code.
 
 ## Development
 
 ### Start venus-influx-loader, and client in hot reloading mode
 
+First install all required dependencies:
+
 ```
 $ npm install
-$ npm run dev
 ```
 
-This command will use [`concurrently`](https://www.npmjs.com/package/concurrently) command to start hot reloading development instances of both the `src/server`, and `src/client`, so whenever you change source code in `src/` everything should get restarted/reloaded automatically.
-
-Alternatively you can spin up only hot reloading server, or only hot reloading client via:
+Then spin up hot reloading Influx Loader:
 
 ```
 $ npm run watch-influx-loader
 ```
 
-and
+and Influx Loader Admin UI:
 
 ```
 $ npm run watch-client

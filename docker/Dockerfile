@@ -17,12 +17,10 @@ RUN apt-get update && apt-get install -y curl
 
 WORKDIR /venus-influx-loader
 
-COPY --from=build /venus-influx-loader/bin ./bin
-COPY --from=build /venus-influx-loader/dist ./dist
-COPY --from=build /venus-influx-loader/src/server ./src/server
 COPY --from=build /venus-influx-loader/package*.json ./
+COPY --from=build /venus-influx-loader/dist/* ./
 
-RUN npm install --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
 USER root
 RUN mkdir -p /config && chown -R node /config

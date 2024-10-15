@@ -1,12 +1,12 @@
-const eslint = require("@eslint/js")
-const babelParser = require("@babel/eslint-parser")
-const reactPlugin = require("eslint-plugin-react")
-const prettierPluginRecommended = require("eslint-plugin-prettier/recommended")
-const globals = require("globals")
-const confusingBrowserGlobals = require("confusing-browser-globals")
+import { configs } from "@eslint/js"
+import babelParser from "@babel/eslint-parser"
+import reactPlugin, { configs as _configs } from "eslint-plugin-react"
+import prettierPluginRecommended from "eslint-plugin-prettier/recommended"
+import { node, browser } from "globals"
+import confusingBrowserGlobals from "confusing-browser-globals"
 
-module.exports = [
-  eslint.configs.recommended,
+export default [
+  configs.recommended,
   prettierPluginRecommended,
   {
     files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"],
@@ -14,8 +14,8 @@ module.exports = [
       react: reactPlugin,
     },
     rules: {
-      ...reactPlugin.configs.recommended.rules,
-      ...reactPlugin.configs["jsx-runtime"].rules,
+      ..._configs.recommended.rules,
+      ..._configs["jsx-runtime"].rules,
       "no-unused-vars": [
         "error",
         { varsIgnorePattern: "^_", argsIgnorePattern: "^_" },
@@ -26,7 +26,7 @@ module.exports = [
       ecmaVersion: 2022,
       sourceType: "module",
       globals: {
-        ...globals.node,
+        ...node,
       },
     },
     settings: {
@@ -39,7 +39,7 @@ module.exports = [
     files: ["src/client/**/*.{js,jsx,mjs,cjs,ts,tsx}"],
     languageOptions: {
       globals: {
-        ...globals.browser,
+        ...browser,
         VENUS_INFLUX_LOADER_ADMIN_API_PORT: true,
         VENUS_INFLUX_LOADER_BUILD_VERSION: true,
       },
@@ -52,7 +52,7 @@ module.exports = [
     files: ["src/server/**/*.{js,jsx,mjs,cjs,ts,tsx}"],
     languageOptions: {
       globals: {
-        ...globals.node,
+        ...node,
       },
     },
   },

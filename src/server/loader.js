@@ -1,7 +1,7 @@
 const _ = require("lodash")
 const mqtt = require("mqtt")
 const ignoredMeasurements = require("./ignoredMeasurements")
-const buildVersion = require("../../dist/buildInfo").buildVersion
+const buildVersion = require("../buildInfo").buildVersion
 
 const collectStatsInterval = 5
 const keepAliveInterval = 30
