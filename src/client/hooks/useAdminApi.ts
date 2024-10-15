@@ -4,6 +4,7 @@ import {
   ADMIN_API_DEBUG,
   ADMIN_API_LOG,
   ADMIN_API_SECURITY,
+  ADMIN_API_VRM_LOGIN,
   ADMIN_API_VRM_LOGOUT,
   ADMIN_API_VRM_REFRESH,
   GetConfigRequest,
@@ -63,7 +64,7 @@ export function usePutDebug() {
 }
 
 export function useVRMLogin() {
-  return useAxios<VRMLoginResponse, VRMLoginRequest>({ url: ADMIN_API_LOG, method: "POST" }, { manual: true })
+  return useAxios<VRMLoginResponse, VRMLoginRequest>({ url: ADMIN_API_VRM_LOGIN, method: "POST" }, { manual: true })
 }
 
 export function useVRMLogout() {
