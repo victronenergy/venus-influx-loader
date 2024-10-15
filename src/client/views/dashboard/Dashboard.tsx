@@ -18,12 +18,13 @@ import {
 
 import CIcon from "@coreui/icons-react"
 import { cilRss } from "@coreui/icons"
+import { AppState } from "../../store"
 
 function Dashboard() {
   const { measurementRate, measurementCount, deviceStatistics } = useSelector(
-    (state) => {
+    (state: AppState) => {
       return (
-        state.serverStatistics || {
+        state.loaderStatistics || {
           measurementRate: 0,
           measurementCount: 0,
           deviceStatistics: [],
@@ -31,7 +32,7 @@ function Dashboard() {
       )
     },
   )
-  const websocketStatus = useSelector((state) => state.websocketStatus)
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
 
   return (
     <div>
