@@ -67,19 +67,15 @@ module.exports = function (app) {
                 app.config.secrets.vrmTokenId = response.idAccessToken
                 app.config.secrets.vrmUserId = idUser
                 app.config.secrets.vrmUsername = req.body.username
-                fs.writeFile(
-                  app.config.secretsLocation,
-                  JSON.stringify(app.config.secrets, null, 2),
-                  (err) => {
-                    if (err) {
-                      logger.error(err)
-                      res.status(500).send("Unable to write secrets file")
-                    } else {
-                      res.send()
-                      loadPortalIDs()
-                    }
-                  },
-                )
+                fs.writeFile(app.config.secretsLocation, JSON.stringify(app.config.secrets, null, 2), (err) => {
+                  if (err) {
+                    logger.error(err)
+                    res.status(500).send("Unable to write secrets file")
+                  } else {
+                    res.send()
+                    loadPortalIDs()
+                  }
+                })
               }
             })
             .catch((err) => {
@@ -100,24 +96,20 @@ module.exports = function (app) {
     delete scopy.vrmUserId
     delete scopy.vrmUsername
 
-    fs.writeFile(
-      app.config.secretsLocation,
-      JSON.stringify(scopy, null, 2),
-      (err) => {
-        if (err) {
-          logger.error(err)
-          fail(err.message)
-          res.status(500).send("Unable to write secrets file")
-        } else {
-          good("Logged Out")
-          delete app.config.secrets.vrmToken
-          delete app.config.secrets.vrmTokenId
-          delete app.config.secrets.vrmUserId
-          delete app.config.secrets.vrmUsername
-          res.send()
-        }
-      },
-    )
+    fs.writeFile(app.config.secretsLocation, JSON.stringify(scopy, null, 2), (err) => {
+      if (err) {
+        logger.error(err)
+        fail(err.message)
+        res.status(500).send("Unable to write secrets file")
+      } else {
+        good("Logged Out")
+        delete app.config.secrets.vrmToken
+        delete app.config.secrets.vrmTokenId
+        delete app.config.secrets.vrmUserId
+        delete app.config.secrets.vrmUsername
+        res.send()
+      }
+    })
   })
 
   app.put("/admin-api/vrmRefresh", (req, res, _next) => {
@@ -157,14 +149,9 @@ module.exports = function (app) {
           if (!_.isUndefined(app.config.settings.vrm.disabled)) {
             //convert from old method of storing the disabled ids
             const enabledPortalIds = devices.map((info) => {
-              return app.config.settings.vrm.disabled.indexOf(info.portalId) ===
-                -1
-                ? info.portalId
-                : null
+              return app.config.settings.vrm.disabled.indexOf(info.portalId) === -1 ? info.portalId : null
             })
-            app.config.settings.vrm.enabledPortalIds = enabledPortalIds.filter(
-              (id) => id != null,
-            )
+            app.config.settings.vrm.enabledPortalIds = enabledPortalIds.filter((id) => id != null)
             delete app.config.settings.vrm.disabled
             app.saveSettings()
           }

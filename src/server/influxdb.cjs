@@ -28,8 +28,7 @@ class InfluxDB {
         return
       }
 
-      const { host, port, database, retention, username, password } =
-        settings.influxdb
+      const { host, port, database, retention, username, password } = settings.influxdb
 
       if (
         this.host !== host ||
@@ -39,10 +38,7 @@ class InfluxDB {
         this.password !== password
       ) {
         this.start()
-      } else if (
-        !_.isUndefined(this.retention) &&
-        retention !== this.retention
-      ) {
+      } else if (!_.isUndefined(this.retention) && retention !== this.retention) {
         this._setRetentionPolicy(retention)
       }
     })
@@ -60,8 +56,7 @@ class InfluxDB {
   }
 
   async _connect() {
-    const { host, port, database, retention, username, password } =
-      this.app.config.settings.influxdb
+    const { host, port, database, retention, username, password } = this.app.config.settings.influxdb
 
     this.host = host
     this.port = port
@@ -78,9 +73,7 @@ class InfluxDB {
       password: password,
     })
 
-    this.info(
-      `Attempting connection to ${host}:${port}/${database} using ${this.username}:*****`,
-    )
+    this.info(`Attempting connection to ${host}:${port}/${database} using ${this.username}:*****`)
 
     try {
       const databaseNames = await this.influxClient.getDatabaseNames()
@@ -98,11 +91,7 @@ class InfluxDB {
   }
 
   async _setRetentionPolicy(retention) {
-    if (
-      this.connected === false ||
-      _.isUndefined(retention) ||
-      retention === null
-    ) {
+    if (this.connected === false || _.isUndefined(retention) || retention === null) {
       return
     }
 
@@ -124,9 +113,7 @@ class InfluxDB {
         this.logger.debug(`Retention policy set: ${retention}`)
         this.retention = retention
       } catch (error) {
-        this.logger.error(
-          `Error setting retention policy: ${retention}, ${error}`,
-        )
+        this.logger.error(`Error setting retention policy: ${retention}, ${error}`)
       }
     }
   }
@@ -163,10 +150,7 @@ class InfluxDB {
     this.accumulatedPoints.push(point)
     const now = Date.now()
 
-    if (
-      this.batchWriteInterval === 0 ||
-      now - this.lastWriteTime > this.batchWriteInterval
-    ) {
+    if (this.batchWriteInterval === 0 || now - this.lastWriteTime > this.batchWriteInterval) {
       this.lastWriteTime = now
 
       try {

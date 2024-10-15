@@ -23,43 +23,30 @@ module.exports = function (app) {
   })
 
   router.put("/config", (req, res, _next) => {
-    fs.writeFile(
-      app.config.configLocation,
-      JSON.stringify(req.body, null, 2),
-      (err) => {
-        if (err) {
-          app.logger.error(err)
-          res.status(500).send("Unable to write config file")
-        } else {
-          res.status(200).send("Configuration Saved")
-          app.config.settings = req.body
-          app.emit("settingsChanged", app.config.settings)
-          delete req.body.vrm.hasToken
-        }
-      },
-    )
+    fs.writeFile(app.config.configLocation, JSON.stringify(req.body, null, 2), (err) => {
+      if (err) {
+        app.logger.error(err)
+        res.status(500).send("Unable to write config file")
+      } else {
+        res.status(200).send("Configuration Saved")
+        app.config.settings = req.body
+        app.emit("settingsChanged", app.config.settings)
+        delete req.body.vrm.hasToken
+      }
+    })
   })
 
   router.post("/security", (req, res, _next) => {
-    if (
-      req.body.username &&
-      req.body.username.length > 0 &&
-      req.body.password &&
-      req.body.password.length > 0
-    ) {
+    if (req.body.username && req.body.username.length > 0 && req.body.password && req.body.password.length > 0) {
       app.config.secrets.login = req.body
-      fs.writeFile(
-        app.config.secretsLocation,
-        JSON.stringify(app.config.secrets, null, 2),
-        (err) => {
-          if (err) {
-            app.logger.error(err)
-            res.status(500).send("Unable to write secrets file")
-          } else {
-            res.send()
-          }
-        },
-      )
+      fs.writeFile(app.config.secretsLocation, JSON.stringify(app.config.secrets, null, 2), (err) => {
+        if (err) {
+          app.logger.error(err)
+          res.status(500).send("Unable to write secrets file")
+        } else {
+          res.send()
+        }
+      })
     } else {
       res.status(400).send("Please enter a Username and Password")
     }
@@ -71,19 +58,17 @@ module.exports = function (app) {
 
   router.get("/debug", (_req, res, _next) => {
     const value = app.rootLogger.level === "debug" ? true : false
-    res.send(value)
+    res.send(JSON.stringify({ debug: value }))
   })
 
   router.put("/debug", (req, res, _next) => {
-    app.rootLogger.level = req.body.value ? "debug" : "info"
-    app.logger[app.rootLogger.level](
-      "Log level changed to: " + app.rootLogger.level,
-    )
+    app.rootLogger.level = req.body.debug ? "debug" : "info"
+    app.logger[app.rootLogger.level]("Log level changed to: " + app.rootLogger.level)
     app.emit("serverevent", {
       type: "DEBUG",
-      data: req.body.value,
+      data: req.body.debug,
     })
-    res.send(req.body.value)
+    res.send(JSON.stringify({ debug: req.body.debug }))
   })
 
   return router

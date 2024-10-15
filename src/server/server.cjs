@@ -3,16 +3,14 @@ const path = require("node:path")
 const http = require("node:http")
 const _ = require("lodash")
 const fs = require("node:fs/promises")
-const createRootLogger = require("./logger")
-const Loader = require("./loader")
-const InfluxDB = require("./influxdb")
+const createRootLogger = require("./logger.cjs")
+const Loader = require("./loader.cjs")
+const InfluxDB = require("./influxdb.cjs")
 const bodyParser = require("body-parser")
 const compare = require("tsscmp")
 const auth = require("basic-auth")
 
-const defaultInfluxDBURL = new URL(
-  process.env.VIL_INFLUXDB_URL || "http://influxdb:8086",
-)
+const defaultInfluxDBURL = new URL(process.env.VIL_INFLUXDB_URL || "http://influxdb:8086")
 const defaultInfluxDBUsername = process.env.VIL_INFLUXDB_USERNAME || ""
 const defaultInfluxDBPassword = process.env.VIL_INFLUXDB_PASSWORD || ""
 const defaultInfluxDBDatabase = "venus"
@@ -59,10 +57,7 @@ async function loadConfig(app) {
     }
 
     try {
-      await fs.writeFile(
-        app.config.configLocation,
-        JSON.stringify(app.config.settings, null, 2),
-      )
+      await fs.writeFile(app.config.configLocation, JSON.stringify(app.config.settings, null, 2))
     } catch (error) {
       app.logger.error(error)
     }
@@ -71,10 +66,7 @@ async function loadConfig(app) {
 
 async function saveConfig(app, cb) {
   try {
-    await fs.writeFile(
-      app.config.configLocation,
-      JSON.stringify(app.config.settings, null, 2),
-    )
+    await fs.writeFile(app.config.configLocation, JSON.stringify(app.config.settings, null, 2))
   } catch (error) {
     app.logger.error(error)
     if (cb) {
@@ -150,7 +142,7 @@ class Server {
 
         app.emit("serverevent", {
           type: "UPNPDISCOVERY",
-          data: _.keys(app.upnpDiscovered),
+          data: _.values(app.upnpDiscovered),
         })
       }
     })
@@ -186,10 +178,10 @@ class Server {
       })
     })
 
-    app.upnp = require("./upnp")(this.app)
+    app.upnp = require("./upnp.cjs")(this.app)
     app.upnpLogger = app.upnp.logger
 
-    app.vrm = require("./vrm")(this.app)
+    app.vrm = require("./vrm.cjs")(this.app)
     app.loader = new Loader(app)
     app.influxdb = new InfluxDB(app)
 
@@ -306,25 +298,22 @@ class Server {
         if (app.options.adminApiEndpointAuthEnabled) {
           app.use(app.options.adminApiEndpoint, adminCredentials)
         }
-        app.use(app.options.adminApiEndpoint, require("./admin-api")(app))
+        app.use(app.options.adminApiEndpoint, require("./admin-api.cjs")(app))
 
-        app.websocket = require("./websocket")(app)
+        app.websocket = require("./websocket.cjs")(app)
         app.websocket.start()
       }
 
       // setup /discovery-api routes, if enabled
       if (app.options.discoveryApiEndpoint) {
         app.logger.info(`setting up ${app.options.discoveryApiEndpoint} routes`)
-        app.use(
-          app.options.discoveryApiEndpoint,
-          require("./discovery-api")(app),
-        )
+        app.use(app.options.discoveryApiEndpoint, require("./discovery-api.cjs")(app))
       }
 
       // setup /grafana-api routes, if enabled
       if (app.options.grafanaApiEndpoint) {
         app.logger.info(`setting up ${app.options.grafanaApiEndpoint} routes`)
-        app.use(app.options.grafanaApiEndpoint, require("./grafana-api")(app))
+        app.use(app.options.grafanaApiEndpoint, require("./grafana-api.cjs")(app))
       }
 
       // listen

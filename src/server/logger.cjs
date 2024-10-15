@@ -55,11 +55,7 @@ module.exports = function (app, label, level) {
     level: level,
     transports: [
       new winston.transports.Console({
-        format: winston.format.combine(
-          winston.format.errors({ stack: true }),
-          winston.format.splat(),
-          format,
-        ),
+        format: winston.format.combine(winston.format.errors({ stack: true }), winston.format.splat(), format),
         handleExceptions: true,
       }),
       app.logTransport,

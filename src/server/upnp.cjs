@@ -23,10 +23,7 @@ module.exports = function (app) {
 
     start: () => {
       client.on("response", function (headers, statusCode, rinfo) {
-        if (
-          headers.USN &&
-          headers.USN.startsWith("uuid:com.victronenergy.ccgx")
-        ) {
+        if (headers.USN && headers.USN.startsWith("uuid:com.victronenergy.ccgx")) {
           axios
             .get(headers.LOCATION)
             .then((response) => response.data)
@@ -40,9 +37,7 @@ module.exports = function (app) {
                       portalId: result.root.device[0]["ve:X_VrmPortalId"][0]._,
                       address: rinfo.address,
                     }
-                    logger.info(
-                      `Found a venus device with id ${info.portalId} at ${info.address}`,
-                    )
+                    logger.info(`Found a venus device with id ${info.portalId} at ${info.address}`)
                     app.emit("upnpDiscovered", info)
                   } catch (err) {
                     logger.error(err)
