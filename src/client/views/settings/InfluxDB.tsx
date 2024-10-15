@@ -1,57 +1,42 @@
-import {
-  CCard,
-  CCardBody,
-  CCardFooter,
-  CForm,
-  CFormLabel,
-  CFormInput,
-  CButton,
-} from "@coreui/react"
+import React from "react"
+import { useEffect, useState } from "react"
+import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CButton } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
-import {
-  useFormValidation,
-  extractParameterNameAndValue,
-} from "../../hooks/useFormValidation"
+import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+import { AppConfig } from "../../../shared/types"
 
 function InfluxDB() {
-  const type = "influxdb"
+  const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
 
-  const [
-    {
-      data: config,
-      setData: setConfig,
-      loading: _isLoading,
-      error: _loadError,
-    },
-    _load,
-    _cancelLoad,
-  ] = useGetConfig()
-  const [
-    { data: _saveResult, loading: isSaving, error: _saveError },
-    save,
-    _cancelSave,
-  ] = usePutConfig()
+  const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
+
+  const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
+  useEffect(() => {
+    setTemporaryConfig(config)
+  }, [config])
 
   const isSaveEnabled = useFormValidation(() => {
     return (
-      config &&
-      config.influxdb.host !== "" &&
-      config.influxdb.port !== "" &&
-      config.influxdb.database !== "" &&
-      config.influxdb.retention !== ""
+      temporaryConfig !== undefined &&
+      temporaryConfig.influxdb.host !== "" &&
+      temporaryConfig.influxdb.port !== "" &&
+      temporaryConfig.influxdb.database !== "" &&
+      temporaryConfig.influxdb.retention !== ""
     )
   })
 
-  function handleFormInputChange(event) {
-    const clone = { ...config }
+  function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const clone = { ...temporaryConfig!!! }
     const [name, value] = extractParameterNameAndValue(event)
-    clone[type][name] = value
-    setConfig(clone)
+    // TODO: fix this
+    // @ts-expect-error
+    clone.influxdb[name] = value
+    setTemporaryConfig(clone)
   }
 
   return (
-    config && (
+    temporaryConfig && (
       <CCard>
         <CCardBody>
           <CForm>
@@ -61,7 +46,7 @@ function InfluxDB() {
                 type="text"
                 name="host"
                 placeholder="influxdb"
-                value={config.influxdb.host}
+                value={temporaryConfig.influxdb.host}
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
@@ -71,7 +56,7 @@ function InfluxDB() {
                 type="text"
                 name="port"
                 placeholder="8086"
-                value={config.influxdb.port}
+                value={temporaryConfig.influxdb.port}
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
@@ -81,7 +66,7 @@ function InfluxDB() {
                 type="text"
                 name="database"
                 placeholder="venus"
-                value={config.influxdb.database}
+                value={temporaryConfig.influxdb.database}
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
@@ -91,7 +76,7 @@ function InfluxDB() {
                 type="text"
                 name="retention"
                 placeholder="30d"
-                value={config.influxdb.retention}
+                value={temporaryConfig.influxdb.retention}
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
@@ -101,7 +86,7 @@ function InfluxDB() {
                 type="text"
                 name="username"
                 placeholder=""
-                value={config.influxdb.username}
+                value={temporaryConfig.influxdb.username}
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
@@ -111,18 +96,14 @@ function InfluxDB() {
                 type="password"
                 name="password"
                 placeholder=""
-                value={config.influxdb.password}
+                value={temporaryConfig.influxdb.password}
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
           </CForm>
         </CCardBody>
         <CCardFooter>
-          <CButton
-            color="primary"
-            onClick={() => save({ data: config })}
-            disabled={!isSaveEnabled}
-          >
+          <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
             {isSaving ? "Saving..." : "Save"}
           </CButton>
         </CCardFooter>
