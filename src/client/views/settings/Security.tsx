@@ -1,13 +1,6 @@
+import React from "react"
 import { useState } from "react"
-import {
-  CCard,
-  CCardBody,
-  CCardFooter,
-  CForm,
-  CFormLabel,
-  CFormInput,
-  CButton,
-} from "@coreui/react"
+import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CButton } from "@coreui/react"
 
 import { usePostSecurity } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
@@ -27,18 +20,10 @@ function Security() {
     password1: "",
   })
 
-  const [
-    { data: _saveResult, loading: isSaving, error: _saveError },
-    save,
-    _cancelSave,
-  ] = usePostSecurity()
+  const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePostSecurity()
 
   const isSaveEnabled = useFormValidation(() => {
-    return (
-      state.username !== "" &&
-      state.password !== "" &&
-      state.password === state.password1
-    )
+    return state.username !== "" && state.password !== "" && state.password === state.password1
   })
 
   function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -87,11 +72,7 @@ function Security() {
         </CForm>
       </CCardBody>
       <CCardFooter>
-        <CButton
-          color="primary"
-          onClick={() => save({ data: state })}
-          disabled={!isSaveEnabled}
-        >
+        <CButton color="primary" onClick={() => save({ data: state })} disabled={!isSaveEnabled}>
           {isSaving ? "Saving..." : "Save"}
         </CButton>
       </CCardFooter>
