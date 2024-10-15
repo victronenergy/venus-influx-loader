@@ -1,4 +1,4 @@
-import PropTypes from "prop-types"
+import React from "react"
 import {
   CFormCheck,
   CTable,
@@ -10,8 +10,19 @@ import {
   CFormInput,
   CButton,
 } from "@coreui/react"
+import { AppManualConfig } from "../../../shared/types"
 
-function EditableHostList(props) {
+interface EditableHostListProps {
+  hidden?: boolean
+  settings: AppManualConfig
+  onHostNameChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
+  onEnableHostChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
+  onEnableAllHostsChange: (_event: React.ChangeEvent<HTMLInputElement>) => void
+  onAddHost: (_event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>) => void
+  onDeleteHost: (_event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>, _index: number) => void
+}
+
+function EditableHostList(props: EditableHostListProps) {
   return (
     <div>
       <CTable bordered striped hidden={props.hidden}>
@@ -27,8 +38,7 @@ function EditableHostList(props) {
                   props.settings &&
                   props.settings.hosts &&
                   props.settings.hosts.length > 0 &&
-                  props.settings.hosts.filter((x) => x.enabled === false)
-                    .length === 0
+                  props.settings.hosts.filter((x) => x.enabled === false).length === 0
                 }
               />
             </CTableHeaderCell>
@@ -48,9 +58,7 @@ function EditableHostList(props) {
                         name="hostName"
                         placeholder=""
                         value={element.hostName}
-                        onChange={(event) =>
-                          props.onHostNameChange(event, index)
-                        }
+                        onChange={(event) => props.onHostNameChange(event, index)}
                       />
                     </div>
                   </CTableDataCell>
@@ -58,17 +66,12 @@ function EditableHostList(props) {
                     <CFormCheck
                       name="enableHost"
                       label="Enabled"
-                      onChange={(event) =>
-                        props.onEnableHostChange(event, index)
-                      }
+                      onChange={(event) => props.onEnableHostChange(event, index)}
                       checked={element.enabled}
                     />
                   </CTableDataCell>
                   <CTableDataCell>
-                    <CButton
-                      color="danger"
-                      onClick={(event) => props.onDeleteHost(event, index)}
-                    >
+                    <CButton color="danger" onClick={(event) => props.onDeleteHost(event, index)}>
                       Delete
                     </CButton>
                   </CTableDataCell>
@@ -82,16 +85,6 @@ function EditableHostList(props) {
       </CButton>
     </div>
   )
-}
-
-EditableHostList.propTypes = {
-  hidden: PropTypes.bool,
-  settings: PropTypes.object,
-  onHostNameChange: PropTypes.func,
-  onEnableHostChange: PropTypes.func,
-  onEnableAllHostsChange: PropTypes.func,
-  onAddHost: PropTypes.func,
-  onDeleteHost: PropTypes.func,
 }
 
 export { EditableHostList }
