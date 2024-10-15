@@ -10,10 +10,15 @@ import {
 } from "@coreui/react"
 
 import { usePostSecurity } from "../../hooks/useAdminApi"
-import {
-  useFormValidation,
-  extractParameterNameAndValue,
-} from "../../hooks/useFormValidation"
+import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+
+interface SecurityState {
+  username: string
+  password: string
+  password1: string
+}
+
+type SecurityStateKeys = keyof SecurityState
 
 function Security() {
   const [state, setState] = useState({
@@ -36,9 +41,11 @@ function Security() {
     )
   })
 
-  function handleFormInputChange(event) {
+  function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...state }
-    const [name, value] = extractParameterNameAndValue(event)
+    const [name, value] = extractParameterNameAndValue<SecurityStateKeys>(event)
+    // TODO: fix this
+    // @ts-expect-error
     clone[name] = value
     setState(clone)
   }
