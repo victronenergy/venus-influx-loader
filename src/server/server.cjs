@@ -289,7 +289,7 @@ class Server {
         if (app.options.adminApiEndpointAuthEnabled) {
           app.use("/admin", adminCredentials)
         }
-        app.use("/admin", express.static(path.join(__dirname, "../../dist")))
+        app.use("/admin", express.static(path.join(__dirname, "../client")))
         app.get("/", (req, res) => {
           res.redirect("/admin")
         })
