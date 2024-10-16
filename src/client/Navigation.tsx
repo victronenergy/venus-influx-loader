@@ -3,6 +3,7 @@ import { cilChartLine, cilSettings, cilSpeedometer, cilHistory } from "@coreui/i
 import { CNavGroup, CNavItem } from "@coreui/react"
 
 interface NavigationProps {
+  grafanaUrl: string
   showEditDiscoverySettings: boolean
   showEditVRMSettings: boolean
   showEditManualSettings: boolean
@@ -10,7 +11,13 @@ interface NavigationProps {
   showEditInfluxDBSettings: boolean
 }
 
+function interpolate(template: string, variables: any) {
+  const templateFunction = new Function("variables", `return \`${template}\`;`)
+  return templateFunction(variables)
+}
+
 const Navigation = ({
+  grafanaUrl,
   showEditDiscoverySettings,
   showEditVRMSettings,
   showEditManualSettings,
@@ -65,7 +72,7 @@ const Navigation = ({
   {
     component: CNavItem,
     name: "Grafana",
-    to: `http://${window.location.hostname}:3000/`,
+    to: interpolate(grafanaUrl, { window: window }),
     icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
   },
 ]

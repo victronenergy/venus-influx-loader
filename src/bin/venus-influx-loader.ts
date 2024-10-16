@@ -11,6 +11,11 @@ program
   .description("Monitor Venus devices and capture & store realtime data to serve Grafana")
   .option("-c, --config-path <path>", "path to store config.json and secrets.json", "/config")
   .option("-p, --port <port>", "http port used by Admin Web User Interface and Grafana JSON datasource", "8088")
+  .option(
+    "--grafana-url <url>",
+    "http link to Grafana",
+    "${window.location.protocol}//${window.location.hostname}:3000",
+  )
   .option("--disable-admin-api", "disable Admin Web User Interface and /admin-api/ endpoint")
   .option(
     "--disable-admin-api-auth",
@@ -36,6 +41,7 @@ const adminApi = options.disableAdminApi ? undefined : "/admin-api/"
 const adminApiAuthEnabled = options.disableAdminApiAuth ? false : true
 const grafanaApi = options.disableGrafanaApi ? undefined : "/grafana-api/"
 const port = options.port
+const grafanaUrl = options.grafanaUrl
 
 log("Use --help to learn how to use this program")
 log(`Config Path: ${options.configPath}`)
@@ -43,6 +49,7 @@ log(`Discovery API: ${discoveryApi || "disabled"}`)
 log(`Admin API: ${adminApi || "disabled"}`)
 log(`Grafana JSON Datasource API: ${grafanaApi || "disabled"}`)
 log(`API Port: ${adminApi || grafanaApi ? port : "disabled"}`)
+log(`Grafana URL: ${grafanaUrl}`)
 
 // exit on Ctrl-C
 process.on("SIGINT", function () {
@@ -53,6 +60,7 @@ process.on("SIGINT", function () {
 const server = new Server({
   configPath: options.configPath,
   port: Number(port),
+  grafanaUrl: grafanaUrl,
   discoveryApiEndpoint: discoveryApi,
   adminApiEndpoint: adminApi,
   adminApiEndpointAuthEnabled: adminApiAuthEnabled,

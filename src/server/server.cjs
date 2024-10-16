@@ -232,6 +232,10 @@ class Server {
     app.emit("settingsChanged", app.config.settings)
 
     app.emit("serverevent", {
+      type: "GRAFANA_URL",
+      data: app.options.grafanaUrl,
+    })
+    app.emit("serverevent", {
       type: "EDIT_SECURITY_SETTINGS_ENABLED",
       data: app.options.showEditSecuritySettings,
     })

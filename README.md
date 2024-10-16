@@ -46,7 +46,8 @@ Monitor Venus devices and capture & store realtime data to serve Grafana
 Options:
   -V, --version                    output the version number
   -c, --config-path <path>         path to store config.json and secrets.json (default: "/config")
-  -p, --port <port>                http port used by Admin Web User Interface and Grafana JSON datasource (default: 8088)
+  -p, --port <port>                http port used by Admin Web User Interface and Grafana JSON datasource (default: "8088")
+  --grafana-url <url>              http link to Grafana (default: "${window.location.protocol}//${window.location.hostname}:3000")
   --disable-admin-api              disable Admin Web User Interface and /admin-api/ endpoint
   --disable-admin-api-auth         disable password protection for Admin Web User Interface and /admin-api/ endpoint
   --disable-grafana-api            disable Grafana JSON datasource /grafana-api/ endpoint
@@ -56,8 +57,7 @@ Options:
   --hide-settings-venus-discovery
   --hide-settings-venus-manual
   --hide-settings-venus-vrm
-  -h, --help                       display help for command
-```
+  -h, --help                       display help for command```
 
 #### Tip: Run Influx Loader headless
 

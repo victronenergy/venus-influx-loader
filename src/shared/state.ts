@@ -11,7 +11,7 @@ export type SettingsActions =
   | "EDIT_DISCOVERY_SETTINGS_ENABLED"
   | "EDIT_MANUAL_SETTINGS_ENABLED"
   | "EDIT_VRM_SETTINGS_ENABLED"
-export type MiscActions = "set" | "LOADERSTATISTICS"
+export type MiscActions = "set" | "LOADERSTATISTICS" | "GRAFANA_URL"
 
 export type AppStateActionType =
   | MiscActions
@@ -84,6 +84,11 @@ export interface AppStateSettingsChangedAction extends AppStateBaseAction {
   data: AppConfig
 }
 
+export interface AppStateGrafanaUrlAction extends AppStateBaseAction {
+  type: "GRAFANA_URL"
+  data: string
+}
+
 export interface AppStateSettingsEnabledAction extends AppStateBaseAction {
   type:
     | "EDIT_SECURITY_SETTINGS_ENABLED"
@@ -117,6 +122,7 @@ export type AppStateAction =
   | AppStateVRMDiscoveryAction
   | AppStateVRMStatusAction
   | AppStateLoaderStatisticsAction
+  | AppStateGrafanaUrlAction
   | AppStateSettingsEnabledAction
   | AppStateSettingsChangedAction
   | AppStateDebugAction

@@ -14,6 +14,7 @@ import { AppState } from "../store"
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state: AppState) => state.sidebarShow)
+  const grafanaUrl = useSelector((state: AppState) => state.grafanaUrl)
   const editSettings = useSelector((state: AppState) => state.editSettings)
 
   return (
@@ -31,7 +32,7 @@ const AppSidebar = () => {
           <CImage src={logo} width="100%" className="sidebar-brand-narrow" />
         </CSidebarBrand>
       </CSidebarHeader>
-      <AppSidebarNav items={Navigation(editSettings)} />
+      <AppSidebarNav items={Navigation({ grafanaUrl, ...editSettings })} />
     </CSidebar>
   )
 }

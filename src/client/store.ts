@@ -29,6 +29,7 @@ export interface AppState {
   }
 
   sidebarShow: boolean
+  grafanaUrl: string
   editSettings: {
     showEditDiscoverySettings: boolean
     showEditVRMSettings: boolean
@@ -56,6 +57,7 @@ const initialState: AppState = {
   },
   sidebarShow: true,
 
+  grafanaUrl: "${window.location.protocol}//${window.location.hostname}:3000",
   editSettings: {
     showEditDiscoverySettings: true,
     showEditVRMSettings: true,
@@ -106,6 +108,12 @@ const changeState = (state = initialState, action: AppStateAction): AppState => 
     return {
       ...state,
       debug: action.data,
+    }
+  }
+  if (action.type === "GRAFANA_URL") {
+    return {
+      ...state,
+      grafanaUrl: action.data,
     }
   }
   if (action.type === "EDIT_SECURITY_SETTINGS_ENABLED") {
