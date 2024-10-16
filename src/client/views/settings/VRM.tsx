@@ -12,6 +12,11 @@ import {
   CButton,
   CFormCheck,
   CAlert,
+  CNavItem,
+  CNav,
+  CNavLink,
+  CTabPane,
+  CTabContent,
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig, useVRMLogin, useVRMLogout, useVRMRefresh } from "../../hooks/useAdminApi"
@@ -19,7 +24,7 @@ import { useFormValidation, extractParameterNameAndValue } from "../../hooks/use
 import { DeviceList } from "./DeviceList"
 import { AppConfig, AppVRMConfig, AppVRMConfigKey } from "../../../shared/types"
 import { AppState } from "../../store"
-import { VRMLoginRequest } from "../../../shared/api"
+import { VRMLoginMethod, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
 
 function VRM() {
@@ -120,6 +125,8 @@ function VRM() {
     vrmRefresh({})
   }
 
+  const [loginMethod, setLoginMethod] = useState<VRMLoginMethod>("credentials")
+
   return (
     temporaryConfig && (
       <CCard>
@@ -133,9 +140,37 @@ function VRM() {
               checked={temporaryConfig.vrm.enabled}
             />
           </CForm>
+          {!temporaryConfig.vrm.hasToken && (
+            <CNav variant="underline-border">
+              <CNavItem>
+                <CNavLink
+                  href="#!"
+                  active={loginMethod == "credentials"}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setLoginMethod("credentials")
+                  }}
+                >
+                  VRM Username & Password
+                </CNavLink>
+              </CNavItem>
+              <CNavItem>
+                <CNavLink
+                  href="#!"
+                  active={loginMethod == "token"}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setLoginMethod("token")
+                  }}
+                >
+                  VRM Token
+                </CNavLink>
+              </CNavItem>
+            </CNav>
+          )}
         </CCardHeader>
         <CCardBody>
-          <VRMDetailsPane
+          <VRMLoginPane
             settings={temporaryConfig.vrm}
             handleVRMLogin={handleVRMLogin}
             handleVRMLogout={handleVRMLogout}
@@ -143,16 +178,8 @@ function VRM() {
             loginInProgress={isVRMLoginInProgress}
             logoutInProgress={isVRMLogoutInProgress}
             vrmStatus={vrmStatus}
+            loginMethod={loginMethod}
           />
-          <CForm>
-            <DeviceList
-              hidden={!temporaryConfig.vrm.hasToken}
-              settings={temporaryConfig.vrm}
-              availablePortalIds={vrmDiscovered}
-              onEnablePortalChange={handleEnablePortalChange}
-              onEnableAllPortalsChange={handleEnableAllPortalsChange}
-            />
-          </CForm>
           <CButton
             color="primary"
             onClick={() => handleVRMRefresh()}
@@ -170,6 +197,15 @@ function VRM() {
             {isVRMLogoutInProgress ? "Working..." : "Logout"}
           </CButton>
           <VRMStatusPane hidden={!temporaryConfig.vrm.hasToken} status={vrmStatus} />
+          <CForm>
+            <DeviceList
+              hidden={!temporaryConfig.vrm.hasToken}
+              settings={temporaryConfig.vrm}
+              availablePortalIds={vrmDiscovered}
+              onEnablePortalChange={handleEnablePortalChange}
+              onEnableAllPortalsChange={handleEnableAllPortalsChange}
+            />
+          </CForm>
         </CCardBody>
         <CCardFooter>
           <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
@@ -181,7 +217,7 @@ function VRM() {
   )
 }
 
-interface VRMDetailsPaneProps {
+interface VRMLoginPaneProps {
   settings: AppVRMConfig
   vrmDiscovered?: string[]
   vrmStatus: VRMStatus
@@ -190,6 +226,7 @@ interface VRMDetailsPaneProps {
   handleVRMLogout: () => void
   loginInProgress: boolean
   logoutInProgress: boolean
+  loginMethod: VRMLoginMethod
 }
 
 interface VRMDetailsState {
@@ -201,7 +238,7 @@ interface VRMDetailsState {
 
 type VRMDetailsStateKeys = keyof VRMDetailsState
 
-function VRMDetailsPane(props: VRMDetailsPaneProps) {
+function VRMLoginPane(props: VRMLoginPaneProps) {
   const [state, setState] = useState<VRMDetailsState>({
     username: "",
     password: "",
@@ -213,7 +250,7 @@ function VRMDetailsPane(props: VRMDetailsPaneProps) {
     return state.username !== "" && state.password !== "" && state.tokenName !== ""
   })
 
-  const _isTokenLoginEnabled = useFormValidation(() => {
+  const isTokenLoginEnabled = useFormValidation(() => {
     return state.token !== ""
   })
 
@@ -227,56 +264,88 @@ function VRMDetailsPane(props: VRMDetailsPaneProps) {
   }
 
   return (
-    <div>
+    <>
       {!props.haveVRMToken && (
-        <CForm>
-          <div className="mb-3">
-            <CFormLabel htmlFor="username">VRM Username</CFormLabel>
-            <CFormInput
-              type="text"
-              name="username"
-              placeholder=""
-              value={state.username}
-              onChange={(event) => handleFormInputChange(event)}
-            />
-          </div>
-          <div className="mb-3">
-            <CFormLabel htmlFor="password">VRM Password</CFormLabel>
-            <CFormInput
-              type="password"
-              name="password"
-              placeholder=""
-              value={state.password}
-              onChange={(event) => handleFormInputChange(event)}
-            />
-          </div>
-          <div className="mb-3">
-            <CFormLabel htmlFor="tokenName">VRM Token Name</CFormLabel>
-            <CFormInput
-              type="text"
-              name="tokenName"
-              placeholder=""
-              value={state.tokenName}
-              onChange={(event) => handleFormInputChange(event)}
-            />
-          </div>
-          <CButton
-            color="primary"
-            disabled={!isCredentialsLoginEnabled}
-            onClick={() =>
-              props.handleVRMLogin({
-                method: "credentials",
-                username: state.username,
-                password: state.password,
-                tokenName: state.tokenName,
-              })
-            }
-          >
-            {props.loginInProgress ? "Working..." : "Login"}
-          </CButton>
-        </CForm>
+        <>
+          <CTabContent>
+            <CTabPane role="tabpanel" visible={props.loginMethod === "credentials"}>
+              <CForm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="username">VRM Username</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="username"
+                    placeholder=""
+                    value={state.username}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="password">VRM Password</CFormLabel>
+                  <CFormInput
+                    type="password"
+                    name="password"
+                    placeholder=""
+                    value={state.password}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="tokenName">VRM Token Name</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="tokenName"
+                    placeholder=""
+                    value={state.tokenName}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+                <CButton
+                  color="primary"
+                  disabled={!isCredentialsLoginEnabled}
+                  onClick={() =>
+                    props.handleVRMLogin({
+                      method: "credentials",
+                      username: state.username,
+                      password: state.password,
+                      tokenName: state.tokenName,
+                    })
+                  }
+                >
+                  {props.loginInProgress ? "Working..." : "Login with Username & Password"}
+                </CButton>
+              </CForm>
+            </CTabPane>
+            <CTabPane role="tabpanel" visible={props.loginMethod === "token"}>
+              <CForm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="username">VRM Token</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="token"
+                    placeholder=""
+                    value={state.token}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+                <CButton
+                  color="primary"
+                  disabled={!isTokenLoginEnabled}
+                  onClick={() =>
+                    props.handleVRMLogin({
+                      method: "token",
+                      token: state.token,
+                    })
+                  }
+                >
+                  {props.loginInProgress ? "Working..." : "Login with Token"}
+                </CButton>
+              </CForm>
+            </CTabPane>
+          </CTabContent>
+        </>
       )}
-    </div>
+    </>
   )
 }
 
