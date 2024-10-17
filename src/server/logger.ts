@@ -1,28 +1,34 @@
-const winston = require("winston")
-const Transport = require("winston-transport")
+import winston from "winston"
+import Transport from "winston-transport"
+import { Server } from "./server"
+import { LogEntry, LogLevel } from "../shared/types"
 
 // custom log storage transport
 // that keeps last 100 messages
 // and emits them live over ws /stream connection
 // from venus-influx-loader to react.js client
-class LogStorageTransport extends Transport {
-  constructor(app, opts) {
+export class LogStorageTransport extends Transport {
+  server: Server
+  entries: LogEntry[] = []
+  size: number
+
+  constructor(server: Server, opts: any) {
     super(opts)
+    this.server = server
     this.entries = []
-    this.app = app
     this.size = opts.size || 100
   }
 
-  log(info, callback) {
-    this.entries.push(info)
+  log(entry: LogEntry, callback: () => void) {
+    this.entries.push(entry)
 
     if (this.entries.length > this.size) {
       this.entries.splice(0, this.entries.length - this.size)
     }
 
-    this.app.emit("serverevent", {
+    this.server.emit("serverevent", {
       type: "LOG",
-      data: info,
+      data: entry,
     })
 
     callback()
@@ -36,12 +42,12 @@ class LogStorageTransport extends Transport {
 // app.debug
 // app.getLogger
 //
-module.exports = function (app, label, level) {
-  const format = winston.format.printf((info, _opts) => {
+export function createRootLogger(server: Server, level: LogLevel) {
+  const format = winston.format.printf((info) => {
     return `[${info.level}] [${info.label}] ${info.message} ${info.stack || ""}`
   })
 
-  app.logTransport = new LogStorageTransport(app, {
+  const logTransport = new LogStorageTransport(server, {
     format: winston.format.combine(
       winston.format.errors({ stack: true }),
       winston.format.splat(),
@@ -51,24 +57,16 @@ module.exports = function (app, label, level) {
     handleExceptions: true,
   })
 
-  app.rootLogger = winston.createLogger({
+  const rootLogger = winston.createLogger({
     level: level,
     transports: [
       new winston.transports.Console({
         format: winston.format.combine(winston.format.errors({ stack: true }), winston.format.splat(), format),
         handleExceptions: true,
       }),
-      app.logTransport,
+      logTransport,
     ],
   })
-  app.rootLogger.exitOnError = false
-
-  app.logger = app.rootLogger.child({ label: label })
-  app.getLogger = (label) => {
-    return app.rootLogger.child({ label: label })
-  }
-  app.debug = app.logger.debug.bind(app.logger)
-  app.info = app.logger.info.bind(app.logger)
-
-  return app.rootLogger
+  rootLogger.exitOnError = false
+  return { rootLogger, logTransport }
 }
