@@ -317,12 +317,6 @@ export class Server {
       type: "EDIT_VRM_SETTINGS_ENABLED",
       data: this.options.showEditVRMSettings,
     })
-
-    // TODO: here?
-    this.emit("loaderevent", {
-      type: "VRMDISCOVERY",
-      data: [],
-    })
   }
 
   settingsChanged() {
@@ -342,14 +336,10 @@ export class Server {
       }
     }
 
-    // TODO: do we need this?
-    // // reload VRM portals if vrm enabled and not running
-    // if (this.config.vrm.enabled && Object.keys(this.vrmDevices).length === 0) {
-    //   this.vrm.refresh()
-    // }
-    // // clear VRM discovered
-    // if (!this.config.vrm.enabled && Object.keys(this.vrmDevices).length > 0) {
-    // }
+    // reload VRM portals if vrm enabled
+    if (this.config.vrm.enabled && Object.keys(this.vrmDevices).length === 0) {
+      this.vrm.refresh()
+    }
 
     this.emit("loaderevent", {
       type: "SETTINGSCHANGED",
