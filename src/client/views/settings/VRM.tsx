@@ -17,6 +17,8 @@ import {
   CNavLink,
   CTabPane,
   CTabContent,
+  CCol,
+  CRow,
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig, useVRMLogin, useVRMLogout, useVRMRefresh } from "../../hooks/useAdminApi"
@@ -24,9 +26,10 @@ import { useFormValidation, extractParameterNameAndValue } from "../../hooks/use
 import { DeviceList } from "./DeviceList"
 import { AppConfig, AppVRMConfig, AppVRMConfigKey } from "../../../shared/types"
 import { AppState } from "../../store"
-import { VRMLoginMethod, VRMLoginRequest } from "../../../shared/api"
+import { VRMDeviceType, VRMLoginMethod, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
 import { WebSocketStatus } from "./WebsocketStatus"
+import { EditableHostList } from "./EditableDeviceList"
 
 function VRM() {
   const [{ data: config, loading: _isLoading, error: _loadError }, loadConfig, _cancelLoadConfig] = useGetConfig()
@@ -55,7 +58,9 @@ function VRM() {
   ] = useVRMRefresh()
 
   const isSaveEnabled = useFormValidation(() => {
-    return temporaryConfig !== undefined
+    return (
+      temporaryConfig !== undefined && temporaryConfig.vrm.manualPortalIds.filter((x) => x.portalId === "").length === 0
+    )
   })
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -136,7 +141,43 @@ function VRM() {
       })
   }
 
+  function handleAddPortal(_event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>) {
+    const clone = { ...temporaryConfig!! }
+    clone.vrm.manualPortalIds.push({ portalId: "", enabled: true })
+    setTemporaryConfig(clone)
+  }
+
+  function handleDeletePortal(
+    _event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>,
+    index: number,
+  ) {
+    const clone = { ...temporaryConfig!! }
+    clone.vrm.manualPortalIds.splice(index, 1)
+    setTemporaryConfig(clone)
+  }
+
+  function handlePortalIdChange(event: React.ChangeEvent<HTMLInputElement>, index: number) {
+    const clone = { ...temporaryConfig!! }
+    clone.vrm.manualPortalIds[index].portalId = event.target.value
+    setTemporaryConfig(clone)
+  }
+
+  function handleEnableHostChange(event: React.ChangeEvent<HTMLInputElement>, index: number) {
+    const clone = { ...temporaryConfig!! }
+    clone.vrm.manualPortalIds[index].enabled = event.target.checked
+    setTemporaryConfig(clone)
+  }
+
+  function handleEnableAllHostsChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const clone = { ...temporaryConfig!! }
+    clone.vrm.manualPortalIds = clone.vrm.manualPortalIds.map((element) => {
+      return { portalId: element.portalId, enabled: event.target.checked }
+    })
+    setTemporaryConfig(clone)
+  }
+
   const [loginMethod, setLoginMethod] = useState<VRMLoginMethod>("credentials")
+  const [displayedDevices, setDisplayedDevices] = useState<VRMDeviceType>("discovered")
   const [showStatusPane, setShowStatusPane] = useState(false)
 
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
@@ -199,37 +240,88 @@ function VRM() {
             vrmStatus={vrmStatus}
             loginMethod={loginMethod}
           />
-          <CButton
-            color="primary"
-            onClick={() => handleVRMRefresh()}
-            hidden={!temporaryConfig.vrm.hasToken}
-            disabled={isVRMRefreshInProgress}
-          >
-            {isVRMRefreshInProgress ? "Working..." : "Refresh"}
-          </CButton>{" "}
-          <CButton
-            color="primary"
-            onClick={() => handleVRMLogout()}
-            hidden={!temporaryConfig.vrm.hasToken}
-            disabled={!temporaryConfig.vrm.hasToken}
-          >
-            {isVRMLogoutInProgress ? "Working..." : "Logout"}
-          </CButton>
-          <VRMStatusPane hidden={!showStatusPane} status={vrmStatus} />
-          <CForm>
-            <DeviceList
-              hidden={!temporaryConfig.vrm.hasToken}
-              settings={temporaryConfig.vrm}
-              availablePortalIds={vrmDiscovered}
-              onEnablePortalChange={handleEnablePortalChange}
-              onEnableAllPortalsChange={handleEnableAllPortalsChange}
-            />
-          </CForm>
+          <CNav variant="underline">
+            <CNavItem>
+              <CNavLink
+                href="#!"
+                active={displayedDevices == "discovered"}
+                onClick={(e) => {
+                  e.preventDefault()
+                  setDisplayedDevices("discovered")
+                }}
+              >
+                Discovered ({vrmDiscovered.length})
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink
+                href="#!"
+                active={displayedDevices == "configured"}
+                onClick={(e) => {
+                  e.preventDefault()
+                  setDisplayedDevices("configured")
+                }}
+              >
+                Configured ({temporaryConfig.vrm.manualPortalIds.length})
+              </CNavLink>
+            </CNavItem>
+          </CNav>
+          <CTabContent>
+            <CTabPane role="tabpanel" visible={displayedDevices === "discovered"}>
+              <VRMStatusPane hidden={!showStatusPane} status={vrmStatus} />
+              <CForm>
+                <DeviceList
+                  hidden={!temporaryConfig.vrm.hasToken}
+                  settings={temporaryConfig.vrm}
+                  availablePortalIds={vrmDiscovered}
+                  onEnablePortalChange={handleEnablePortalChange}
+                  onEnableAllPortalsChange={handleEnableAllPortalsChange}
+                />
+              </CForm>
+              <CButton
+                color="primary"
+                onClick={() => handleVRMRefresh()}
+                hidden={!temporaryConfig.vrm.hasToken}
+                disabled={isVRMRefreshInProgress}
+              >
+                {isVRMRefreshInProgress ? "Working..." : "Refresh"}
+              </CButton>{" "}
+            </CTabPane>
+            <CTabPane role="tabpanel" visible={displayedDevices === "configured"}>
+              <VRMInfoPane hidden={!showStatusPane} text="Add Installations by specifying their Portal ID" />
+              <CForm>
+                <EditableHostList
+                  entries={temporaryConfig.vrm.manualPortalIds}
+                  onEntryValueChange={handlePortalIdChange}
+                  onEnableEntryChange={handleEnableHostChange}
+                  onEnableAllEntriesChange={handleEnableAllHostsChange}
+                  onAddEntry={handleAddPortal}
+                  onDeleteEntry={handleDeletePortal}
+                  entryTitleText="Portal ID"
+                  addEntryButtonText="Add Installation"
+                />
+              </CForm>
+            </CTabPane>
+          </CTabContent>
         </CCardBody>
         <CCardFooter>
-          <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
-            {isSaving ? "Saving..." : "Save"}
-          </CButton>
+          <CRow>
+            <CCol>
+              <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
+                {isSaving ? "Saving..." : "Save"}
+              </CButton>
+            </CCol>
+            <CCol xs="auto">
+              <CButton
+                color="primary"
+                onClick={() => handleVRMLogout()}
+                hidden={!temporaryConfig.vrm.hasToken}
+                disabled={!temporaryConfig.vrm.hasToken}
+              >
+                {isVRMLogoutInProgress ? "Working..." : "Logout"}
+              </CButton>
+            </CCol>
+          </CRow>
         </CCardFooter>
       </CCard>
     )
@@ -378,6 +470,21 @@ function VRMStatusPane(props: VRMStatusPaneProps) {
     <div className="pt-3">
       <CAlert hidden={props.hidden} color={props.status && props.status.status === "success" ? "success" : "danger"}>
         <small>VRM Status: {props.status && props.status.message}</small>
+      </CAlert>
+    </div>
+  )
+}
+
+interface VRMInfoPaneProps {
+  hidden: boolean
+  text: string
+}
+
+function VRMInfoPane(props: VRMInfoPaneProps) {
+  return (
+    <div className="pt-3">
+      <CAlert hidden={props.hidden} color="secondary">
+        <small>{props.text}</small>
       </CAlert>
     </div>
   )
