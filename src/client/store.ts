@@ -44,7 +44,7 @@ const initialState: AppState = {
   webSocket: undefined,
   restarting: false,
 
-  loaderStatistics: { measurementCount: 0, measurementRate: 0, deviceStatistics: {} },
+  loaderStatistics: { distinctMeasurementsCount: 0, measurementRate: 0, deviceStatistics: {} },
 
   vrmStatus: { status: "success", message: "" },
 

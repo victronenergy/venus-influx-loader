@@ -13,6 +13,7 @@ import {
   CTableDataCell,
   CTableRow,
   CContainer,
+  CBadge,
 } from "@coreui/react"
 
 import CIcon from "@coreui/icons-react"
@@ -21,11 +22,15 @@ import { AppState } from "../../store"
 import { WebSocketStatus } from "../settings/WebsocketStatus"
 
 function Dashboard() {
-  const { measurementRate, measurementCount, deviceStatistics } = useSelector((state: AppState) => {
+  const {
+    measurementRate,
+    distinctMeasurementsCount: measurementCount,
+    deviceStatistics,
+  } = useSelector((state: AppState) => {
     return (
       state.loaderStatistics || {
         measurementRate: 0,
-        measurementCount: 0,
+        distinctMeasurementsCount: 0,
         deviceStatistics: [],
       }
     )
@@ -63,17 +68,29 @@ function Dashboard() {
             <CCardBody>
               <CTable borderless>
                 <CTableBody>
-                  {Object.keys(deviceStatistics || {}).map((portalId) => {
-                    const deviceStats = deviceStatistics[portalId]
+                  {Object.keys(deviceStatistics || {}).map((key) => {
+                    const deviceStats = deviceStatistics[key]
                     return (
-                      <CTableRow key={portalId}>
+                      <CTableRow key={key}>
                         <CTableDataCell>
                           <CContainer>
-                            <CRow className="align-items-start">
+                            <CRow className="align-items-start mb-1">
                               <CCol>
-                                <CIcon className="text-muted" icon={cilRss} size="lg" /> {deviceStats.name}
+                                <CIcon
+                                  className={deviceStats.isConnected ? "text-success" : "text-danger"}
+                                  icon={cilRss}
+                                  size="lg"
+                                />
+                                <strong>
+                                  &nbsp; &nbsp;
+                                  {deviceStats.name || deviceStats.address}
+                                  &nbsp; &nbsp;
+                                </strong>
+                                <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
+                                  {deviceStats.type}
+                                </CBadge>
                               </CCol>
-                              <CCol xs="auto">
+                              <CCol className="text-end" xs="auto">
                                 <strong> {deviceStats.measurementRate} </strong>(
                                 {((deviceStats.measurementRate / measurementRate) * 100).toFixed(0)}
                                 %)
