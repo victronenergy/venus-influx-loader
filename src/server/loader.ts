@@ -18,7 +18,7 @@ export class Loader {
   manualConnections: { [address: string]: VenusMqttClient } = {}
   vrmConnections: { [portalId: string]: VenusMqttClient } = {}
 
-  loaderStatistics: LoaderStatistics = { distinctMeasurementsCount: 0, measurementRate: 0, deviceStatistics: {} }
+  loaderStatistics: LoaderStatistics = { distinctMeasurementsCount: 0, measurementRate: 0.1, deviceStatistics: {} }
   lastIntervalCount = 0
 
   collectInterval: any = undefined
@@ -42,7 +42,7 @@ export class Loader {
     // start sending loader statistics
     this.server.emit("loaderevent", {
       type: "LOADERSTATISTICS",
-      data: {},
+      data: this.loaderStatistics,
     })
     this.collectInterval = setInterval(() => {
       this.collectStats()
