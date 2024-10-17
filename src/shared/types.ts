@@ -23,21 +23,29 @@ export type AppUPNPConfigKey = keyof AppUPNPConfig
 export interface AppVRMConfig {
   enabled: boolean
   enabledPortalIds: string[]
+  manualPortalIds: AppInstallationConfig[]
   hasToken: boolean
 }
 
 export type AppVRMConfigKey = keyof AppVRMConfig
 
-export interface AppHostConfig {
+export interface AppDeviceConfig {
   hostName: string
   enabled: boolean
 }
 
-export type AppHostConfigKey = keyof AppHostConfig
+export type AppDeviceConfigKey = keyof AppDeviceConfig
+
+export interface AppInstallationConfig {
+  portalId: string
+  enabled: boolean
+}
+
+export type AppInstallationConfigKey = keyof AppInstallationConfig
 
 export interface AppManualConfig {
   enabled: boolean
-  hosts: AppHostConfig[]
+  hosts: AppDeviceConfig[]
 }
 
 export type AppManualConfigKey = keyof AppManualConfig
@@ -87,6 +95,7 @@ const defaultAppConfigValues: AppConfig = {
   vrm: {
     enabled: false,
     enabledPortalIds: [],
+    manualPortalIds: [],
     hasToken: false,
   },
   influxdb: {

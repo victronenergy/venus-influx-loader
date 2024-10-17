@@ -37,6 +37,8 @@ export const ADMIN_API_VRM_LOGIN = `${ADMIN_API}/${API_VRM_LOGIN}`
 
 export type VRMLoginMethod = "credentials" | "token"
 
+export type VRMDeviceType = "discovered" | "configured"
+
 export interface VRMBaseLoginRequest {
   method: VRMLoginMethod
 }
