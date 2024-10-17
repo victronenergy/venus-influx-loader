@@ -26,10 +26,10 @@ import { AppConfig, AppVRMConfig, AppVRMConfigKey } from "../../../shared/types"
 import { AppState } from "../../store"
 import { VRMLoginMethod, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
+import { WebSocketStatus } from "./WebsocketStatus"
 
 function VRM() {
   const [{ data: config, loading: _isLoading, error: _loadError }, loadConfig, _cancelLoadConfig] = useGetConfig()
-
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
 
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
@@ -138,6 +138,11 @@ function VRM() {
 
   const [loginMethod, setLoginMethod] = useState<VRMLoginMethod>("credentials")
   const [showStatusPane, setShowStatusPane] = useState(false)
+
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
+  if (websocketStatus !== "open") {
+    return <WebSocketStatus websocketStatus={websocketStatus} />
+  }
 
   return (
     temporaryConfig && (

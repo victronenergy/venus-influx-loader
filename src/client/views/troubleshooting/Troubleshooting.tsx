@@ -17,12 +17,18 @@ import {
 import { usePutDebug } from "../../hooks/useAdminApi"
 import { AppState } from "../../store"
 import { LogEntry } from "../../../shared/types"
+import { WebSocketStatus } from "../settings/WebsocketStatus"
 
 function Troubleshooting() {
   const log = useSelector((state: AppState) => state.log)
   const isDebugLevelEnabled = useSelector((state: AppState) => state.debug)
 
   const [, toggleDebugLevel, _cancelToggleDebugLevel] = usePutDebug()
+
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
+  if (websocketStatus !== "open") {
+    return <WebSocketStatus websocketStatus={websocketStatus} />
+  }
 
   return (
     log &&

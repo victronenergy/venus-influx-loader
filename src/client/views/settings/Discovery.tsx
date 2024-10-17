@@ -8,6 +8,7 @@ import { DeviceList } from "./DeviceList"
 import { useEffect, useState } from "react"
 import { AppConfig } from "../../../shared/types"
 import { AppState } from "../../store"
+import { WebSocketStatus } from "./WebsocketStatus"
 
 function Discovery() {
   const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
@@ -63,6 +64,11 @@ function Discovery() {
       clone.upnp.enabledPortalIds = []
     }
     setTemporaryConfig(clone)
+  }
+
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
+  if (websocketStatus !== "open") {
+    return <WebSocketStatus websocketStatus={websocketStatus} />
   }
 
   return (

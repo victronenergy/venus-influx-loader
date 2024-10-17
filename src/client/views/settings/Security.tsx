@@ -4,6 +4,9 @@ import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CButton }
 
 import { usePostSecurity } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+import { WebSocketStatus } from "./WebsocketStatus"
+import { useSelector } from "react-redux"
+import { AppState } from "../../store"
 
 interface SecurityState {
   username: string
@@ -33,6 +36,11 @@ function Security() {
     // @ts-expect-error
     clone[name] = value
     setState(clone)
+  }
+
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
+  if (websocketStatus !== "open") {
+    return <WebSocketStatus websocketStatus={websocketStatus} />
   }
 
   return (

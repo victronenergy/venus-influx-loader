@@ -5,6 +5,9 @@ import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CButton }
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
 import { AppConfig } from "../../../shared/types"
+import { useSelector } from "react-redux"
+import { WebSocketStatus } from "./WebsocketStatus"
+import { AppState } from "../../store"
 
 function InfluxDB() {
   const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
@@ -33,6 +36,11 @@ function InfluxDB() {
     // @ts-expect-error
     clone.influxdb[name] = value
     setTemporaryConfig(clone)
+  }
+
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
+  if (websocketStatus !== "open") {
+    return <WebSocketStatus websocketStatus={websocketStatus} />
   }
 
   return (

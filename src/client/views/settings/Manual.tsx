@@ -6,6 +6,9 @@ import { useFormValidation, extractParameterNameAndValue } from "../../hooks/use
 import { EditableHostList } from "./EditableHostList"
 import { useEffect, useState } from "react"
 import { AppConfig } from "../../../shared/types"
+import { WebSocketStatus } from "./WebsocketStatus"
+import { useSelector } from "react-redux"
+import { AppState } from "../../store"
 
 function Manual() {
   const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
@@ -63,6 +66,11 @@ function Manual() {
     const clone = { ...temporaryConfig!! }
     clone.manual.hosts.splice(index, 1)
     setTemporaryConfig(clone)
+  }
+
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
+  if (websocketStatus !== "open") {
+    return <WebSocketStatus websocketStatus={websocketStatus} />
   }
 
   return (
