@@ -26,7 +26,7 @@ export class LogStorageTransport extends Transport {
       this.entries.splice(0, this.entries.length - this.size)
     }
 
-    this.server.emit("serverevent", {
+    this.server.emit("loaderevent", {
       type: "LOG",
       data: entry,
     })

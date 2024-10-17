@@ -34,7 +34,15 @@ export interface AppStateWebSocketOpenAction extends AppStateBaseAction {
   data: WebSocket
 }
 
-export type DiscoveredDevice = { portalId: string; name?: string; address?: string }
+// for discovered device we always know portalId and address, and derive name from MQTT
+export type DiscoveredDevice = { portalId: string; name?: string; address: string }
+// for manually configured device we know address, and derive name and portalId from MQTT
+export type ConfiguredDevice = {
+  type: "UPNP" | "VRM" | "IP"
+  portalId?: string
+  name?: string
+  address: string
+}
 
 export interface AppStateUPNPDiscoveryAction extends AppStateBaseAction {
   type: "UPNPDISCOVERY"
@@ -56,21 +64,25 @@ export interface AppStateVRMStatusAction extends AppStateBaseAction {
   data: VRMStatus
 }
 
-export interface DeviceDetails {
+export interface DeviceStatisticsDetails {
+  type: "UPNP" | "VRM" | "IP"
+  address: string
   name: string
+  isConnected: boolean
   measurementRate: number
-  measurementCount: number
+  totalMeasurementsCount: number
   lastIntervalCount: number
-  lastMeasurement: string // TODO: Date
+  distinctMeasurementsCount: number
+  lastMeasurement?: Date
 }
 
 export interface DeviceStatistics {
-  [key: string]: DeviceDetails
+  [key: string]: DeviceStatisticsDetails
 }
 
 export interface LoaderStatistics {
   measurementRate: number
-  measurementCount: number
+  distinctMeasurementsCount: number
   deviceStatistics: DeviceStatistics
 }
 

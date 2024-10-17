@@ -158,6 +158,7 @@ export class VRM {
     interface VRMAPIUsersInstallationsRecord {
       identifier: string
       name: string
+      mqtt_host: string
     }
 
     interface VRMAPIUsersInstallations {
@@ -175,7 +176,7 @@ export class VRM {
 
       if (res.status === 200) {
         const devices = response.records.map((record) => {
-          return { portalId: String(record.identifier), name: record.name }
+          return { portalId: String(record.identifier), name: record.name, address: record.mqtt_host }
         })
         this.server.emit("vrmDiscovered", devices)
         this.good("Installations Retrieved")

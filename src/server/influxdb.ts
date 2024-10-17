@@ -25,7 +25,7 @@ export class InfluxDBBackend {
     this.server = server
     this.logger = server.getLogger("influxdb")
     this.lastWriteTime = Date.now()
-    this.server.app.on("settingsChanged", () => { this.settingsChanged() })
+    this.server.on("settingsChanged", () => { this.settingsChanged() })
 
     this.settingsChanged()
   }
@@ -64,7 +64,7 @@ export class InfluxDBBackend {
     }
   }
 
-  async store(portalId: string, name: string, instanceNumber: number, measurement: string, value: number) {
+  async store(portalId: string, name: string, instanceNumber: string, measurement: string, value: number) {
     if (!this.isConnected || value === undefined || value === null) {
       return
     }

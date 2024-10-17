@@ -35,14 +35,14 @@ export class WebSocketChannel {
         spark.write(event)
       }
 
-      this.server.app.on("serverevent", onServerEvent)
+      this.server.on("loaderevent", onServerEvent)
 
       // @ts-ignore
       spark.onDisconnects.push(() => {
-        this.server.app.removeListener("serverevent", onServerEvent)
+        this.server.removeListener("loaderevent", onServerEvent)
       })
 
-      Object.entries(this.server.lastServerEvents).forEach(([type, event]) => {
+      Object.entries(this.server.loaderState).forEach(([type, event]) => {
         if (type !== "LOG") {
           spark.write(event)
         }

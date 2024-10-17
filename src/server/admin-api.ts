@@ -58,7 +58,7 @@ export default (server: Server) => {
     // TODO: validate JSON payload
     server.isDebugEnabled = req.body.debug
     const value = server.isDebugEnabled
-    server.emit("serverevent", { type: "DEBUG", data: value })
+    server.emit("loaderevent", { type: "DEBUG", data: value })
     res.send(JSON.stringify({ debug: value }))
   })
 
