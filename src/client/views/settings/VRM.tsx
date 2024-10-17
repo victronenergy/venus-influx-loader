@@ -28,13 +28,14 @@ import { VRMLoginMethod, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
 
 function VRM() {
-  const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
+  const [{ data: config, loading: _isLoading, error: _loadError }, loadConfig, _cancelLoadConfig] = useGetConfig()
 
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
 
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
     setTemporaryConfig(config)
+    setShowStatusPane(config?.vrm.hasToken || false)
   }, [config])
 
   const vrmDiscovered = useSelector((state: AppState) => state.vrmDiscovered)
@@ -106,26 +107,37 @@ function VRM() {
   }
 
   function handleVRMLogin(request: VRMLoginRequest) {
-    vrmLogin({ data: request }).then(() => {
-      const clone = { ...temporaryConfig!! }
-      clone.vrm.hasToken = true
-      setTemporaryConfig(clone)
-    })
+    vrmLogin({ data: request })
+      .then(() => {
+        loadConfig()
+      })
+      .catch((_error) => {
+        setShowStatusPane(true)
+      })
   }
 
   function handleVRMLogout() {
-    vrmLogout({}).then(() => {
-      const clone = { ...temporaryConfig!! }
-      clone.vrm.hasToken = false
-      setTemporaryConfig(clone)
-    })
+    vrmLogout({})
+      .then(() => {
+        loadConfig()
+      })
+      .catch((_error) => {
+        setShowStatusPane(true)
+      })
   }
 
   function handleVRMRefresh() {
     vrmRefresh({})
+      .then(() => {
+        loadConfig()
+      })
+      .catch((_error) => {
+        setShowStatusPane(true)
+      })
   }
 
   const [loginMethod, setLoginMethod] = useState<VRMLoginMethod>("credentials")
+  const [showStatusPane, setShowStatusPane] = useState(false)
 
   return (
     temporaryConfig && (
@@ -149,6 +161,7 @@ function VRM() {
                   onClick={(e) => {
                     e.preventDefault()
                     setLoginMethod("credentials")
+                    setShowStatusPane(false)
                   }}
                 >
                   With Username & Password
@@ -161,6 +174,7 @@ function VRM() {
                   onClick={(e) => {
                     e.preventDefault()
                     setLoginMethod("token")
+                    setShowStatusPane(false)
                   }}
                 >
                   With Token
@@ -196,7 +210,7 @@ function VRM() {
           >
             {isVRMLogoutInProgress ? "Working..." : "Logout"}
           </CButton>
-          <VRMStatusPane hidden={!temporaryConfig.vrm.hasToken} status={vrmStatus} />
+          <VRMStatusPane hidden={!showStatusPane} status={vrmStatus} />
           <CForm>
             <DeviceList
               hidden={!temporaryConfig.vrm.hasToken}
@@ -319,9 +333,9 @@ function VRMLoginPane(props: VRMLoginPaneProps) {
             <CTabPane role="tabpanel" visible={props.loginMethod === "token"}>
               <CForm>
                 <div className="mb-3">
-                  <CFormLabel htmlFor="username">VRM Token</CFormLabel>
+                  <CFormLabel htmlFor="token">VRM Token</CFormLabel>
                   <CFormInput
-                    type="text"
+                    type="password"
                     name="token"
                     placeholder=""
                     value={state.token}
