@@ -129,7 +129,14 @@ export class Loader {
     // check what devices are enabled
     // and compute what devices should be disabled
     const config = this.server.config.vrm
-    const enabled = config.enabled ? config.enabledPortalIds : []
+    const e1 = config.enabled ? config.enabledPortalIds : []
+    const e2 = config.enabled
+      ? config.manualPortalIds.reduce((r: string[], e) => {
+          if (e.enabled) r.push(e.portalId)
+          return r
+        }, [])
+      : []
+    const enabled = [...e1, ...e2]
     const disabled = arrayDifference(Object.keys(this.vrmConnections), enabled)
     // disconnect from Venus devices that are no longer enabled
     disabled.forEach((portalId) => {
@@ -240,6 +247,7 @@ class VenusMqttClient {
   async stop() {
     this.logger.info("stop")
     this.client.end(true)
+    delete this.loader.loaderStatistics.deviceStatistics[this.statisticsKey]
   }
 
   async changeExpirationDate() {

@@ -87,9 +87,9 @@ export class Server {
     this.secrets = await this.loadSecrets()
     this.config = await this.loadConfig()
 
-    // if (this.config.debug) {
-    this.rootLogger.level = "debug"
-    // }
+    if (this.config.debug) {
+      this.rootLogger.level = "debug"
+    }
 
     this.logger.debug("Starting server...")
 
@@ -366,22 +366,30 @@ export class Server {
 
   async loadConfig(): Promise<AppConfig> {
     const location = this.configFiles.configLocation
+    const defaultConfig = createAppConfig({
+      influxdb: {
+        host: defaultInfluxDBURL.hostname,
+        port: defaultInfluxDBURL.port,
+        username: defaultInfluxDBUsername,
+        password: defaultInfluxDBPassword,
+        database: defaultInfluxDBDatabase,
+        retention: defaultInfluxDBRetention,
+      },
+    })
     try {
       this.logger.info(`Loading config from: ${location}...`)
       const contents = await fs.readFile(location, "utf-8")
-      return JSON.parse(contents) as AppConfig
+      const config = JSON.parse(contents) as AppConfig
+      // merge default with loaded overrides
+      return {
+        upnp: { ...defaultConfig.upnp, ...config.upnp },
+        vrm: { ...defaultConfig.vrm, ...config.vrm },
+        manual: { ...defaultConfig.manual, ...config.manual },
+        influxdb: { ...defaultConfig.influxdb, ...config.influxdb },
+      }
     } catch (error) {
       this.logger.error(`Failed loading config from: ${location}, error: ${error}.`)
-      return createAppConfig({
-        influxdb: {
-          host: defaultInfluxDBURL.hostname,
-          port: defaultInfluxDBURL.port,
-          username: defaultInfluxDBUsername,
-          password: defaultInfluxDBPassword,
-          database: defaultInfluxDBDatabase,
-          retention: defaultInfluxDBRetention,
-        },
-      })
+      return defaultConfig
     }
   }
 
