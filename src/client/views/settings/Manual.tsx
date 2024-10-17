@@ -3,7 +3,7 @@ import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck 
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
-import { EditableHostList } from "./EditableHostList"
+import { EditableHostList } from "./EditableDeviceList"
 import { useEffect, useState } from "react"
 import { AppConfig } from "../../../shared/types"
 import { WebSocketStatus } from "./WebsocketStatus"
@@ -74,33 +74,35 @@ function Manual() {
   }
 
   return (
-    config && (
+    temporaryConfig && (
       <CCard>
         <CCardHeader>
           <CForm>
             <CFormCheck
               name="enabled"
               id="enabled"
-              label="Connect to Venus Devices using their hostname / address"
+              label="Connect to Venus Devices using their Hostname or IP Address"
               onChange={(event) => handleEnableChange(event)}
-              checked={config.manual.enabled}
+              checked={temporaryConfig.manual.enabled}
             />
           </CForm>
         </CCardHeader>
         <CCardBody>
           <CForm>
             <EditableHostList
-              settings={config.manual}
-              onHostNameChange={handleHostNameChange}
-              onEnableHostChange={handleEnableHostChange}
-              onEnableAllHostsChange={handleEnableAllHostsChange}
-              onAddHost={handleAddHost}
-              onDeleteHost={handleDeleteHost}
+              entries={temporaryConfig.manual.hosts}
+              onEntryValueChange={handleHostNameChange}
+              onEnableEntryChange={handleEnableHostChange}
+              onEnableAllEntriesChange={handleEnableAllHostsChange}
+              onAddEntry={handleAddHost}
+              onDeleteEntry={handleDeleteHost}
+              entryTitleText="Host"
+              addEntryButtonText="Add Host"
             />
           </CForm>
         </CCardBody>
         <CCardFooter>
-          <CButton color="primary" onClick={() => save({ data: config })} disabled={!isSaveEnabled}>
+          <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
             {isSaving ? "Saving..." : "Save"}
           </CButton>
         </CCardFooter>
