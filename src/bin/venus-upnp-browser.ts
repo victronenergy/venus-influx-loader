@@ -2,11 +2,13 @@
 
 import { program } from "commander"
 // @ts-expect-error
-const buildInfo = await import("../buildInfo.cjs")
+import buildInfo from "../buildInfo.cjs"
 
 import axios from "axios"
 
-import upnp from "../server/upnp.cjs"
+import { UPNP } from "../server/upnp"
+import { LogEntry, LogLevel } from "../shared/types"
+import { DiscoveredDevice } from "../shared/state"
 
 program
   .version(buildInfo.buildVersion)
@@ -27,52 +29,22 @@ log(`Discovery API: ${options.discoveryApi}`)
 const logEndpoint = new URL("log", options.discoveryApi)
 const discoveryEndpoint = new URL("upnpDiscovered", options.discoveryApi)
 
-// upnp browser
-const browser = upnp({
-  getLogger: (_name: string) => {
-    return {
-      info: (message: string) => {
-        log(message)
-        postLog(logEndpoint, { level: "info", message: message })
-      },
-      error: (message: string) => {
-        log(message)
-        postLog(logEndpoint, { level: "error", message: message })
-      },
-    }
-  },
-  emit: (event: string, data: any) => {
-    if (event === "upnpDiscovered") {
-      postDiscovery(discoveryEndpoint, data)
-    }
-  },
-})
-
-interface LogMessage {
-  level: string
-  message: string
-}
-
-interface DiscoveryMessage {
-  data: string
-}
-
 // cache discovered venus devices and log entries
 // so they can be posted to discoveryApi when ready
-let cachedLogs: LogMessage[] = []
-let cachedDiscovery: DiscoveryMessage[] = []
+let cachedLogs: LogEntry[] = []
+let cachedDiscovery: DiscoveredDevice[] = []
 
-function postLog(endpoint: URL, info: LogMessage) {
+function postLog(endpoint: URL, entry: LogEntry) {
   axios
-    .post(endpoint.toString(), info)
+    .post(endpoint.toString(), entry)
     .then((response) => response.data)
     .catch((err) => {
       log(`Failed to postLog to ${endpoint}, error: ${err.message}`)
-      cachedLogs.push(info)
+      cachedLogs.push(entry)
     })
 }
 
-function postDiscovery(endpoint: URL, info: DiscoveryMessage) {
+function postDiscovery(endpoint: URL, info: DiscoveredDevice) {
   axios
     .post(endpoint.toString(), info)
     .then((response) => response.data)
@@ -95,6 +67,26 @@ setInterval(() => {
     postDiscovery(discoveryEndpoint, info)
   })
 }, 5000)
+
+// server mock
+const serverMock = {
+  getLogger: (name: string) => {
+    return {
+      log: (level: LogLevel, message: string) => {
+        log(message)
+        postLog(logEndpoint, { timestamp: Date.now().toString(), label: name, level: level, message: message })
+      },
+    }
+  },
+  emit: (event: string, data: any) => {
+    if (event === "upnpDiscovered") {
+      postDiscovery(discoveryEndpoint, data)
+    }
+  },
+}
+
+// upnp browser
+const browser = new UPNP(serverMock)
 
 // exit on Ctrl-C
 process.on("SIGINT", function () {

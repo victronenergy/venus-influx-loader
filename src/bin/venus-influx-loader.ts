@@ -2,9 +2,9 @@
 
 import { program } from "commander"
 // @ts-expect-error
-const buildInfo = await import("../buildInfo.cjs")
+import buildInfo from "../buildInfo.cjs"
 
-import Server from "../server/server.cjs"
+import { Server } from "../server/server"
 
 program
   .version(buildInfo.buildVersion)
