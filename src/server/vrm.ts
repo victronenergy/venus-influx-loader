@@ -133,20 +133,19 @@ export class VRM {
       const _res = await axios.get(`${apiUrl}/auth/logout`, {
         headers: { "X-Authorization": `Token ${this.server.secrets.vrmToken}` },
       })
-
-      // NOTE: we do not check response code,
-      // we simply delete secrets, and forget enabled portals
-      delete this.server.secrets.vrmToken
-      delete this.server.secrets.vrmTokenId
-      delete this.server.secrets.vrmUserId
-      delete this.server.secrets.vrmUsername
-      this.server.config.vrm.enabledPortalIds = []
-      await this.server.saveSecrets()
-      await this.server.saveConfig()
     } catch (error) {
       this.fail(`Logout failed: ${error}`)
-      throw error
     }
+
+    // NOTE: we do not check response code,
+    // we simply delete secrets, and forget enabled portals
+    delete this.server.secrets.vrmToken
+    delete this.server.secrets.vrmTokenId
+    delete this.server.secrets.vrmUserId
+    delete this.server.secrets.vrmUsername
+    this.server.config.vrm.enabledPortalIds = []
+    await this.server.saveSecrets()
+    await this.server.saveConfig()
   }
 
   async refresh() {
