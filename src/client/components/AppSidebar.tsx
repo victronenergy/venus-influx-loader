@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux"
 
 import { CSidebar, CSidebarHeader, CSidebarBrand, CImage } from "@coreui/react"
 
+// @ts-ignore
 import logo from "../public/img/victron-logo-footer.svg"
 
 import { AppSidebarNav } from "./AppSidebarNav"

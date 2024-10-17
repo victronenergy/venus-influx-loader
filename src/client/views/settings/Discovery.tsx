@@ -73,7 +73,7 @@ function Discovery() {
             <CFormCheck
               name="enabled"
               id="enabled"
-              label="Enable Connection to Nearby Venus OS Devices"
+              label="Connection to Venus Devices Nearby"
               onChange={(event) => handleEnableChange(event)}
               checked={temporaryConfig.upnp.enabled}
             />

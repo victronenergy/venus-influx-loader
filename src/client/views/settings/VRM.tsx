@@ -135,13 +135,13 @@ function VRM() {
             <CFormCheck
               name="enabled"
               id="enabled"
-              label="Enable Connection to Venus OS Devices via VRM"
+              label="Connect to Venus Devices via VRM"
               onChange={(event) => handleEnableChange(event)}
               checked={temporaryConfig.vrm.enabled}
             />
           </CForm>
           {!temporaryConfig.vrm.hasToken && (
-            <CNav variant="underline-border">
+            <CNav variant="underline">
               <CNavItem>
                 <CNavLink
                   href="#!"
@@ -151,7 +151,7 @@ function VRM() {
                     setLoginMethod("credentials")
                   }}
                 >
-                  VRM Username & Password
+                  With Username & Password
                 </CNavLink>
               </CNavItem>
               <CNavItem>
@@ -163,7 +163,7 @@ function VRM() {
                     setLoginMethod("token")
                   }}
                 >
-                  VRM Token
+                  With Token
                 </CNavLink>
               </CNavItem>
             </CNav>

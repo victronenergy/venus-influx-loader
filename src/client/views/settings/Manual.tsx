@@ -73,7 +73,7 @@ function Manual() {
             <CFormCheck
               name="enabled"
               id="enabled"
-              label="Enable Manual Connection to Venus OS Devices"
+              label="Connect to Venus Devices using their hostname / address"
               onChange={(event) => handleEnableChange(event)}
               checked={config.manual.enabled}
             />
