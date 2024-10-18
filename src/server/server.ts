@@ -167,7 +167,8 @@ export class Server {
     // setup /discovery-api routes, if enabled
     if (this.options.discoveryApiEndpoint) {
       this.logger.info(`Setting up ${this.options.discoveryApiEndpoint} routes`)
-      app.use(this.options.discoveryApiEndpoint, require("./discovery-api.cjs")(app))
+      const configureDiscoveryApiRoutes = (await import("./discovery-api")).default
+      app.use(this.options.discoveryApiEndpoint, configureDiscoveryApiRoutes(this))
     }
 
     // setup /grafana-api routes, if enabled
