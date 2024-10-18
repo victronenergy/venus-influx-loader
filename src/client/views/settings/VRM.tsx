@@ -240,69 +240,73 @@ function VRM() {
             vrmStatus={vrmStatus}
             loginMethod={loginMethod}
           />
-          <CNav variant="underline">
-            <CNavItem>
-              <CNavLink
-                href="#!"
-                active={displayedDevices == "discovered"}
-                onClick={(e) => {
-                  e.preventDefault()
-                  setDisplayedDevices("discovered")
-                }}
-              >
-                Discovered ({vrmDiscovered.length})
-              </CNavLink>
-            </CNavItem>
-            <CNavItem>
-              <CNavLink
-                href="#!"
-                active={displayedDevices == "configured"}
-                onClick={(e) => {
-                  e.preventDefault()
-                  setDisplayedDevices("configured")
-                }}
-              >
-                Configured ({temporaryConfig.vrm.manualPortalIds.length})
-              </CNavLink>
-            </CNavItem>
-          </CNav>
-          <CTabContent>
-            <CTabPane role="tabpanel" visible={displayedDevices === "discovered"}>
-              <VRMStatusPane hidden={!showStatusPane} status={vrmStatus} />
-              <CForm>
-                <DeviceList
-                  hidden={!temporaryConfig.vrm.hasToken}
-                  settings={temporaryConfig.vrm}
-                  availablePortalIds={vrmDiscovered}
-                  onEnablePortalChange={handleEnablePortalChange}
-                  onEnableAllPortalsChange={handleEnableAllPortalsChange}
-                />
-              </CForm>
-              <CButton
-                color="primary"
-                onClick={() => handleVRMRefresh()}
-                hidden={!temporaryConfig.vrm.hasToken}
-                disabled={isVRMRefreshInProgress}
-              >
-                {isVRMRefreshInProgress ? "Working..." : "Refresh"}
-              </CButton>{" "}
-            </CTabPane>
-            <CTabPane role="tabpanel" visible={displayedDevices === "configured"}>
-              <VRMInfoPane hidden={!showStatusPane} text="Add Installations by specifying their Portal ID" />
-              <CForm>
-                <EditableHostList
-                  entries={temporaryConfig.vrm.manualPortalIds}
-                  onEntryValueChange={handlePortalIdChange}
-                  onEnableEntryChange={handleEnableHostChange}
-                  onEnableAllEntriesChange={handleEnableAllHostsChange}
-                  onAddEntry={handleAddPortal}
-                  onDeleteEntry={handleDeletePortal}
-                  entryTitleText="Portal ID"
-                  addEntryButtonText="Add Installation"
-                />
-              </CForm>
-            </CTabPane>
-          </CTabContent>
+          {temporaryConfig.vrm.hasToken && (
+            <>
+              <CNav variant="underline">
+                <CNavItem>
+                  <CNavLink
+                    href="#!"
+                    active={displayedDevices == "discovered"}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setDisplayedDevices("discovered")
+                    }}
+                  >
+                    Discovered ({vrmDiscovered.length})
+                  </CNavLink>
+                </CNavItem>
+                <CNavItem>
+                  <CNavLink
+                    href="#!"
+                    active={displayedDevices == "configured"}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setDisplayedDevices("configured")
+                    }}
+                  >
+                    Configured ({temporaryConfig.vrm.manualPortalIds.length})
+                  </CNavLink>
+                </CNavItem>
+              </CNav>
+              <CTabContent>
+                <CTabPane role="tabpanel" visible={displayedDevices === "discovered"}>
+                  <VRMStatusPane hidden={!showStatusPane} status={vrmStatus} />
+                  <CForm>
+                    <DeviceList
+                      hidden={!temporaryConfig.vrm.hasToken}
+                      settings={temporaryConfig.vrm}
+                      availablePortalIds={vrmDiscovered}
+                      onEnablePortalChange={handleEnablePortalChange}
+                      onEnableAllPortalsChange={handleEnableAllPortalsChange}
+                    />
+                  </CForm>
+                  <CButton
+                    color="primary"
+                    onClick={() => handleVRMRefresh()}
+                    hidden={!temporaryConfig.vrm.hasToken}
+                    disabled={isVRMRefreshInProgress}
+                  >
+                    {isVRMRefreshInProgress ? "Working..." : "Refresh"}
+                  </CButton>{" "}
+                </CTabPane>
+                <CTabPane role="tabpanel" visible={displayedDevices === "configured"}>
+                  <VRMInfoPane hidden={!showStatusPane} text="Add Installations by specifying their Portal ID" />
+                  <CForm>
+                    <EditableHostList
+                      entries={temporaryConfig.vrm.manualPortalIds}
+                      onEntryValueChange={handlePortalIdChange}
+                      onEnableEntryChange={handleEnableHostChange}
+                      onEnableAllEntriesChange={handleEnableAllHostsChange}
+                      onAddEntry={handleAddPortal}
+                      onDeleteEntry={handleDeletePortal}
+                      entryTitleText="Portal ID"
+                      addEntryButtonText="Add Installation"
+                    />
+                  </CForm>
+                </CTabPane>
+              </CTabContent>
+            </>
+          )}
         </CCardBody>
         <CCardFooter>
           <CRow>
