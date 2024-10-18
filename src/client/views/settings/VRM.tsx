@@ -29,7 +29,7 @@ import { AppState } from "../../store"
 import { VRMDeviceType, VRMLoginMethod, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
 import { WebSocketStatus } from "./WebsocketStatus"
-import { EditableHostList } from "./EditableDeviceList"
+import { EditableDeviceList } from "./EditableDeviceList"
 
 function VRM() {
   const [{ data: config, loading: _isLoading, error: _loadError }, loadConfig, _cancelLoadConfig] = useGetConfig()
@@ -43,6 +43,7 @@ function VRM() {
 
   const vrmDiscovered = useSelector((state: AppState) => state.vrmDiscovered)
   const vrmStatus = useSelector((state: AppState) => state.vrmStatus)
+  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
 
   const [{ data: _vrmLoginResult, loading: isVRMLoginInProgress, error: _vrmLoginError }, vrmLogin, _cancelVrmLogin] =
     useVRMLogin()
@@ -176,6 +177,10 @@ function VRM() {
     setTemporaryConfig(clone)
   }
 
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    // TODO
+  }
+
   const [loginMethod, setLoginMethod] = useState<VRMLoginMethod>("credentials")
   const [displayedDevices, setDisplayedDevices] = useState<VRMDeviceType>("discovered")
   const [showStatusPane, setShowStatusPane] = useState(false)
@@ -278,7 +283,9 @@ function VRM() {
                       availablePortalIds={vrmDiscovered}
                       onEnablePortalChange={handleEnablePortalChange}
                       onEnableAllPortalsChange={handleEnableAllPortalsChange}
-                    />
+                      showAutomaticExpirySettings={showAutomaticExpirySettings}
+                      onPortalExpiryChange={handlePortalExpiryChange}
+                      />
                   </CForm>
                   <CButton
                     color="primary"
@@ -292,7 +299,7 @@ function VRM() {
                 <CTabPane role="tabpanel" visible={displayedDevices === "configured"}>
                   <VRMInfoPane hidden={!showStatusPane} text="Add Installations by specifying their Portal ID" />
                   <CForm>
-                    <EditableHostList
+                    <EditableDeviceList
                       entries={temporaryConfig.vrm.manualPortalIds}
                       onEntryValueChange={handlePortalIdChange}
                       onEnableEntryChange={handleEnableHostChange}
@@ -301,7 +308,9 @@ function VRM() {
                       onDeleteEntry={handleDeletePortal}
                       entryTitleText="Portal ID"
                       addEntryButtonText="Add Installation"
-                    />
+                      showAutomaticExpirySettings={showAutomaticExpirySettings}
+                      onPortalExpiryChange={handlePortalExpiryChange}
+                      />
                   </CForm>
                 </CTabPane>
               </CTabContent>

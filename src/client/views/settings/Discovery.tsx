@@ -26,6 +26,8 @@ function Discovery() {
 
   const upnpDiscovered = useSelector((state: AppState) => state.upnpDiscovered)
 
+  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
+
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
     const [name, value] = extractParameterNameAndValue(event)
@@ -66,6 +68,10 @@ function Discovery() {
     setTemporaryConfig(clone)
   }
 
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    // TODO
+  }
+
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
     return <WebSocketStatus websocketStatus={websocketStatus} />
@@ -92,6 +98,8 @@ function Discovery() {
               availablePortalIds={upnpDiscovered}
               onEnablePortalChange={(event) => handleEnablePortalChange(event)}
               onEnableAllPortalsChange={(event) => handleEnableAllPortalsChange(event)}
+              showAutomaticExpirySettings={showAutomaticExpirySettings}
+              onPortalExpiryChange={(event) => handlePortalExpiryChange(event)}
             />
           </CForm>
         </CCardBody>

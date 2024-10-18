@@ -1,6 +1,6 @@
 import { createStore } from "redux"
 import { openServerEventsConnection } from "./actions"
-import { AppConfig, LogEntry } from "../shared/types"
+import { AppConfig, AppUISettings, LogEntry } from "../shared/types"
 import { AppStateAction, DiscoveredDevice, LoaderStatistics, VRMStatus } from "../shared/state"
 
 // TODO: migrate store.js to redux toolkit
@@ -29,14 +29,7 @@ export interface AppState {
   }
 
   showSidebar: boolean
-  uiSettings: {
-    grafanaUrl: string
-    showEditDiscoverySettings: boolean
-    showEditVRMSettings: boolean
-    showEditManualSettings: boolean
-    showEditSecuritySettings: boolean
-    showEditInfluxDBSettings: boolean
-  }
+  uiSettings: AppUISettings
 }
 
 const initialState: AppState = {

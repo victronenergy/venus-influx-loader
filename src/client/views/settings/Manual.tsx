@@ -3,7 +3,7 @@ import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck 
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
-import { EditableHostList } from "./EditableDeviceList"
+import { EditableDeviceList } from "./EditableDeviceList"
 import { useEffect, useState } from "react"
 import { AppConfig } from "../../../shared/types"
 import { WebSocketStatus } from "./WebsocketStatus"
@@ -23,6 +23,8 @@ function Manual() {
   const isSaveEnabled = useFormValidation(() => {
     return temporaryConfig !== undefined && temporaryConfig.manual.hosts.filter((x) => x.hostName === "").length === 0
   })
+
+  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
@@ -68,6 +70,10 @@ function Manual() {
     setTemporaryConfig(clone)
   }
 
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    // TODO
+  }
+
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
     return <WebSocketStatus websocketStatus={websocketStatus} />
@@ -89,7 +95,7 @@ function Manual() {
         </CCardHeader>
         <CCardBody>
           <CForm>
-            <EditableHostList
+            <EditableDeviceList
               entries={temporaryConfig.manual.hosts}
               onEntryValueChange={handleHostNameChange}
               onEnableEntryChange={handleEnableHostChange}
@@ -98,6 +104,8 @@ function Manual() {
               onDeleteEntry={handleDeleteHost}
               entryTitleText="Host"
               addEntryButtonText="Add Host"
+              showAutomaticExpirySettings={showAutomaticExpirySettings}
+              onPortalExpiryChange={handlePortalExpiryChange}
             />
           </CForm>
         </CCardBody>

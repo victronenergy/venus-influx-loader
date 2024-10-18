@@ -11,6 +11,7 @@ import {
   CButton,
 } from "@coreui/react"
 import { AppDeviceConfig, AppInstallationConfig } from "../../../shared/types"
+import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 
 interface EditableDeviceListProps {
   hidden?: boolean
@@ -22,15 +23,18 @@ interface EditableDeviceListProps {
   onDeleteEntry: (_event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>, _index: number) => void
   entryTitleText: string
   addEntryButtonText: string
+  showAutomaticExpirySettings?: number
+  onPortalExpiryChange: React.ChangeEventHandler<HTMLSelectElement>
 }
 
-function EditableDeviceList(props: EditableDeviceListProps) {
+export function EditableDeviceList(props: EditableDeviceListProps) {
   return (
     <div>
       <CTable bordered striped hidden={props.hidden}>
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>{props.entryTitleText}</CTableHeaderCell>
+            {props.showAutomaticExpirySettings && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
             <CTableHeaderCell>
               <CFormCheck
                 id="enable"
@@ -52,17 +56,23 @@ function EditableDeviceList(props: EditableDeviceListProps) {
               return (
                 <CTableRow key={index}>
                   <CTableDataCell>
-                    <div className="mb-3">
-                      <CFormInput
-                        type="text"
-                        name="hostName"
-                        placeholder=""
-                        // @ts-expect-error
-                        value={element.hostName || element.portalId}
-                        onChange={(event) => props.onEntryValueChange(event, index)}
-                      />
-                    </div>
+                    <CFormInput
+                      type="text"
+                      name="hostName"
+                      placeholder=""
+                      // @ts-expect-error
+                      value={element.hostName || element.portalId}
+                      onChange={(event) => props.onEntryValueChange(event, index)}
+                    />
                   </CTableDataCell>
+                  {props.showAutomaticExpirySettings && (
+                    <CTableDataCell>
+                      <AutoExpiryOptionList
+                        showAutomaticExpirySettings={props.showAutomaticExpirySettings}
+                        onSelectionDidChange={props.onPortalExpiryChange}
+                      />
+                    </CTableDataCell>
+                  )}
                   <CTableDataCell>
                     <CFormCheck
                       name="enableHost"
@@ -87,5 +97,3 @@ function EditableDeviceList(props: EditableDeviceListProps) {
     </div>
   )
 }
-
-export { EditableDeviceList as EditableHostList }

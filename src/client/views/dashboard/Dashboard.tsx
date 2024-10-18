@@ -1,4 +1,3 @@
-import PropTypes from "prop-types"
 import { useSelector } from "react-redux"
 import {
   CCard,
@@ -118,11 +117,6 @@ function Dashboard() {
       </CCard>
     </>
   )
-}
-
-Dashboard.propTypes = {
-  serverStatistics: PropTypes.object,
-  websocketStatus: PropTypes.string,
 }
 
 export default Dashboard

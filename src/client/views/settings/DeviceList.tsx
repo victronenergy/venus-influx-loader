@@ -2,6 +2,7 @@ import React from "react"
 import { CFormCheck, CTable, CTableHead, CTableBody, CTableHeaderCell, CTableDataCell, CTableRow } from "@coreui/react"
 import { AppUPNPConfig, AppVRMConfig } from "../../../shared/types"
 import { DiscoveredDevice } from "../../../shared/state"
+import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 
 interface DeviceListProps {
   hidden?: boolean
@@ -9,15 +10,18 @@ interface DeviceListProps {
   onEnablePortalChange: React.ChangeEventHandler<HTMLInputElement>
   onEnableAllPortalsChange: React.ChangeEventHandler<HTMLInputElement>
   availablePortalIds: DiscoveredDevice[]
+  showAutomaticExpirySettings?: number
+  onPortalExpiryChange: React.ChangeEventHandler<HTMLSelectElement>
 }
 
-function DeviceList(props: DeviceListProps) {
+export function DeviceList(props: DeviceListProps) {
   return (
     <CTable bordered striped hidden={props.hidden}>
       <CTableHead>
         <CTableRow>
           <CTableHeaderCell>Installation Name</CTableHeaderCell>
           <CTableHeaderCell>Portal ID</CTableHeaderCell>
+          {props.showAutomaticExpirySettings && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
           <CTableHeaderCell>
             <CFormCheck
               id="enable"
@@ -39,6 +43,14 @@ function DeviceList(props: DeviceListProps) {
               <CTableRow key={element.portalId}>
                 <CTableDataCell>{element.name}</CTableDataCell>
                 <CTableDataCell>{element.portalId}</CTableDataCell>
+                {props.showAutomaticExpirySettings && (
+                  <CTableDataCell>
+                    <AutoExpiryOptionList
+                      showAutomaticExpirySettings={props.showAutomaticExpirySettings}
+                      onSelectionDidChange={props.onPortalExpiryChange}
+                    />
+                  </CTableDataCell>
+                )}
                 <CTableDataCell>
                   <CFormCheck
                     name="enablePortal"
@@ -55,5 +67,3 @@ function DeviceList(props: DeviceListProps) {
     </CTable>
   )
 }
-
-export { DeviceList }

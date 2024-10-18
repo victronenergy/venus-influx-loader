@@ -5,11 +5,9 @@ interface WebSocketStatusProps {
   websocketStatus: AppWebSocketStatus
 }
 
-function WebSocketStatus(props: WebSocketStatusProps) {
+export function WebSocketStatus(props: WebSocketStatusProps) {
   if (props.websocketStatus !== "open") {
     return <CAlert color="danger">Not connected to the Venus Influx Loader</CAlert>
   }
   return null
 }
-
-export { WebSocketStatus }
