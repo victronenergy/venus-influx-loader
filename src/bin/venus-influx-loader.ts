@@ -60,16 +60,18 @@ process.on("SIGINT", function () {
 const server = new Server({
   configPath: options.configPath,
   port: Number(port),
-  grafanaUrl: grafanaUrl,
   discoveryApiEndpoint: discoveryApi,
   adminApiEndpoint: adminApi,
   adminApiEndpointAuthEnabled: adminApiAuthEnabled,
   grafanaApiEndpoint: grafanaApi,
-  showEditDiscoverySettings: !options.hideSettingsVenusDiscovery,
-  showEditVRMSettings: !options.hideSettingsVenusVRM,
-  showEditManualSettings: !options.hideSettingsVenusManual,
-  showEditSecuritySettings: !options.hideSettingsSecurity && adminApiAuthEnabled,
-  showEditInfluxDBSettings: !options.hideSettingsInfluxdb,
+  uiSettings: {
+    grafanaUrl: grafanaUrl,
+    showEditDiscoverySettings: !options.hideSettingsVenusDiscovery,
+    showEditVRMSettings: !options.hideSettingsVenusVRM,
+    showEditManualSettings: !options.hideSettingsVenusManual,
+    showEditSecuritySettings: !options.hideSettingsSecurity && adminApiAuthEnabled,
+    showEditInfluxDBSettings: !options.hideSettingsInfluxdb,
+  },
 })
 
 // start server

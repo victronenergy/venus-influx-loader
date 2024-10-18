@@ -28,9 +28,9 @@ export interface AppState {
     entries: LogEntry[]
   }
 
-  sidebarShow: boolean
-  grafanaUrl: string
-  editSettings: {
+  showSidebar: boolean
+  uiSettings: {
+    grafanaUrl: string
     showEditDiscoverySettings: boolean
     showEditVRMSettings: boolean
     showEditManualSettings: boolean
@@ -55,10 +55,10 @@ const initialState: AppState = {
   log: {
     entries: [] as LogEntry[],
   },
-  sidebarShow: true,
+  showSidebar: true,
 
-  grafanaUrl: "${window.location.protocol}//${window.location.hostname}:3000",
-  editSettings: {
+  uiSettings: {
+    grafanaUrl: "${window.location.protocol}//${window.location.hostname}:3000",
     showEditDiscoverySettings: true,
     showEditVRMSettings: true,
     showEditManualSettings: true,
@@ -74,7 +74,7 @@ const changeState = (state = initialState, action: AppStateAction): AppState => 
       ...action,
     }
   }
-  if (action.type === "LOADERSTATISTICS") {
+  if (action.type === "LOADER_STATISTICS") {
     return {
       ...state,
       loaderStatistics: action.data,
@@ -98,7 +98,7 @@ const changeState = (state = initialState, action: AppStateAction): AppState => 
       vrmStatus: action.data,
     }
   }
-  if (action.type === "SETTINGSCHANGED") {
+  if (action.type === "LOADER_SETTINGS") {
     return {
       ...state,
       settings: action.data,
@@ -110,55 +110,10 @@ const changeState = (state = initialState, action: AppStateAction): AppState => 
       debug: action.data,
     }
   }
-  if (action.type === "GRAFANA_URL") {
+  if (action.type === "UI_SETTINGS") {
     return {
       ...state,
-      grafanaUrl: action.data,
-    }
-  }
-  if (action.type === "EDIT_SECURITY_SETTINGS_ENABLED") {
-    return {
-      ...state,
-      editSettings: {
-        ...state.editSettings,
-        showEditSecuritySettings: action.data,
-      },
-    }
-  }
-  if (action.type === "EDIT_INFLUXDB_SETTINGS_ENABLED") {
-    return {
-      ...state,
-      editSettings: {
-        ...state.editSettings,
-        showEditInfluxDBSettings: action.data,
-      },
-    }
-  }
-  if (action.type === "EDIT_DISCOVERY_SETTINGS_ENABLED") {
-    return {
-      ...state,
-      editSettings: {
-        ...state.editSettings,
-        showEditDiscoverySettings: action.data,
-      },
-    }
-  }
-  if (action.type === "EDIT_MANUAL_SETTINGS_ENABLED") {
-    return {
-      ...state,
-      editSettings: {
-        ...state.editSettings,
-        showEditManualSettings: action.data,
-      },
-    }
-  }
-  if (action.type === "EDIT_VRM_SETTINGS_ENABLED") {
-    return {
-      ...state,
-      editSettings: {
-        ...state.editSettings,
-        showEditVRMSettings: action.data,
-      },
+      uiSettings: action.data,
     }
   }
   if (action.type === "LOG") {
@@ -171,12 +126,6 @@ const changeState = (state = initialState, action: AppStateAction): AppState => 
       log: {
         entries: state.log.entries,
       },
-    }
-  }
-  if (action.type === "WEBSOCKET_CONNECTED") {
-    return {
-      ...state,
-      websocketStatus: "connected",
     }
   }
   if (action.type === "WEBSOCKET_OPEN") {

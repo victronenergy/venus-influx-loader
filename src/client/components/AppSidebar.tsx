@@ -14,17 +14,16 @@ import { AppState } from "../store"
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
-  const sidebarShow = useSelector((state: AppState) => state.sidebarShow)
-  const grafanaUrl = useSelector((state: AppState) => state.grafanaUrl)
-  const editSettings = useSelector((state: AppState) => state.editSettings)
+  const showSidebar = useSelector((state: AppState) => state.showSidebar)
+  const uiSettings = useSelector((state: AppState) => state.uiSettings)
 
   return (
     <CSidebar
       colorScheme="dark"
       position="fixed"
-      visible={sidebarShow}
+      visible={showSidebar}
       onVisibleChange={(visible) => {
-        dispatch({ type: "set", sidebarShow: visible })
+        dispatch({ type: "set", showSidebar: visible })
       }}
     >
       <CSidebarHeader className="border-bottom px-4">
@@ -33,7 +32,7 @@ const AppSidebar = () => {
           <CImage src={logo} width="100%" className="sidebar-brand-narrow" />
         </CSidebarBrand>
       </CSidebarHeader>
-      <AppSidebarNav items={Navigation({ grafanaUrl, ...editSettings })} />
+      <AppSidebarNav items={Navigation(uiSettings)} />
     </CSidebar>
   )
 }

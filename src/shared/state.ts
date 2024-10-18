@@ -1,17 +1,11 @@
-import { AppConfig, LogEntry } from "./types"
+import { AppConfig, AppUISettings, LogEntry } from "./types"
 
-export type WebSocketActions = "WEBSOCKET_CONNECTED" | "WEBSOCKET_OPEN" | "WEBSOCKET_ERROR" | "WEBSOCKET_CLOSE"
+export type WebSocketActions = "WEBSOCKET_OPEN" | "WEBSOCKET_CLOSE" | "WEBSOCKET_ERROR"
 export type DiscoveryActions = "UPNPDISCOVERY" | "VRMDISCOVERY"
 export type VRMActions = "VRMSTATUS"
 export type DebugActions = "DEBUG" | "LOG"
-export type SettingsActions =
-  | "SETTINGSCHANGED"
-  | "EDIT_SECURITY_SETTINGS_ENABLED"
-  | "EDIT_INFLUXDB_SETTINGS_ENABLED"
-  | "EDIT_DISCOVERY_SETTINGS_ENABLED"
-  | "EDIT_MANUAL_SETTINGS_ENABLED"
-  | "EDIT_VRM_SETTINGS_ENABLED"
-export type MiscActions = "set" | "LOADERSTATISTICS" | "GRAFANA_URL"
+export type SettingsActions = "LOADER_SETTINGS" | "UI_SETTINGS"
+export type MiscActions = "set" | "LOADER_STATISTICS"
 
 export type AppStateActionType =
   | MiscActions
@@ -26,7 +20,7 @@ export interface AppStateBaseAction {
 }
 
 export interface AppStateWebSocketAction extends AppStateBaseAction {
-  type: "WEBSOCKET_CONNECTED" | "WEBSOCKET_ERROR" | "WEBSOCKET_CLOSE"
+  type: "WEBSOCKET_CLOSE" | "WEBSOCKET_ERROR"
 }
 
 export interface AppStateWebSocketOpenAction extends AppStateBaseAction {
@@ -36,6 +30,7 @@ export interface AppStateWebSocketOpenAction extends AppStateBaseAction {
 
 // for discovered device we always know portalId and address, and derive name from MQTT
 export type DiscoveredDevice = { portalId: string; name?: string; address: string }
+
 // for manually configured device we know address, and derive name and portalId from MQTT
 export type ConfiguredDevice = {
   type: "UPNP" | "VRM" | "IP"
@@ -87,28 +82,18 @@ export interface LoaderStatistics {
 }
 
 export interface AppStateLoaderStatisticsAction extends AppStateBaseAction {
-  type: "LOADERSTATISTICS"
+  type: "LOADER_STATISTICS"
   data: LoaderStatistics
 }
 
-export interface AppStateSettingsChangedAction extends AppStateBaseAction {
-  type: "SETTINGSCHANGED"
+export interface AppStateLoaderSettingsAction extends AppStateBaseAction {
+  type: "LOADER_SETTINGS"
   data: AppConfig
 }
 
-export interface AppStateGrafanaUrlAction extends AppStateBaseAction {
-  type: "GRAFANA_URL"
-  data: string
-}
-
-export interface AppStateSettingsEnabledAction extends AppStateBaseAction {
-  type:
-    | "EDIT_SECURITY_SETTINGS_ENABLED"
-    | "EDIT_INFLUXDB_SETTINGS_ENABLED"
-    | "EDIT_DISCOVERY_SETTINGS_ENABLED"
-    | "EDIT_MANUAL_SETTINGS_ENABLED"
-    | "EDIT_VRM_SETTINGS_ENABLED"
-  data: boolean
+export interface AppStateUISettingsAction extends AppStateBaseAction {
+  type: "UI_SETTINGS"
+  data: AppUISettings
 }
 
 export interface AppStateDebugAction extends AppStateBaseAction {
@@ -134,9 +119,8 @@ export type AppStateAction =
   | AppStateVRMDiscoveryAction
   | AppStateVRMStatusAction
   | AppStateLoaderStatisticsAction
-  | AppStateGrafanaUrlAction
-  | AppStateSettingsEnabledAction
-  | AppStateSettingsChangedAction
+  | AppStateUISettingsAction
+  | AppStateLoaderSettingsAction
   | AppStateDebugAction
   | AppStateLogAction
   | AppStateSetAction

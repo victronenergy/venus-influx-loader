@@ -41,7 +41,7 @@ export class Loader {
 
     // start sending loader statistics
     this.server.emit("loaderevent", {
-      type: "LOADERSTATISTICS",
+      type: "LOADER_STATISTICS",
       data: this.loaderStatistics,
     })
     this.collectInterval = setInterval(() => {
@@ -75,7 +75,7 @@ export class Loader {
     this.lastIntervalCount = totalMeasurementsCount
 
     this.server.emit("loaderevent", {
-      type: "LOADERSTATISTICS",
+      type: "LOADER_STATISTICS",
       data: this.loaderStatistics,
     })
   }

@@ -8,7 +8,15 @@ import { WebSocketChannel } from "./websocket.js"
 import bodyParser from "body-parser"
 import compare from "tsscmp"
 import auth from "basic-auth"
-import { AppConfig, AppConfigFiles, AppSecrets, createAppConfig, createAppSecrets, LogLevel } from "../shared/types"
+import {
+  AppConfig,
+  AppConfigFiles,
+  AppSecrets,
+  AppUISettings,
+  createAppConfig,
+  createAppSecrets,
+  LogLevel,
+} from "../shared/types"
 import { LogEntry, Logger } from "winston"
 import { UPNP } from "./upnp"
 import { VRM } from "./vrm"
@@ -27,16 +35,11 @@ const defaultAdminPassword = "admin"
 export interface ServerOptions {
   configPath: string
   port: number
-  grafanaUrl: string
-  discoveryApiEndpoint?: string
   adminApiEndpoint?: string
   adminApiEndpointAuthEnabled: boolean
   grafanaApiEndpoint?: string
-  showEditDiscoverySettings: boolean
-  showEditVRMSettings: boolean
-  showEditManualSettings: boolean
-  showEditSecuritySettings: boolean
-  showEditInfluxDBSettings: boolean
+  discoveryApiEndpoint?: string
+  uiSettings: AppUISettings
 }
 
 export class Server {
@@ -295,28 +298,8 @@ export class Server {
     this.emit("settingsChanged", this.config)
 
     this.emit("loaderevent", {
-      type: "GRAFANA_URL",
-      data: this.options.grafanaUrl,
-    })
-    this.emit("loaderevent", {
-      type: "EDIT_SECURITY_SETTINGS_ENABLED",
-      data: this.options.showEditSecuritySettings,
-    })
-    this.emit("loaderevent", {
-      type: "EDIT_INFLUXDB_SETTINGS_ENABLED",
-      data: this.options.showEditInfluxDBSettings,
-    })
-    this.emit("loaderevent", {
-      type: "EDIT_DISCOVERY_SETTINGS_ENABLED",
-      data: this.options.showEditDiscoverySettings,
-    })
-    this.emit("loaderevent", {
-      type: "EDIT_MANUAL_SETTINGS_ENABLED",
-      data: this.options.showEditManualSettings,
-    })
-    this.emit("loaderevent", {
-      type: "EDIT_VRM_SETTINGS_ENABLED",
-      data: this.options.showEditVRMSettings,
+      type: "UI_SETTINGS",
+      data: this.options.uiSettings,
     })
   }
 
@@ -347,7 +330,7 @@ export class Server {
     }
 
     this.emit("loaderevent", {
-      type: "SETTINGSCHANGED",
+      type: "LOADER_SETTINGS",
       data: this.config,
     })
   }

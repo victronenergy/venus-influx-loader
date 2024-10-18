@@ -8,12 +8,12 @@ import { AppState } from "../store"
 
 const AppHeader = () => {
   const dispatch = useDispatch()
-  const sidebarShow = useSelector((state: AppState) => state.sidebarShow)
+  const showSidebar = useSelector((state: AppState) => state.showSidebar)
 
   return (
     <CHeader position="sticky" className="mb-4 p-0">
       <CContainer className="border-bottom px-4" fluid>
-        <CHeaderToggler className="ps-1" onClick={() => dispatch({ type: "set", sidebarShow: !sidebarShow })}>
+        <CHeaderToggler className="ps-1" onClick={() => dispatch({ type: "set", showSidebar: !showSidebar })}>
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
         <CHeaderBrand className="mx-auto d-md-none" href="/"></CHeaderBrand>

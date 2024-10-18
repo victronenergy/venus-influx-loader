@@ -75,6 +75,17 @@ export interface AppSecrets {
   }
 }
 
+export interface AppUISettings {
+  grafanaUrl: string
+  showEditDiscoverySettings: boolean
+  showEditVRMSettings: boolean
+  showEditManualSettings: boolean
+  showEditSecuritySettings: boolean
+  showEditInfluxDBSettings: boolean
+}
+
+export type AppUISettingsKey = keyof AppUISettings
+
 export type LogLevel = "error" | "warn" | "info" | "debug"
 export interface LogEntry {
   timestamp: string
