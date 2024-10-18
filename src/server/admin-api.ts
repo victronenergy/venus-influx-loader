@@ -10,7 +10,6 @@ export default (server: Server) => {
 
   // TODO: annotate req/res
   router.get(`/${API_CONFIG}`, (_req, res: express.Response<AppConfig>, _next) => {
-    server.config.vrm.hasToken = server.secrets.vrmToken !== undefined
     res.json(server.config)
   })
 
