@@ -301,7 +301,7 @@ class VenusMqttClient {
 
       // update stats
       if (this.device.portalId) {
-        this.loader.loaderStatistics.deviceStatistics[this.device.portalId].isConnected = false
+        this.loader.loaderStatistics.deviceStatistics[this.statisticsKey].isConnected = false
       }
     })
 

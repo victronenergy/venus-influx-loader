@@ -320,7 +320,7 @@ export class Server {
     })
   }
 
-  settingsChanged() {
+  async settingsChanged() {
     this.logger.debug("Settings changed...")
 
     // start local upnp browser if enabled and not running
@@ -339,7 +339,11 @@ export class Server {
 
     // reload VRM portals if vrm enabled
     if (this.config.vrm.enabled && Object.keys(this.vrmDevices).length === 0) {
-      this.vrm.refresh()
+      try {
+        await this.vrm.refresh()
+      } catch {
+        /* empty */
+      }
     }
 
     this.emit("loaderevent", {
