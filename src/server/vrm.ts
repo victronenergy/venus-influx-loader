@@ -144,6 +144,7 @@ export class VRM {
     delete this.server.secrets.vrmUserId
     delete this.server.secrets.vrmUsername
     this.server.config.vrm.enabledPortalIds = []
+    this.server.config.vrm.manualPortalIds = []
     await this.server.saveSecrets()
     await this.server.saveConfig()
   }
