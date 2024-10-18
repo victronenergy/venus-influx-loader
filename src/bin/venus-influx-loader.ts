@@ -5,6 +5,9 @@ import { program } from "commander"
 import buildInfo from "../buildInfo.cjs"
 
 import { Server } from "../server/server"
+import ms from "ms"
+
+const autoExpiryDefault = "30d"
 
 program
   .version(buildInfo.buildVersion)
@@ -23,6 +26,7 @@ program
   )
   .option("--disable-grafana-api", "disable Grafana JSON datasource /grafana-api/ endpoint")
   .option("--enable-discovery-api", "enable venus-upnp-browser /discovery-api/ endpoint")
+  .option("--enable-auto-expiry [duration]", "enable automatic expiry of data collection", autoExpiryDefault)
   .option("--hide-settings-influxdb")
   .option("--hide-settings-security")
   .option("--hide-settings-venus-discovery")
@@ -43,6 +47,17 @@ const grafanaApi = options.disableGrafanaApi ? undefined : "/grafana-api/"
 const port = options.port
 const grafanaUrl = options.grafanaUrl
 
+// extract autoExpiryDuration, but only when the option was used
+// to workaround commander limitation where default option value
+// is always present even if the option was not used at all
+let autoExpiryDuration: number
+if (process.argv.includes("--enable-auto-expiry")) {
+  autoExpiryDuration =
+    options.enableAutoExpiry === true ? ms(autoExpiryDefault) : ms(options.enableAutoExpiry as string)
+} else {
+  autoExpiryDuration = 0 // disabled
+}
+
 log("Use --help to learn how to use this program")
 log(`Config Path: ${options.configPath}`)
 log(`Discovery API: ${discoveryApi || "disabled"}`)
@@ -50,6 +65,7 @@ log(`Admin API: ${adminApi || "disabled"}`)
 log(`Grafana JSON Datasource API: ${grafanaApi || "disabled"}`)
 log(`API Port: ${adminApi || grafanaApi ? port : "disabled"}`)
 log(`Grafana URL: ${grafanaUrl}`)
+log(`Automatic Data Collection Expiry: ${autoExpiryDuration > 0 ? ms(autoExpiryDuration, { long: true }) : "disabled"}`)
 
 // exit on Ctrl-C
 process.on("SIGINT", function () {
@@ -71,6 +87,7 @@ const server = new Server({
     showEditManualSettings: !options.hideSettingsVenusManual,
     showEditSecuritySettings: !options.hideSettingsSecurity && adminApiAuthEnabled,
     showEditInfluxDBSettings: !options.hideSettingsInfluxdb,
+    showAutomaticExpirySettings: autoExpiryDuration,
   },
 })
 

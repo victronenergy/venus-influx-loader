@@ -82,6 +82,7 @@ export interface AppUISettings {
   showEditManualSettings: boolean
   showEditSecuritySettings: boolean
   showEditInfluxDBSettings: boolean
+  showAutomaticExpirySettings?: number
 }
 
 export type AppUISettingsKey = keyof AppUISettings
