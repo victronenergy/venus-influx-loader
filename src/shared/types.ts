@@ -16,6 +16,7 @@ export type AppConfigKey = keyof AppConfig
 export interface AppUPNPConfig {
   enabled: boolean
   enabledPortalIds: string[]
+  expiry: AppDataCollectionExpiryConfig
 }
 
 export type AppUPNPConfigKey = keyof AppUPNPConfig
@@ -24,6 +25,7 @@ export interface AppVRMConfig {
   enabled: boolean
   enabledPortalIds: string[]
   manualPortalIds: AppInstallationConfig[]
+  expiry: AppDataCollectionExpiryConfig
   hasToken: boolean
 }
 
@@ -46,9 +48,14 @@ export type AppInstallationConfigKey = keyof AppInstallationConfig
 export interface AppManualConfig {
   enabled: boolean
   hosts: AppDeviceConfig[]
+  expiry: AppDataCollectionExpiryConfig
 }
 
 export type AppManualConfigKey = keyof AppManualConfig
+
+export interface AppDataCollectionExpiryConfig {
+  [portalId: string]: number | undefined // absolute time in millis when data collection will expire
+}
 
 export interface AppInfluxDBConfig {
   host: string
@@ -99,16 +106,19 @@ const defaultAppConfigValues: AppConfig = {
   upnp: {
     enabled: false,
     enabledPortalIds: [],
+    expiry: {},
   },
   manual: {
     enabled: false,
     hosts: [],
+    expiry: {},
   },
   vrm: {
     enabled: false,
     enabledPortalIds: [],
     manualPortalIds: [],
     hasToken: false,
+    expiry: {},
   },
   influxdb: {
     host: "localhost",
