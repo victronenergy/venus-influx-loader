@@ -155,6 +155,12 @@ export class VRM {
       return
     }
 
+    if (!this.server.config.vrm.enabled) {
+      this.server.emit("vrmDiscovered", [])
+      this.fail("Connection to Venus Devices via VRM is disabled")
+      return
+    }
+
     this.good("Getting installations...")
 
     interface VRMAPIUsersInstallationsRecord {

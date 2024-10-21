@@ -320,13 +320,11 @@ export class Server {
       }
     }
 
-    // reload VRM portals if vrm enabled
-    if (this.config.vrm.enabled && Object.keys(this.vrmDevices).length === 0) {
-      try {
-        await this.vrm.refresh()
-      } catch {
-        /* empty */
-      }
+    // reload VRM portals and set VRM state depending on settings
+    try {
+      await this.vrm.refresh()
+    } catch {
+      /* empty */
     }
 
     this.emit("loaderevent", {
