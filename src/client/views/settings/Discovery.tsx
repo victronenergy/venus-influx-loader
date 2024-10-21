@@ -12,21 +12,39 @@ import { WebSocketStatus } from "./WebsocketStatus"
 
 function Discovery() {
   const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
-
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
 
+  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
+
+  const upnpDiscovered = useSelector((state: AppState) => state.upnpDiscovered)
+
+  const [referenceTime, setReferenceTime] = useState<number>(0)
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
+    setReferenceTime(Date.now())
     setTemporaryConfig(config)
-  }, [config])
+    setDefaultExpiry()
+  }, [config, upnpDiscovered, showAutomaticExpirySettings])
+
+  function setDefaultExpiry() {
+    if (showAutomaticExpirySettings && temporaryConfig) {
+      upnpDiscovered.forEach((device) => {
+        if (temporaryConfig.upnp.expiry[device.portalId] === undefined) {
+          temporaryConfig.upnp.expiry[device.portalId] = referenceTime + showAutomaticExpirySettings
+        }
+      })
+    }
+  }
+
+  function beforeSave() {
+    if (temporaryConfig && !temporaryConfig.upnp.enabled) {
+      temporaryConfig.upnp.expiry = {}
+    }
+  }
 
   const isSaveEnabled = useFormValidation(() => {
     return temporaryConfig !== undefined
   })
-
-  const upnpDiscovered = useSelector((state: AppState) => state.upnpDiscovered)
-
-  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
@@ -68,8 +86,15 @@ function Discovery() {
     setTemporaryConfig(clone)
   }
 
-  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    // TODO
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, portalId: string) {
+    const clone = { ...temporaryConfig!! }
+    const value = Number(event.target.value)
+    if (value > 0) {
+      clone.upnp.expiry[portalId] = referenceTime + value
+    } else {
+      clone.upnp.expiry[portalId] = 0
+    }
+    setTemporaryConfig(clone)
   }
 
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
@@ -95,16 +120,24 @@ function Discovery() {
           <CForm>
             <DeviceList
               settings={temporaryConfig.upnp}
+              referenceTime={referenceTime}
+              expirySettings={temporaryConfig.upnp.expiry}
               availablePortalIds={upnpDiscovered}
-              onEnablePortalChange={(event) => handleEnablePortalChange(event)}
-              onEnableAllPortalsChange={(event) => handleEnableAllPortalsChange(event)}
-              showAutomaticExpirySettings={showAutomaticExpirySettings}
-              onPortalExpiryChange={(event) => handlePortalExpiryChange(event)}
+              onEnablePortalChange={handleEnablePortalChange}
+              onEnableAllPortalsChange={handleEnableAllPortalsChange}
+              defaultExpiryDuration={showAutomaticExpirySettings}
+              onPortalExpiryChange={handlePortalExpiryChange}
             />
           </CForm>
         </CCardBody>
         <CCardFooter>
-          <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
+          <CButton
+            color="primary"
+            onClick={() => {
+              beforeSave(), save({ data: temporaryConfig })
+            }}
+            disabled={!isSaveEnabled}
+          >
             {isSaving ? "Saving..." : "Save"}
           </CButton>
         </CCardFooter>

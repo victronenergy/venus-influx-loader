@@ -12,19 +12,31 @@ import { AppState } from "../../store"
 
 function Manual() {
   const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
-
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
 
+  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
+
+  const [referenceTime, setReferenceTime] = useState<number>(0)
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
+    setReferenceTime(Date.now())
     setTemporaryConfig(config)
+    setDefaultExpiry()
   }, [config])
+
+  function setDefaultExpiry() {
+    if (showAutomaticExpirySettings && temporaryConfig) {
+      temporaryConfig.manual.hosts.forEach((device) => {
+        if (temporaryConfig.manual.expiry[device.hostName] === undefined) {
+          temporaryConfig.manual.expiry[device.hostName] = referenceTime + showAutomaticExpirySettings
+        }
+      })
+    }
+  }
 
   const isSaveEnabled = useFormValidation(() => {
     return temporaryConfig !== undefined && temporaryConfig.manual.hosts.filter((x) => x.hostName === "").length === 0
   })
-
-  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
@@ -37,7 +49,12 @@ function Manual() {
 
   function handleHostNameChange(event: React.ChangeEvent<HTMLInputElement>, index: number) {
     const clone = { ...temporaryConfig!! }
-    clone.manual.hosts[index].hostName = event.target.value
+    const previousHostName = clone.manual.hosts[index].hostName
+    const newHostName = event.target.value
+    const expiry = clone.manual.expiry[previousHostName]
+    clone.manual.hosts[index].hostName = newHostName
+    clone.manual.expiry[newHostName] = expiry
+    delete clone.manual.expiry[previousHostName]
     setTemporaryConfig(clone)
   }
 
@@ -66,12 +83,23 @@ function Manual() {
     index: number,
   ) {
     const clone = { ...temporaryConfig!! }
+    const previousHostName = clone.manual.hosts[index].hostName
+    if (previousHostName) {
+      delete clone.manual.expiry[previousHostName]
+    }
     clone.manual.hosts.splice(index, 1)
     setTemporaryConfig(clone)
   }
 
-  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    // TODO
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, portalId: string) {
+    const clone = { ...temporaryConfig!! }
+    const value = Number(event.target.value)
+    if (value > 0) {
+      clone.manual.expiry[portalId] = referenceTime + value
+    } else {
+      clone.manual.expiry[portalId] = 0
+    }
+    setTemporaryConfig(clone)
   }
 
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
@@ -97,6 +125,8 @@ function Manual() {
           <CForm>
             <EditableDeviceList
               entries={temporaryConfig.manual.hosts}
+              referenceTime={referenceTime}
+              expirySettings={temporaryConfig.manual.expiry}
               onEntryValueChange={handleHostNameChange}
               onEnableEntryChange={handleEnableHostChange}
               onEnableAllEntriesChange={handleEnableAllHostsChange}
@@ -104,7 +134,7 @@ function Manual() {
               onDeleteEntry={handleDeleteHost}
               entryTitleText="Host"
               addEntryButtonText="Add Host"
-              showAutomaticExpirySettings={showAutomaticExpirySettings}
+              defaultExpiryDuration={showAutomaticExpirySettings}
               onPortalExpiryChange={handlePortalExpiryChange}
             />
           </CForm>

@@ -35,15 +35,19 @@ function VRM() {
   const [{ data: config, loading: _isLoading, error: _loadError }, loadConfig, _cancelLoadConfig] = useGetConfig()
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
 
-  const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
-  useEffect(() => {
-    setTemporaryConfig(config)
-    setShowStatusPane(config?.vrm.hasToken || false)
-  }, [config])
+  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
 
   const vrmDiscovered = useSelector((state: AppState) => state.vrmDiscovered)
   const vrmStatus = useSelector((state: AppState) => state.vrmStatus)
-  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
+
+  const [referenceTime, setReferenceTime] = useState<number>(0)
+  const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
+  useEffect(() => {
+    setReferenceTime(Date.now())
+    setTemporaryConfig(config)
+    setDefaultExpiry()
+    setShowStatusPane(config?.vrm.hasToken || false)
+  }, [config, vrmDiscovered, showAutomaticExpirySettings])
 
   const [{ data: _vrmLoginResult, loading: isVRMLoginInProgress, error: _vrmLoginError }, vrmLogin, _cancelVrmLogin] =
     useVRMLogin()
@@ -57,6 +61,27 @@ function VRM() {
     vrmRefresh,
     _cancelVrmRefresh,
   ] = useVRMRefresh()
+
+  function setDefaultExpiry() {
+    if (showAutomaticExpirySettings && temporaryConfig) {
+      vrmDiscovered.forEach((device) => {
+        if (temporaryConfig.vrm.expiry[device.portalId] === undefined) {
+          temporaryConfig.vrm.expiry[device.portalId] = referenceTime + showAutomaticExpirySettings
+        }
+      })
+      temporaryConfig.vrm.manualPortalIds.forEach((device) => {
+        if (temporaryConfig.vrm.expiry[device.portalId] === undefined) {
+          temporaryConfig.vrm.expiry[device.portalId] = referenceTime + showAutomaticExpirySettings
+        }
+      })
+    }
+  }
+
+  function beforeSave() {
+    if (temporaryConfig && !temporaryConfig.vrm.enabled) {
+      vrmDiscovered.forEach((device) => delete temporaryConfig.vrm.expiry[device.portalId])
+    }
+  }
 
   const isSaveEnabled = useFormValidation(() => {
     return (
@@ -153,13 +178,22 @@ function VRM() {
     index: number,
   ) {
     const clone = { ...temporaryConfig!! }
+    const previousPortalId = clone.vrm.manualPortalIds[index].portalId
+    if (previousPortalId) {
+      delete clone.vrm.expiry[previousPortalId]
+    }
     clone.vrm.manualPortalIds.splice(index, 1)
     setTemporaryConfig(clone)
   }
 
   function handlePortalIdChange(event: React.ChangeEvent<HTMLInputElement>, index: number) {
     const clone = { ...temporaryConfig!! }
-    clone.vrm.manualPortalIds[index].portalId = event.target.value
+    const previousPortalId = clone.vrm.manualPortalIds[index].portalId
+    const newPortalId = event.target.value
+    const expiry = clone.vrm.expiry[previousPortalId]
+    clone.vrm.manualPortalIds[index].portalId = newPortalId
+    clone.vrm.expiry[newPortalId] = expiry
+    delete clone.vrm.expiry[previousPortalId]
     setTemporaryConfig(clone)
   }
 
@@ -177,8 +211,15 @@ function VRM() {
     setTemporaryConfig(clone)
   }
 
-  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    // TODO
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, portalId: string) {
+    const clone = { ...temporaryConfig!! }
+    const value = Number(event.target.value)
+    if (value > 0) {
+      clone.vrm.expiry[portalId] = referenceTime + value
+    } else {
+      clone.vrm.expiry[portalId] = 0
+    }
+    setTemporaryConfig(clone)
   }
 
   const [loginMethod, setLoginMethod] = useState<VRMLoginMethod>("credentials")
@@ -275,17 +316,19 @@ function VRM() {
               </CNav>
               <CTabContent>
                 <CTabPane role="tabpanel" visible={displayedDevices === "discovered"}>
-                  <VRMStatusPane hidden={!showStatusPane} status={vrmStatus} />
+                  <VRMStatusPane hidden={!showStatusPane} vrmStatus={vrmStatus} />
                   <CForm>
                     <DeviceList
                       hidden={!temporaryConfig.vrm.hasToken}
                       settings={temporaryConfig.vrm}
+                      referenceTime={referenceTime}
+                      expirySettings={temporaryConfig.vrm.expiry}
                       availablePortalIds={vrmDiscovered}
                       onEnablePortalChange={handleEnablePortalChange}
                       onEnableAllPortalsChange={handleEnableAllPortalsChange}
-                      showAutomaticExpirySettings={showAutomaticExpirySettings}
+                      defaultExpiryDuration={showAutomaticExpirySettings}
                       onPortalExpiryChange={handlePortalExpiryChange}
-                      />
+                    />
                   </CForm>
                   <CButton
                     color="primary"
@@ -297,10 +340,16 @@ function VRM() {
                   </CButton>{" "}
                 </CTabPane>
                 <CTabPane role="tabpanel" visible={displayedDevices === "configured"}>
-                  <VRMInfoPane hidden={!showStatusPane} text="Add Installations by specifying their Portal ID" />
+                  <VRMStatusPane
+                    hidden={!showStatusPane}
+                    vrmStatus={vrmStatus}
+                    overrideText="Add Installations by specifying their Portal ID"
+                  />
                   <CForm>
                     <EditableDeviceList
                       entries={temporaryConfig.vrm.manualPortalIds}
+                      referenceTime={referenceTime}
+                      expirySettings={temporaryConfig.vrm.expiry}
                       onEntryValueChange={handlePortalIdChange}
                       onEnableEntryChange={handleEnableHostChange}
                       onEnableAllEntriesChange={handleEnableAllHostsChange}
@@ -308,9 +357,9 @@ function VRM() {
                       onDeleteEntry={handleDeletePortal}
                       entryTitleText="Portal ID"
                       addEntryButtonText="Add Installation"
-                      showAutomaticExpirySettings={showAutomaticExpirySettings}
+                      defaultExpiryDuration={showAutomaticExpirySettings}
                       onPortalExpiryChange={handlePortalExpiryChange}
-                      />
+                    />
                   </CForm>
                 </CTabPane>
               </CTabContent>
@@ -320,7 +369,13 @@ function VRM() {
         <CCardFooter>
           <CRow>
             <CCol>
-              <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
+              <CButton
+                color="primary"
+                onClick={() => {
+                  beforeSave(), save({ data: temporaryConfig })
+                }}
+                disabled={!isSaveEnabled}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </CButton>
             </CCol>
@@ -475,29 +530,18 @@ function VRMLoginPane(props: VRMLoginPaneProps) {
 
 interface VRMStatusPaneProps {
   hidden: boolean
-  status?: VRMStatus
+  vrmStatus?: VRMStatus
+  overrideText?: string
 }
 
 function VRMStatusPane(props: VRMStatusPaneProps) {
+  const override = props.overrideText !== undefined && props.vrmStatus && props.vrmStatus.status === "success"
+  const color = props.vrmStatus && props.vrmStatus.status === "success" ? "success" : "danger"
   return (
     <div className="pt-3">
-      <CAlert hidden={props.hidden} color={props.status && props.status.status === "success" ? "success" : "danger"}>
-        <small>VRM Status: {props.status && props.status.message}</small>
-      </CAlert>
-    </div>
-  )
-}
-
-interface VRMInfoPaneProps {
-  hidden: boolean
-  text: string
-}
-
-function VRMInfoPane(props: VRMInfoPaneProps) {
-  return (
-    <div className="pt-3">
-      <CAlert hidden={props.hidden} color="secondary">
-        <small>{props.text}</small>
+      <CAlert hidden={props.hidden} color={color}>
+        {override === true && <small>{props.overrideText}</small>}
+        {override === false && <small>VRM Status: {props.vrmStatus && props.vrmStatus.message}</small>}
       </CAlert>
     </div>
   )

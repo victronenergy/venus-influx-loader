@@ -1,17 +1,19 @@
 import React from "react"
 import { CFormCheck, CTable, CTableHead, CTableBody, CTableHeaderCell, CTableDataCell, CTableRow } from "@coreui/react"
-import { AppUPNPConfig, AppVRMConfig } from "../../../shared/types"
+import { AppDataCollectionExpiryConfig, AppUPNPConfig, AppVRMConfig } from "../../../shared/types"
 import { DiscoveredDevice } from "../../../shared/state"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 
 interface DeviceListProps {
   hidden?: boolean
   settings: AppUPNPConfig | AppVRMConfig
+  referenceTime: number
+  expirySettings: AppDataCollectionExpiryConfig
   onEnablePortalChange: React.ChangeEventHandler<HTMLInputElement>
   onEnableAllPortalsChange: React.ChangeEventHandler<HTMLInputElement>
   availablePortalIds: DiscoveredDevice[]
-  showAutomaticExpirySettings?: number
-  onPortalExpiryChange: React.ChangeEventHandler<HTMLSelectElement>
+  defaultExpiryDuration?: number
+  onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _portalId: string) => void
 }
 
 export function DeviceList(props: DeviceListProps) {
@@ -21,7 +23,7 @@ export function DeviceList(props: DeviceListProps) {
         <CTableRow>
           <CTableHeaderCell>Installation Name</CTableHeaderCell>
           <CTableHeaderCell>Portal ID</CTableHeaderCell>
-          {props.showAutomaticExpirySettings && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
+          {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
           <CTableHeaderCell>
             <CFormCheck
               id="enable"
@@ -43,10 +45,13 @@ export function DeviceList(props: DeviceListProps) {
               <CTableRow key={element.portalId}>
                 <CTableDataCell>{element.name}</CTableDataCell>
                 <CTableDataCell>{element.portalId}</CTableDataCell>
-                {props.showAutomaticExpirySettings && (
+                {props.defaultExpiryDuration && (
                   <CTableDataCell>
                     <AutoExpiryOptionList
-                      showAutomaticExpirySettings={props.showAutomaticExpirySettings}
+                      portalId={element.portalId}
+                      referenceTime={props.referenceTime}
+                      configuredExpiryTime={props.expirySettings[element.portalId]}
+                      defaultExpiryDuration={props.defaultExpiryDuration}
                       onSelectionDidChange={props.onPortalExpiryChange}
                     />
                   </CTableDataCell>

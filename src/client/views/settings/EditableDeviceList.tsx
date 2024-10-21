@@ -10,12 +10,14 @@ import {
   CFormInput,
   CButton,
 } from "@coreui/react"
-import { AppDeviceConfig, AppInstallationConfig } from "../../../shared/types"
+import { AppDataCollectionExpiryConfig, AppDeviceConfig, AppInstallationConfig } from "../../../shared/types"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 
 interface EditableDeviceListProps {
   hidden?: boolean
   entries: AppDeviceConfig[] | AppInstallationConfig[]
+  referenceTime: number
+  expirySettings: AppDataCollectionExpiryConfig
   onEntryValueChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableEntryChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableAllEntriesChange: (_event: React.ChangeEvent<HTMLInputElement>) => void
@@ -23,8 +25,8 @@ interface EditableDeviceListProps {
   onDeleteEntry: (_event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>, _index: number) => void
   entryTitleText: string
   addEntryButtonText: string
-  showAutomaticExpirySettings?: number
-  onPortalExpiryChange: React.ChangeEventHandler<HTMLSelectElement>
+  defaultExpiryDuration?: number
+  onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _portalId: string) => void
 }
 
 export function EditableDeviceList(props: EditableDeviceListProps) {
@@ -34,7 +36,7 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>{props.entryTitleText}</CTableHeaderCell>
-            {props.showAutomaticExpirySettings && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
+            {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
             <CTableHeaderCell>
               <CFormCheck
                 id="enable"
@@ -53,6 +55,8 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
         <CTableBody>
           {props.entries &&
             props.entries.map((element, index) => {
+              // @ts-expect-error
+              const key = element.hostName || element.portalId
               return (
                 <CTableRow key={index}>
                   <CTableDataCell>
@@ -60,15 +64,17 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                       type="text"
                       name="hostName"
                       placeholder=""
-                      // @ts-expect-error
-                      value={element.hostName || element.portalId}
+                      value={key}
                       onChange={(event) => props.onEntryValueChange(event, index)}
                     />
                   </CTableDataCell>
-                  {props.showAutomaticExpirySettings && (
+                  {props.defaultExpiryDuration && (
                     <CTableDataCell>
                       <AutoExpiryOptionList
-                        showAutomaticExpirySettings={props.showAutomaticExpirySettings}
+                        portalId={key}
+                        referenceTime={props.referenceTime}
+                        configuredExpiryTime={props.expirySettings[key]}
+                        defaultExpiryDuration={props.defaultExpiryDuration}
                         onSelectionDidChange={props.onPortalExpiryChange}
                       />
                     </CTableDataCell>
