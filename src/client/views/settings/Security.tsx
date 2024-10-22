@@ -22,11 +22,12 @@ function Security() {
     password: "",
     password1: "",
   })
+  const [isStateDirty, setIsStateDirty] = useState(false)
 
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePostSecurity()
 
   const isSaveEnabled = useFormValidation(() => {
-    return state.username !== "" && state.password !== "" && state.password === state.password1
+    return state.username !== "" && state.password !== "" && state.password === state.password1 && isStateDirty
   })
 
   function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -36,6 +37,7 @@ function Security() {
     // @ts-expect-error
     clone[name] = value
     setState(clone)
+    setIsStateDirty(true)
   }
 
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)

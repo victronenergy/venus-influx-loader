@@ -11,12 +11,13 @@ import { AppState } from "../../store"
 
 function InfluxDB() {
   const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
-
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
+  const [isTemporaryConfigDirty, setIsTemporaryConfigDirty] = useState(false)
 
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
     setTemporaryConfig(config)
+    setIsTemporaryConfigDirty(false)
   }, [config])
 
   const isSaveEnabled = useFormValidation(() => {
@@ -25,7 +26,8 @@ function InfluxDB() {
       temporaryConfig.influxdb.host !== "" &&
       temporaryConfig.influxdb.port !== "" &&
       temporaryConfig.influxdb.database !== "" &&
-      temporaryConfig.influxdb.retention !== ""
+      temporaryConfig.influxdb.retention !== "" &&
+      isTemporaryConfigDirty
     )
   })
 
@@ -36,6 +38,7 @@ function InfluxDB() {
     // @ts-expect-error
     clone.influxdb[name] = value
     setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
   }
 
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)

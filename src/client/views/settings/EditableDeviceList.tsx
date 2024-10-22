@@ -56,7 +56,7 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
           {props.entries &&
             props.entries.map((element, index) => {
               // @ts-expect-error
-              const key = element.hostName || element.portalId
+              const key = element.hostName || element.portalId || ""
               return (
                 <CTableRow key={index}>
                   <CTableDataCell>

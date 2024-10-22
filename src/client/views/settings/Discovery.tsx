@@ -11,10 +11,12 @@ import { AppState } from "../../store"
 import { WebSocketStatus } from "./WebsocketStatus"
 
 function Discovery() {
-  const [{ data: config, loading: _isLoading, error: _loadError }, _load, _cancelLoad] = useGetConfig()
+  // auto load loader config on first page render
+  const [{ data: config, loading: _isLoading, error: _loadError }, load, _cancelLoad] = useGetConfig()
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
+  const [isTemporaryConfigDirty, setIsTemporaryConfigDirty] = useState(false)
 
-  const showAutomaticExpirySettings = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
+  const defaultExpiryDuration = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
 
   const upnpDiscovered = useSelector((state: AppState) => state.upnpDiscovered)
 
@@ -23,14 +25,21 @@ function Discovery() {
   useEffect(() => {
     setReferenceTime(Date.now())
     setTemporaryConfig(config)
+    setIsTemporaryConfigDirty(false)
     setDefaultExpiry()
-  }, [config, upnpDiscovered, showAutomaticExpirySettings])
+  }, [config, upnpDiscovered, defaultExpiryDuration])
+
+  // reload loader config when notified via websocket
+  const loaderSettings = useSelector((state: AppState) => state.settings)
+  useEffect(() => {
+    load()
+  }, [loaderSettings])
 
   function setDefaultExpiry() {
-    if (showAutomaticExpirySettings && temporaryConfig) {
+    if (defaultExpiryDuration && temporaryConfig) {
       upnpDiscovered.forEach((device) => {
         if (temporaryConfig.upnp.expiry[device.portalId] === undefined) {
-          temporaryConfig.upnp.expiry[device.portalId] = referenceTime + showAutomaticExpirySettings
+          temporaryConfig.upnp.expiry[device.portalId] = referenceTime + defaultExpiryDuration
         }
       })
     }
@@ -43,7 +52,7 @@ function Discovery() {
   }
 
   const isSaveEnabled = useFormValidation(() => {
-    return temporaryConfig !== undefined
+    return temporaryConfig !== undefined && isTemporaryConfigDirty
   })
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -56,6 +65,7 @@ function Discovery() {
       clone.upnp.enabledPortalIds = []
     }
     setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
   }
 
   function handleEnablePortalChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -72,6 +82,7 @@ function Discovery() {
     }
     clone.upnp.enabledPortalIds = list
     setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
   }
 
   function handleEnableAllPortalsChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -84,6 +95,7 @@ function Discovery() {
       clone.upnp.enabledPortalIds = []
     }
     setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
   }
 
   function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, portalId: string) {
@@ -95,6 +107,7 @@ function Discovery() {
       clone.upnp.expiry[portalId] = 0
     }
     setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
   }
 
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
@@ -125,7 +138,7 @@ function Discovery() {
               availablePortalIds={upnpDiscovered}
               onEnablePortalChange={handleEnablePortalChange}
               onEnableAllPortalsChange={handleEnableAllPortalsChange}
-              defaultExpiryDuration={showAutomaticExpirySettings}
+              defaultExpiryDuration={defaultExpiryDuration}
               onPortalExpiryChange={handlePortalExpiryChange}
             />
           </CForm>

@@ -19,6 +19,7 @@ import CIcon from "@coreui/icons-react"
 import { cilRss } from "@coreui/icons"
 import { AppState } from "../../store"
 import { WebSocketStatus } from "../settings/WebsocketStatus"
+import ms from "ms"
 
 function Dashboard() {
   const {
@@ -88,8 +89,14 @@ function Dashboard() {
                               &nbsp; &nbsp;
                             </strong>
                             <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
-                              {deviceStats.type}
+                              {deviceStats.type} {deviceStats.address}
                             </CBadge>
+                            &nbsp; &nbsp;
+                            {deviceStats.expiry && (
+                              <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
+                                Stop in {ms(deviceStats.expiry - Date.now())}
+                              </CBadge>
+                            )}
                           </CCol>
                           <CCol className="text-end" xs="auto">
                             <strong> {deviceStats.measurementRate} </strong>(
