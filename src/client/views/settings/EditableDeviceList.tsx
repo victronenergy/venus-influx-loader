@@ -12,12 +12,13 @@ import {
 } from "@coreui/react"
 import { AppDataCollectionExpiryConfig, AppDeviceConfig, AppInstallationConfig } from "../../../shared/types"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
+import { DiscoveredDevice } from "../../../shared/state"
 
 interface EditableDeviceListProps {
   hidden?: boolean
   entries: AppDeviceConfig[] | AppInstallationConfig[]
   referenceTime: number
-  expirySettings: AppDataCollectionExpiryConfig
+  expirySettings: (number | undefined)[]
   onEntryValueChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableEntryChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableAllEntriesChange: (_event: React.ChangeEvent<HTMLInputElement>) => void
@@ -26,7 +27,7 @@ interface EditableDeviceListProps {
   entryTitleText: string
   addEntryButtonText: string
   defaultExpiryDuration?: number
-  onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _portalId: string) => void
+  onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
 export function EditableDeviceList(props: EditableDeviceListProps) {
@@ -71,9 +72,10 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                   {props.defaultExpiryDuration && (
                     <CTableDataCell>
                       <AutoExpiryOptionList
+                        index={index}
                         portalId={key}
                         referenceTime={props.referenceTime}
-                        configuredExpiryTime={props.expirySettings[key]}
+                        configuredExpiryTime={props.expirySettings[index]}
                         defaultExpiryDuration={props.defaultExpiryDuration}
                         onSelectionDidChange={props.onPortalExpiryChange}
                       />
@@ -102,4 +104,24 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
       </CButton>
     </div>
   )
+}
+
+export function arrayExpiryToKeyed(
+  expiry: (number | undefined)[],
+  devices: AppDeviceConfig[] | AppInstallationConfig[],
+  existingExpiry: AppDataCollectionExpiryConfig = {},
+  discoveredDevices: DiscoveredDevice[] = [],
+): AppDataCollectionExpiryConfig {
+  const a = discoveredDevices.map((device) => existingExpiry[device.portalId])
+  // @ts-expect-error
+  const b = Object.fromEntries(devices.map((device, i) => [device.hostName ?? device.portalId, expiry[i]]))
+  return { ...a, ...b }
+}
+
+export function keyedExpiryToArray(
+  expiry: AppDataCollectionExpiryConfig,
+  devices: AppDeviceConfig[] | AppInstallationConfig[],
+): (number | undefined)[] {
+  // @ts-expect-error
+  return devices.map((device) => expiry[device.hostName ?? device.portalId])
 }

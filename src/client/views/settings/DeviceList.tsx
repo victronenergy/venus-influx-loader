@@ -13,7 +13,7 @@ interface DeviceListProps {
   onEnableAllPortalsChange: React.ChangeEventHandler<HTMLInputElement>
   availablePortalIds: DiscoveredDevice[]
   defaultExpiryDuration?: number
-  onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _portalId: string) => void
+  onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
 export function DeviceList(props: DeviceListProps) {
@@ -40,7 +40,7 @@ export function DeviceList(props: DeviceListProps) {
       </CTableHead>
       <CTableBody>
         {props.availablePortalIds &&
-          props.availablePortalIds.map((element, _index) => {
+          props.availablePortalIds.map((element, index) => {
             return (
               <CTableRow key={element.portalId}>
                 <CTableDataCell>{element.name}</CTableDataCell>
@@ -48,6 +48,7 @@ export function DeviceList(props: DeviceListProps) {
                 {props.defaultExpiryDuration && (
                   <CTableDataCell>
                     <AutoExpiryOptionList
+                      index={index}
                       portalId={element.portalId}
                       referenceTime={props.referenceTime}
                       configuredExpiryTime={props.expirySettings[element.portalId]}
