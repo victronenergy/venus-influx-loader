@@ -3,7 +3,7 @@ import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck 
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
-import { EditableDeviceList } from "./EditableDeviceList"
+import { arrayExpiryToKeyed, EditableDeviceList, keyedExpiryToArray } from "./EditableDeviceList"
 import { useEffect, useState } from "react"
 import { AppConfig } from "../../../shared/types"
 import { WebSocketStatus } from "./WebsocketStatus"
@@ -17,14 +17,25 @@ function Manual() {
   const [isTemporaryConfigDirty, setIsTemporaryConfigDirty] = useState(false)
 
   const defaultExpiryDuration = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
+  function populateDefaultExpiry(config?: AppConfig) {
+    if (config && defaultExpiryDuration) {
+      config.manual.hosts.forEach((host) => {
+        if (config.manual.expiry[host.hostName] === undefined) {
+          config.manual.expiry[host.hostName] = referenceTime + defaultExpiryDuration
+        }
+      })
+    }
+  }
 
   const [referenceTime, setReferenceTime] = useState<number>(0)
+  const [temporaryExpiry, setTemporaryExpiry] = useState<(number | undefined)[]>([])
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
     setReferenceTime(Date.now())
+    populateDefaultExpiry(config)
     setTemporaryConfig(config)
+    setTemporaryExpiry(keyedExpiryToArray(config?.manual.expiry ?? {}, config?.manual.hosts ?? []))
     setIsTemporaryConfigDirty(false)
-    setDefaultExpiry()
   }, [config])
 
   // reload loader config when notified via websocket
@@ -32,16 +43,6 @@ function Manual() {
   useEffect(() => {
     load()
   }, [loaderSettings])
-
-  function setDefaultExpiry() {
-    if (defaultExpiryDuration && temporaryConfig) {
-      temporaryConfig.manual.hosts.forEach((device) => {
-        if (temporaryConfig.manual.expiry[device.hostName] === undefined) {
-          temporaryConfig.manual.expiry[device.hostName] = referenceTime + defaultExpiryDuration
-        }
-      })
-    }
-  }
 
   const isSaveEnabled = useFormValidation(() => {
     return (
@@ -57,19 +58,6 @@ function Manual() {
     // TODO: fix this
     // @ts-expect-error
     clone.manual[name] = value
-    setTemporaryConfig(clone)
-    setIsTemporaryConfigDirty(true)
-  }
-
-  function handleHostNameChange(event: React.ChangeEvent<HTMLInputElement>, index: number) {
-    const clone = { ...temporaryConfig!! }
-    const previousHostName = clone.manual.hosts[index].hostName
-    const newHostName = event.target.value
-    const expiry = clone.manual.expiry[previousHostName]
-    clone.manual.hosts[index].hostName = newHostName
-    clone.manual.expiry[newHostName] =
-      expiry ?? (defaultExpiryDuration ? referenceTime + defaultExpiryDuration : undefined)
-    delete clone.manual.expiry[previousHostName]
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
   }
@@ -93,6 +81,9 @@ function Manual() {
   function handleAddHost(_event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>) {
     const clone = { ...temporaryConfig!! }
     clone.manual.hosts.push({ hostName: "", enabled: true })
+    const newExpiry = [...temporaryExpiry, defaultExpiryDuration ? referenceTime + defaultExpiryDuration : undefined]
+    clone.manual.expiry = arrayExpiryToKeyed(newExpiry, clone.manual.hosts)
+    setTemporaryExpiry(newExpiry)
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
   }
@@ -101,24 +92,32 @@ function Manual() {
     _event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>,
     index: number,
   ) {
-    const clone = { ...temporaryConfig!! }
-    const previousHostName = clone.manual.hosts[index].hostName
-    if (previousHostName) {
-      delete clone.manual.expiry[previousHostName]
-    }
+    const clone = { ...config!! }
     clone.manual.hosts.splice(index, 1)
+    const newExpiry = [...temporaryExpiry]
+    newExpiry.splice(index, 1)
+    clone.manual.expiry = arrayExpiryToKeyed(newExpiry, clone.manual.hosts)
+    setTemporaryExpiry(newExpiry)
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
   }
 
-  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, portalId: string) {
+  function handleHostNameChange(event: React.ChangeEvent<HTMLInputElement>, index: number) {
+    const clone = { ...temporaryConfig!! }
+    clone.manual.hosts[index].hostName = event.target.value
+    const newExpiry = [...temporaryExpiry]
+    clone.manual.expiry = arrayExpiryToKeyed(newExpiry, clone.manual.hosts)
+    setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
+  }
+
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, index: number, _portalId: string) {
     const clone = { ...temporaryConfig!! }
     const value = Number(event.target.value)
-    if (value > 0) {
-      clone.manual.expiry[portalId] = referenceTime + value
-    } else {
-      clone.manual.expiry[portalId] = 0
-    }
+    const newExpiry = [...temporaryExpiry]
+    newExpiry[index] = value > 0 ? referenceTime + value : 0
+    clone.manual.expiry = arrayExpiryToKeyed(newExpiry, clone.manual.hosts)
+    setTemporaryExpiry(newExpiry)
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
   }
@@ -147,7 +146,7 @@ function Manual() {
             <EditableDeviceList
               entries={temporaryConfig.manual.hosts}
               referenceTime={referenceTime}
-              expirySettings={temporaryConfig.manual.expiry}
+              expirySettings={temporaryExpiry}
               onEntryValueChange={handleHostNameChange}
               onEnableEntryChange={handleEnableHostChange}
               onEnableAllEntriesChange={handleEnableAllHostsChange}

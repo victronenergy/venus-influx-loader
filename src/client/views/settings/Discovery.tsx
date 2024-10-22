@@ -16,17 +16,26 @@ function Discovery() {
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
   const [isTemporaryConfigDirty, setIsTemporaryConfigDirty] = useState(false)
 
+  const [referenceTime, setReferenceTime] = useState<number>(0)
   const defaultExpiryDuration = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
+  function populateDefaultExpiry(config?: AppConfig) {
+    if (config && defaultExpiryDuration) {
+      upnpDiscovered.forEach((device) => {
+        if (config.upnp.expiry[device.portalId] === undefined) {
+          config.upnp.expiry[device.portalId] = referenceTime + defaultExpiryDuration
+        }
+      })
+    }
+  }
 
   const upnpDiscovered = useSelector((state: AppState) => state.upnpDiscovered)
 
-  const [referenceTime, setReferenceTime] = useState<number>(0)
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
     setReferenceTime(Date.now())
+    populateDefaultExpiry(config)
     setTemporaryConfig(config)
     setIsTemporaryConfigDirty(false)
-    setDefaultExpiry()
   }, [config, upnpDiscovered, defaultExpiryDuration])
 
   // reload loader config when notified via websocket
@@ -34,16 +43,6 @@ function Discovery() {
   useEffect(() => {
     load()
   }, [loaderSettings])
-
-  function setDefaultExpiry() {
-    if (defaultExpiryDuration && temporaryConfig) {
-      upnpDiscovered.forEach((device) => {
-        if (temporaryConfig.upnp.expiry[device.portalId] === undefined) {
-          temporaryConfig.upnp.expiry[device.portalId] = referenceTime + defaultExpiryDuration
-        }
-      })
-    }
-  }
 
   function beforeSave() {
     if (temporaryConfig && !temporaryConfig.upnp.enabled) {
@@ -98,7 +97,7 @@ function Discovery() {
     setIsTemporaryConfigDirty(true)
   }
 
-  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, portalId: string) {
+  function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, _index: number, portalId: string) {
     const clone = { ...temporaryConfig!! }
     const value = Number(event.target.value)
     if (value > 0) {
