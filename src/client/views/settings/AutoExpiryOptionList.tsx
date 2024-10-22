@@ -4,12 +4,13 @@ import ms from "ms"
 import { useEffect, useState } from "react"
 
 export interface AutoExpiryOptionListProps {
+  index: number
   referenceTime: number
   portalId: string
   configuredExpiryTime?: number
   defaultExpiryDuration?: number
   value?: number
-  onSelectionDidChange: (_event: React.ChangeEvent<HTMLSelectElement>, _portalId: string) => void
+  onSelectionDidChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
 interface AutoExpiryOptionListOption {
@@ -70,7 +71,7 @@ export function AutoExpiryOptionList(props: AutoExpiryOptionListProps) {
     <CFormSelect
       options={options.options}
       value={options.default}
-      onChange={(event) => props.onSelectionDidChange(event, props.portalId)}
+      onChange={(event) => props.onSelectionDidChange(event, props.index, props.portalId)}
     />
   )
 }
