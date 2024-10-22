@@ -145,6 +145,7 @@ export class VRM {
     delete this.server.secrets.vrmUsername
     this.server.config.vrm.enabledPortalIds = []
     this.server.config.vrm.manualPortalIds = []
+    this.server.config.vrm.expiry = {}
     this.server.config.vrm.hasToken = false
     await this.server.saveSecrets()
     await this.server.saveConfig()
