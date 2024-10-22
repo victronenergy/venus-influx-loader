@@ -36,6 +36,8 @@ function Dashboard() {
     )
   })
 
+  const deviceKeys = Object.keys(deviceStatistics || {}).sort()
+
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
     return <WebSocketStatus websocketStatus={websocketStatus} />
@@ -70,7 +72,7 @@ function Dashboard() {
         <CCardBody>
           <CTable borderless>
             <CTableBody>
-              {Object.keys(deviceStatistics || {}).map((key) => {
+              {deviceKeys.map((key) => {
                 const deviceStats = deviceStatistics[key]
                 return (
                   <CTableRow key={key}>
@@ -92,7 +94,7 @@ function Dashboard() {
                               {deviceStats.type} {deviceStats.address}
                             </CBadge>
                             &nbsp; &nbsp;
-                            {deviceStats.expiry && (
+                            {deviceStats.expiry !== undefined && deviceStats.expiry > 0 && (
                               <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
                                 Stop in {ms(deviceStats.expiry - Date.now())}
                               </CBadge>
