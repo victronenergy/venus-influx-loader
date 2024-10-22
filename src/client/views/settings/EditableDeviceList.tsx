@@ -112,7 +112,7 @@ export function arrayExpiryToKeyed(
   existingExpiry: AppDataCollectionExpiryConfig = {},
   discoveredDevices: DiscoveredDevice[] = [],
 ): AppDataCollectionExpiryConfig {
-  const a = discoveredDevices.map((device) => existingExpiry[device.portalId])
+  const a = Object.fromEntries(discoveredDevices.map((device) => [device.portalId, existingExpiry[device.portalId]]))
   // @ts-expect-error
   const b = Object.fromEntries(devices.map((device, i) => [device.hostName ?? device.portalId, expiry[i]]))
   return { ...a, ...b }
