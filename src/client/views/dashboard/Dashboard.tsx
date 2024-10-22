@@ -37,6 +37,7 @@ function Dashboard() {
   })
 
   const deviceKeys = Object.keys(deviceStatistics || {}).sort()
+  const adjustedMeasurementRate = measurementRate !== 0 ? measurementRate : 0.001
 
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
@@ -102,7 +103,7 @@ function Dashboard() {
                           </CCol>
                           <CCol className="text-end" xs="auto">
                             <strong> {deviceStats.measurementRate} </strong>(
-                            {((deviceStats.measurementRate / measurementRate) * 100).toFixed(0)}
+                            {((deviceStats.measurementRate / adjustedMeasurementRate) * 100).toFixed(0)}
                             %)
                           </CCol>
                         </CRow>
@@ -111,7 +112,7 @@ function Dashboard() {
                             <CProgress
                               className="progress-xs"
                               color="warning"
-                              value={(deviceStats.measurementRate / measurementRate) * 100}
+                              value={(deviceStats.measurementRate / adjustedMeasurementRate) * 100}
                             />
                           </CCol>
                         </CRow>
