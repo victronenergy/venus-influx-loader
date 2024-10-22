@@ -87,7 +87,7 @@ const server = new Server({
     showEditManualSettings: !options.hideSettingsVenusManual,
     showEditSecuritySettings: !options.hideSettingsSecurity && adminApiAuthEnabled,
     showEditInfluxDBSettings: !options.hideSettingsInfluxdb,
-    showAutomaticExpirySettings: autoExpiryDuration,
+    showAutomaticExpirySettings: autoExpiryDuration > 0 ? autoExpiryDuration : undefined,
   },
 })
 
