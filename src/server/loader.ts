@@ -6,8 +6,10 @@ const buildVersion = buildInfo.buildVersion
 import { Server } from "./server"
 import { Logger } from "winston"
 import { ConfiguredDevice, DiscoveredDevice, LoaderStatistics } from "../shared/state.js"
+import ms from "ms"
 
 const collectStatsInterval = 5
+const checkExpiryInterval = 60
 const keepAliveInterval = 30
 
 export class Loader {
@@ -21,7 +23,9 @@ export class Loader {
   loaderStatistics: LoaderStatistics = { distinctMeasurementsCount: 0, measurementRate: 0.1, deviceStatistics: {} }
   lastIntervalCount = 0
 
-  collectInterval: any = undefined
+  collectStatisticsInterval: any = undefined
+  checkExpiryInterval: any = undefined
+  isConfigFileDirty = false
 
   constructor(server: Server) {
     this.server = server
@@ -44,16 +48,20 @@ export class Loader {
       type: "LOADER_STATISTICS",
       data: this.loaderStatistics,
     })
-    this.collectInterval = setInterval(() => {
-      this.collectStats()
+    this.collectStatisticsInterval = setInterval(() => {
+      this.collectStatistics()
     }, collectStatsInterval * 1000)
+
+    this.checkExpiryInterval = setInterval(() => {
+      this.checkExpiry()
+    }, checkExpiryInterval * 1000)
 
     // initiate connections to configured devices
     this.settingsChanged()
   }
 
-  collectStats() {
-    // this.logger.debug("collectStats")
+  collectStatistics() {
+    // this.logger.debug("collectStatistics")
 
     let distinctMeasurementsCount = 0
     let totalMeasurementsCount = 0
@@ -66,8 +74,13 @@ export class Loader {
       this.loaderStatistics.deviceStatistics[key] = stats
     })
 
+    let totalIntervalCount = totalMeasurementsCount - this.lastIntervalCount
+    if (totalIntervalCount < 0) {
+      totalIntervalCount = 0
+    }
+
     this.loaderStatistics = {
-      measurementRate: (totalMeasurementsCount - this.lastIntervalCount) / collectStatsInterval,
+      measurementRate: totalIntervalCount / collectStatsInterval,
       distinctMeasurementsCount: distinctMeasurementsCount,
       deviceStatistics: this.loaderStatistics.deviceStatistics,
     }
@@ -78,6 +91,19 @@ export class Loader {
       type: "LOADER_STATISTICS",
       data: this.loaderStatistics,
     })
+  }
+
+  async checkExpiry() {
+    this.logger.debug("checkExpiry")
+
+    // mark config as not dirty and update all connections to recompute expiry
+    this.isConfigFileDirty = false
+    this.settingsChanged()
+
+    // save settings in case something expired
+    if (this.isConfigFileDirty) {
+      await this.server.saveConfig()
+    }
   }
 
   private settingsChanged() {
@@ -93,14 +119,25 @@ export class Loader {
     // and compute what devices should be disabled
     const config = this.server.config.upnp
     const enabled = config.enabled ? config.enabledPortalIds : []
-    const disabled = arrayDifference(Object.keys(this.upnpConnections), enabled)
+    // check device expiry settings (add one minute to never go negative on the dashboard)
+    const now = Date.now() + 60_000
+    const expired = enabled.filter((device) => (config.expiry[device] ? config.expiry[device] < now : false))
+    const remaining = arrayDifference(enabled, expired)
+    const disabled = arrayDifference(Object.keys(this.upnpConnections), remaining)
     // disconnect from Venus devices that are no longer enabled
     disabled.forEach((portalId) => {
       this.upnpConnections[portalId].stop()
       delete this.upnpConnections[portalId]
     })
-    // connect to Venus devices that are enabled
-    enabled.forEach((portalId) => this.initiateUpnpDeviceConnection(this.server.upnpDevices[portalId]))
+    // connect to Venus devices that are enabled and not expired
+    remaining.forEach((portalId) =>
+      this.initiateUpnpDeviceConnection(this.server.upnpDevices[portalId], config.expiry[portalId]),
+    )
+    // disable expired devices in the config file
+    this.server.config.upnp.enabledPortalIds = remaining
+    expired.forEach((device) => delete this.server.config.upnp.expiry[device])
+    // mark config as dirty to save it eventually
+    this.isConfigFileDirty = this.isConfigFileDirty ? true : expired.length > 0
   }
 
   private updateHostnameDeviceConnections() {
@@ -115,14 +152,27 @@ export class Loader {
           return result
         }, [])
       : []
-    const disabled = arrayDifference(Object.keys(this.manualConnections), enabled)
+    // check device expiry settings (add one minute to never go negative on the dashboard)
+    const now = Date.now() + 60_000
+    const expired = enabled.filter((device) => (config.expiry[device] ? config.expiry[device] < now : false))
+    const remaining = arrayDifference(enabled, expired)
+    const disabled = arrayDifference(Object.keys(this.manualConnections), remaining)
     // disconnect from Venus devices that are no longer enabled
     disabled.forEach((hostName) => {
       this.manualConnections[hostName].stop()
       delete this.manualConnections[hostName]
     })
     // connect to Venus devices that are enabled
-    enabled.forEach((hostName) => this.initiateHostnameDeviceConnection(hostName))
+    remaining.forEach((hostName) => this.initiateHostnameDeviceConnection(hostName, config.expiry[hostName]))
+    // disable expired devices in the config file
+    expired.forEach((hostName) => {
+      this.server.config.manual.hosts.forEach((host) => {
+        if (host.hostName === hostName) host.enabled = false
+      })
+      delete this.server.config.manual.expiry[hostName]
+    })
+    // mark config as dirty to save it eventually
+    this.isConfigFileDirty = this.isConfigFileDirty ? true : expired.length > 0
   }
 
   private updateVrmDeviceConnections() {
@@ -137,48 +187,65 @@ export class Loader {
         }, [])
       : []
     const enabled = [...e1, ...e2]
-    const disabled = arrayDifference(Object.keys(this.vrmConnections), enabled)
+    // check device expiry settings (add one minute to never go negative on the dashboard)
+    const now = Date.now() + 60_000
+    const expired = enabled.filter((device) => (config.expiry[device] ? config.expiry[device] < now : false))
+    const remaining = arrayDifference(enabled, expired)
+    const disabled = arrayDifference(Object.keys(this.vrmConnections), remaining)
     // disconnect from Venus devices that are no longer enabled
     disabled.forEach((portalId) => {
       this.vrmConnections[portalId].stop()
       delete this.vrmConnections[portalId]
     })
     // connect to Venus devices that are enabled
-    enabled.forEach((portalId) => this.initiateVrmDeviceConnection(portalId))
+    remaining.forEach((portalId) => this.initiateVrmDeviceConnection(portalId, config.expiry[portalId]))
+    // disable expired devices in the config file
+    expired.forEach((portalId) => {
+      this.server.config.vrm.enabledPortalIds = this.server.config.vrm.enabledPortalIds.filter((x) => x !== portalId)
+      this.server.config.vrm.manualPortalIds.forEach((inst) => {
+        if (inst.portalId === portalId) inst.enabled = false
+      })
+      delete this.server.config.vrm.expiry[portalId]
+    })
+    // mark config as dirty to save it eventually
+    this.isConfigFileDirty = this.isConfigFileDirty ? true : expired.length > 0
   }
 
-  private async initiateUpnpDeviceConnection(d: DiscoveredDevice) {
+  private async initiateUpnpDeviceConnection(d: DiscoveredDevice, expiry?: number) {
     if (d === undefined) return
     if (this.upnpConnections[d.portalId]) {
+      this.upnpConnections[d.portalId].updateExpiry(expiry)
       return
     }
     const device: ConfiguredDevice = { type: "UPNP", address: d.address, portalId: d.portalId }
     this.logger.debug(`initiateUpnpDeviceConnection: ${JSON.stringify(device)}`)
-    const mqttClient = new VenusMqttClient(this, device)
+    const mqttClient = new VenusMqttClient(this, device, expiry)
     this.upnpConnections[d.portalId] = mqttClient
     await mqttClient.start()
   }
 
-  private async initiateHostnameDeviceConnection(hostName: string) {
+  private async initiateHostnameDeviceConnection(hostName: string, expiry?: number) {
     if (hostName === undefined) return
     if (this.manualConnections[hostName]) {
+      this.manualConnections[hostName].updateExpiry(expiry)
       return
     }
     const device: ConfiguredDevice = { type: "IP", address: hostName }
     this.logger.debug(`initiateHostnameDeviceConnection: ${JSON.stringify(device)}`)
-    const mqttClient = new VenusMqttClient(this, device)
+    const mqttClient = new VenusMqttClient(this, device, expiry)
     this.manualConnections[hostName] = mqttClient
     await mqttClient.start()
   }
 
-  private async initiateVrmDeviceConnection(portalId: string) {
+  private async initiateVrmDeviceConnection(portalId: string, expiry?: number) {
     if (portalId === undefined) return
     if (this.vrmConnections[portalId]) {
+      this.vrmConnections[portalId].updateExpiry(expiry)
       return
     }
     const device: ConfiguredDevice = { type: "VRM", portalId: portalId, address: this.calculateVrmBrokerURL(portalId) }
     this.logger.debug(`initiateVrmDeviceConnection: ${JSON.stringify(device)}`)
-    const mqttClient = new VenusMqttClient(this, device, true)
+    const mqttClient = new VenusMqttClient(this, device, expiry, true)
     this.vrmConnections[portalId] = mqttClient
     await mqttClient.start()
   }
@@ -201,23 +268,25 @@ class VenusMqttClient {
   address: string
   port: number
   isVrm: boolean
+  expiry?: number
   isFirstKeepAliveRequest: boolean = true
   isDetectingPortalId: boolean = true
   venusKeepAlive: any
 
-  constructor(loader: Loader, device: ConfiguredDevice, isVrm = false) {
+  constructor(loader: Loader, device: ConfiguredDevice, expiry?: number, isVrm = false) {
     this.loader = loader
     this.logger = loader.server.getLogger(`${device.type}:${device.portalId ?? device.address}`)
     this.address = device.address!!
     this.port = isVrm ? 8883 : 1883
     this.device = device
+    this.expiry = expiry
     this.isVrm = isVrm
 
     this.setupStatistics()
   }
 
   async start() {
-    this.logger.info("start")
+    this.logger.info(`start, will stop ${this.formatExpiry(this.expiry)}`)
     return new Promise((resolve, _reject) => {
       const clientId = Math.random().toString(16).slice(3)
       let options
@@ -410,6 +479,7 @@ class VenusMqttClient {
       type: this.device.type,
       address: this.device.address,
       isConnected: false,
+      expiry: this.expiry,
       name: this.device.name || this.device.portalId!!,
       totalMeasurementsCount: 0,
       distinctMeasurementsCount: 0,
@@ -434,6 +504,24 @@ class VenusMqttClient {
     portalStats.totalMeasurementsCount++
     portalStats.distinctMeasurementsCount = this.distinctMeasurements.size
     portalStats.lastMeasurement = new Date()
+  }
+
+  updateExpiry(expiry?: number) {
+    if (this.expiry === expiry) {
+      return
+    }
+    this.expiry = expiry
+    this.logger.info(`updateExpiry, will stop ${this.formatExpiry(this.expiry)}`)
+    this.loader.loaderStatistics.deviceStatistics[this.statisticsKey].expiry = this.expiry
+  }
+
+  formatExpiry(expiry?: number) {
+    let formattedExpiry = "never"
+    if (expiry) {
+      const now = Date.now()
+      formattedExpiry = `in ${ms(expiry - now)} (${new Date(expiry).toISOString()})`
+    }
+    return formattedExpiry
   }
 }
 

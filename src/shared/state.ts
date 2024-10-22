@@ -64,6 +64,7 @@ export interface DeviceStatisticsDetails {
   address: string
   name: string
   isConnected: boolean
+  expiry?: number
   measurementRate: number
   totalMeasurementsCount: number
   lastIntervalCount: number
