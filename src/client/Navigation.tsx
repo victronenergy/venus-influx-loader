@@ -1,3 +1,4 @@
+import React from "react"
 import CIcon from "@coreui/icons-react"
 import { cilChartLine, cilSettings, cilSpeedometer, cilHistory } from "@coreui/icons"
 import { CNavGroup, CNavItem } from "@coreui/react"
@@ -72,9 +73,9 @@ const Navigation = ({
   {
     component: CNavItem,
     name: "Grafana",
-    to: interpolate(grafanaUrl, { window: window }),
-    icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
+    href: interpolate(grafanaUrl, { window: window }),
     target: "_self",
+    icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
   },
 ]
 
