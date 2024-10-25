@@ -74,6 +74,7 @@ const Navigation = ({
     name: "Grafana",
     to: interpolate(grafanaUrl, { window: window }),
     icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
+    target: "_self",
   },
 ]
 
