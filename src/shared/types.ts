@@ -104,17 +104,17 @@ export interface LogEntry {
 
 const defaultAppConfigValues: AppConfig = {
   upnp: {
-    enabled: false,
+    enabled: true,
     enabledPortalIds: [],
     expiry: {},
   },
   manual: {
-    enabled: false,
+    enabled: true,
     hosts: [],
     expiry: {},
   },
   vrm: {
-    enabled: false,
+    enabled: true,
     enabledPortalIds: [],
     manualPortalIds: [],
     hasToken: false,
