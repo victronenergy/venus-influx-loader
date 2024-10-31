@@ -114,7 +114,7 @@ export class InfluxDBBackend {
   }
 
   private async _connect() {
-    const { host, port, database, username, password } = this.server.config.influxdb
+    const { host, port, database, retention, username, password } = this.server.config.influxdb
 
     this.host = host
     this.port = port
@@ -142,7 +142,7 @@ export class InfluxDBBackend {
         await this.influxClient.createDatabase(this.database)
       }
       this.isConnected = true
-      await this._setRetentionPolicy(this.retention)
+      await this._setRetentionPolicy(retention)
     } catch (error) {
       this.logger.error(`Unable to connect: ${error}`)
       throw error
