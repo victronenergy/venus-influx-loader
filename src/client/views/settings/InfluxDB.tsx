@@ -72,6 +72,26 @@ function InfluxDB() {
               />
             </div>
             <div className="mb-3">
+              <CFormLabel htmlFor="protocol">Protocol</CFormLabel>
+              <CFormInput
+                type="text"
+                name="protocol"
+                placeholder="http"
+                value={temporaryConfig.influxdb.protocol}
+                onChange={(event) => handleFormInputChange(event)}
+              />
+            </div>
+            <div className="mb-3">
+              <CFormLabel htmlFor="path">Path</CFormLabel>
+              <CFormInput
+                type="text"
+                name="path"
+                placeholder=""
+                value={temporaryConfig.influxdb.path}
+                onChange={(event) => handleFormInputChange(event)}
+              />
+            </div>
+            <div className="mb-3">
               <CFormLabel htmlFor="database">Database Name</CFormLabel>
               <CFormInput
                 type="text"

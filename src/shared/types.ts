@@ -60,6 +60,8 @@ export interface AppDataCollectionExpiryConfig {
 export interface AppInfluxDBConfig {
   host: string
   port: string
+  protocol?: string
+  path?: string
   username?: string
   password?: string
   database: string

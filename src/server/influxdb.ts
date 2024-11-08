@@ -10,6 +10,8 @@ export class InfluxDBBackend {
 
   host: string = ""
   port: string = ""
+  path: string = ""
+  protocol: string = "http"
   database: string = ""
   username?: string
   password?: string
@@ -37,11 +39,13 @@ export class InfluxDBBackend {
       return
     }
 
-    const { host, port, database, retention, username, password } = this.server.config.influxdb
+    const { host, port, protocol, path, username, password, database, retention } = this.server.config.influxdb
 
     if (
       this.host !== host ||
       this.port !== port ||
+      this.path !== path ||
+      this.protocol !== protocol ||
       this.database !== database ||
       this.username !== username ||
       this.password !== password
@@ -114,13 +118,15 @@ export class InfluxDBBackend {
   }
 
   private async _connect() {
-    const { host, port, database, retention, username, password } = this.server.config.influxdb
+    const { host, port, protocol, path, username, password, database, retention } = this.server.config.influxdb
 
     this.host = host
     this.port = port
     this.database = database
     this.username = username !== "" ? username : "root"
     this.password = password !== "" ? password : "root"
+    this.path = path ? path : ""
+    this.protocol = protocol ? protocol : "http"
 
     this.logger.info(`Attempting connection to ${this.host}:${this.port}/${this.database} using ${this.username}:*****`)
 
@@ -129,7 +135,8 @@ export class InfluxDBBackend {
       this.influxClient = new InfluxDB({
         host: this.host,
         port: Number(this.port),
-        protocol: "http",
+        path: this.path,
+        protocol: this.protocol,
         database: this.database,
         username: this.username,
         password: this.password,
