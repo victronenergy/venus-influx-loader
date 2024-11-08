@@ -126,9 +126,13 @@ export class InfluxDBBackend {
     this.username = username !== "" ? username : "root"
     this.password = password !== "" ? password : "root"
     this.path = path ? path : ""
+    // ensure path starts with "/" when set
+    if (this.path !== "" && !this.path.startsWith("/")) {
+      this.path = "/" + this.path
+    }
     this.protocol = protocol=="https" ? protocol : "http"
 
-    this.logger.info(`Attempting connection to ${this.host}:${this.port}/${this.database} using ${this.username}:*****`)
+    this.logger.info(`Attempting connection to ${this.protocol}${this.host}:${this.port}/${this.path}${this.database} using ${this.username}:*****`)
 
     try {
 
