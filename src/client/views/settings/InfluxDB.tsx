@@ -1,6 +1,6 @@
 import React from "react"
 import { useEffect, useState } from "react"
-import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CButton } from "@coreui/react"
+import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CFormSelect, CButton } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
@@ -73,13 +73,16 @@ function InfluxDB() {
             </div>
             <div className="mb-3">
               <CFormLabel htmlFor="protocol">Protocol</CFormLabel>
-              <CFormInput
-                type="text"
+              <CFormSelect
+                id="protocol"
                 name="protocol"
-                placeholder="http"
                 value={temporaryConfig.influxdb.protocol}
                 onChange={(event) => handleFormInputChange(event)}
-              />
+              >
+                <option value="">Select a protocol</option>
+                <option value="http">HTTP</option>
+                <option value="https">HTTPS</option>
+              </CFormSelect>
             </div>
             <div className="mb-3">
               <CFormLabel htmlFor="path">Path</CFormLabel>

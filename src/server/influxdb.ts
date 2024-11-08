@@ -11,7 +11,7 @@ export class InfluxDBBackend {
   host: string = ""
   port: string = ""
   path: string = ""
-  protocol: string = "http"
+  protocol: "http"|"https" = "http"
   database: string = ""
   username?: string
   password?: string
@@ -126,7 +126,7 @@ export class InfluxDBBackend {
     this.username = username !== "" ? username : "root"
     this.password = password !== "" ? password : "root"
     this.path = path ? path : ""
-    this.protocol = protocol ? protocol : "http"
+    this.protocol = protocol=="https" ? protocol : "http"
 
     this.logger.info(`Attempting connection to ${this.host}:${this.port}/${this.database} using ${this.username}:*****`)
 
