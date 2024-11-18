@@ -88,10 +88,13 @@ const serverMock = {
 // upnp browser
 const browser = new UPNP(serverMock)
 
-// exit on Ctrl-C
-process.on("SIGINT", function () {
-  browser.stop()
-  process.exit()
+// exit on `docker stop` or Ctrl-C
+const signals = ["SIGTERM", "SIGINT"]
+signals.forEach((signal: string) => {
+  process.on(signal, function () {
+    browser.stop()
+    process.exit()
+  })
 })
 
 // start browsing

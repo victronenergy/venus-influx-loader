@@ -287,6 +287,9 @@ class VenusMqttClient {
 
   async start() {
     this.logger.info(`start, will stop ${this.formatExpiry(this.expiry)}`)
+    if (this.isVrm && this.device.name === undefined) {
+      this.device.name = await this.loader.server.vrm.getInstallationName(this.device.portalId!!, this.logger)
+    }
     return new Promise((resolve, _reject) => {
       const clientId = Math.random().toString(16).slice(3)
       let options

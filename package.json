@@ -11,11 +11,12 @@
     "clean": "rimraf ./dist",
     "lint": "eslint src/ --fix",
     "type-check": "tsc --noEmit",
+    "watch:bin": "tsc -p tsconfig.build.json --watch",
     "watch-client": "webpack serve --mode development --progress --hot",
-    "watch-influx-loader": "concurrently npm:build:bin \"babel-watch dist/bin/venus-influx-loader.js -- --config-path ./config/ --port 8088\"",
-    "watch-upnp-browser": "concurrently npm:build:bin \"babel-watch dist/bin/venus-upnp-browser.js\"",
+    "watch-influx-loader": "concurrently npm:watch:bin \"babel-watch dist/bin/venus-influx-loader.js -- --config-path ./config/ --port 8088\"",
+    "watch-upnp-browser": "concurrently npm:watch:bin \"babel-watch dist/bin/venus-upnp-browser.js\"",
     "start": "VIL_INFLUXDB_URL=http://localhost:8086 VIL_INFLUXDB_USERNAME=s3cr4t VIL_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-influx-loader npm:watch-client",
-    "prepare": "npm run build"
+    "prepare": "(husky || true) && npm run prebuild"
   },
   "repository": {
     "type": "git",
@@ -25,16 +26,7 @@
     "url": "https://github.com/victronenergy/venus-influx-loader/issues"
   },
   "lint-staged": {
-    "linters": {
-      "lib/*.js*": [
-        "prettier-standard",
-        "git add"
-      ],
-      "index.js": [
-        "prettier-standard",
-        "git add"
-      ]
-    }
+    "*.{js,jsx,ts,tsx}": "npm run lint"
   },
   "bin": {
     "venus-influx-loader": "./dist/bin/venus-influx-loader.js",
@@ -73,7 +65,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.8",
-    "@babel/preset-env": "^7.25.8",
+    "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.25.7",
     "@babel/preset-typescript": "^7.25.7",
     "@coreui/coreui": "^5",
@@ -93,8 +85,8 @@
     "@types/react-dom": "^18.3.1",
     "@types/tsscmp": "^1.0.2",
     "@types/xml2js": "^0.4.14",
-    "@typescript-eslint/eslint-plugin": "^8.10.0",
-    "@typescript-eslint/parser": "^8.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
     "autoprefixer": "^10.4.20",
     "axios-hooks": "^5.0.2",
     "babel-loader": "^9.2.1",
@@ -106,7 +98,7 @@
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "^7.37.1",
+    "eslint-plugin-react": "^7.37.2",
     "globals": "^15.11.0",
     "html-loader": "5.1.0",
     "html-webpack-plugin": "^5.6.2",
@@ -122,7 +114,7 @@
     "redux": "^5.0.1",
     "redux-thunk": "^3.1.0",
     "rimraf": "^6.0.1",
-    "sass": "^1.79.5",
+    "sass": "^1.81.0",
     "sass-loader": "^16.0.2",
     "source-list-map": "2.0.1",
     "style-loader": "^4.0.0",

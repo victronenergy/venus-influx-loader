@@ -67,10 +67,13 @@ log(`API Port: ${adminApi || grafanaApi ? port : "disabled"}`)
 log(`Grafana URL: ${grafanaUrl}`)
 log(`Automatic Data Collection Expiry: ${autoExpiryDuration > 0 ? ms(autoExpiryDuration, { long: true }) : "disabled"}`)
 
-// exit on Ctrl-C
-process.on("SIGINT", function () {
-  server.stop()
-  process.exit()
+// exit on `docker stop` or Ctrl-C
+const signals = ["SIGTERM", "SIGINT"]
+signals.forEach((signal: string) => {
+  process.on(signal, function () {
+    server.stop()
+    process.exit()
+  })
 })
 
 const server = new Server({

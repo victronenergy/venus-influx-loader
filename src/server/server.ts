@@ -104,15 +104,15 @@ export class Server {
     this.influxdb = new InfluxDBBackend(this)
     this.influxdb.start()
 
-    // start loader
-    this.loader = new Loader(this)
-    this.loader.start()
-
     // prepare upnp browser
     this.upnp = new UPNP(this as ServerMock)
 
     // prepare VRM helper
     this.vrm = new VRM(this)
+
+    // start loader
+    this.loader = new Loader(this)
+    this.loader.start()
 
     // emit initial server state
     this.emitInitialServerState()
