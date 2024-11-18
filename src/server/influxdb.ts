@@ -1,8 +1,8 @@
-/* eslint-disable prettier/prettier */
 import { InfluxDB } from "influx"
 import { Server } from "./server"
 import { Logger } from "winston"
 import { AppInfluxDBProtocol } from "../shared/types"
+import { posix } from "node:path"
 
 export class InfluxDBBackend {
   server: Server
@@ -28,7 +28,9 @@ export class InfluxDBBackend {
     this.server = server
     this.logger = server.getLogger("influxdb")
     this.lastWriteTime = Date.now()
-    this.server.on("settingsChanged", () => { this.settingsChanged() })
+    this.server.on("settingsChanged", () => {
+      this.settingsChanged()
+    })
 
     this.settingsChanged()
   }
@@ -82,8 +84,8 @@ export class InfluxDBBackend {
       }
       valueKey = "stringValue"
     } else if (typeof value !== "number") {
-        // skip non-numeric payload (for example JSON)
-        return
+      // skip non-numeric payload (for example JSON)
+      return
     }
 
     // prepare InfluxDB point
@@ -127,19 +129,20 @@ export class InfluxDBBackend {
     this.database = database
     this.username = username !== "" ? username : "root"
     this.password = password !== "" ? password : "root"
-    this.path = path ? path : "/"
+    this.path = posix.normalize(path || "/")
     // ensure path starts, and ends with "/" when set
-    if (this.path !== "" && !this.path.startsWith("/")) {
+    if (!this.path.startsWith("/")) {
       this.path = "/" + this.path
     }
-    if (this.path !== "" && !this.path.endsWith("/")) {
+    if (!this.path.endsWith("/")) {
       this.path = this.path + "/"
     }
 
-    this.logger.info(`Attempting connection to ${this.protocol}://${this.host}:${this.port}${this.path}${this.database} using ${this.username}:*****`)
+    this.logger.info(
+      `Attempting connection to ${this.protocol}://${this.host}:${this.port}${this.path}${this.database} using ${this.username}:*****`,
+    )
 
     try {
-
       this.influxClient = new InfluxDB({
         host: this.host,
         port: Number(this.port),
