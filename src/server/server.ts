@@ -11,6 +11,7 @@ import auth from "basic-auth"
 import {
   AppConfig,
   AppConfigFiles,
+  AppInfluxDBProtocol,
   AppSecrets,
   AppUISettings,
   createAppConfig,
@@ -354,8 +355,10 @@ export class Server {
     const location = this.configFiles.configLocation
     const defaultConfig = createAppConfig({
       influxdb: {
+        protocol: defaultInfluxDBURL.protocol as AppInfluxDBProtocol,
         host: defaultInfluxDBURL.hostname,
         port: defaultInfluxDBURL.port,
+        path: defaultInfluxDBURL.pathname,
         username: defaultInfluxDBUsername,
         password: defaultInfluxDBPassword,
         database: defaultInfluxDBDatabase,

@@ -57,10 +57,12 @@ export interface AppDataCollectionExpiryConfig {
   [portalId: string]: number | undefined // absolute time in millis when data collection will expire
 }
 
+export type AppInfluxDBProtocol = "http" | "https"
+
 export interface AppInfluxDBConfig {
+  protocol: AppInfluxDBProtocol
   host: string
   port: string
-  protocol?: string
   path?: string
   username?: string
   password?: string
@@ -123,6 +125,7 @@ const defaultAppConfigValues: AppConfig = {
     expiry: {},
   },
   influxdb: {
+    protocol: "http",
     host: "localhost",
     port: "8086",
     database: "venus",
