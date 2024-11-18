@@ -11,9 +11,10 @@
     "clean": "rimraf ./dist",
     "lint": "eslint src/ --fix",
     "type-check": "tsc --noEmit",
+    "watch:bin": "tsc -p tsconfig.build.json --watch",
     "watch-client": "webpack serve --mode development --progress --hot",
-    "watch-influx-loader": "concurrently npm:build:bin \"babel-watch dist/bin/venus-influx-loader.js -- --config-path ./config/ --port 8088\"",
-    "watch-upnp-browser": "concurrently npm:build:bin \"babel-watch dist/bin/venus-upnp-browser.js\"",
+    "watch-influx-loader": "concurrently npm:watch:bin \"babel-watch dist/bin/venus-influx-loader.js -- --config-path ./config/ --port 8088\"",
+    "watch-upnp-browser": "concurrently npm:watch:bin \"babel-watch dist/bin/venus-upnp-browser.js\"",
     "start": "VIL_INFLUXDB_URL=http://localhost:8086 VIL_INFLUXDB_USERNAME=s3cr4t VIL_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-influx-loader npm:watch-client",
     "prepare": "npm run build"
   },
