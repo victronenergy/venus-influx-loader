@@ -4,6 +4,26 @@ import { Logger } from "winston"
 
 const apiUrl = "https://vrmapi.victronenergy.com/v2"
 
+interface VRMAPIUsersInstallationsRecord {
+  identifier: string
+  name: string
+  mqtt_host: string
+}
+
+interface VRMAPIUsersInstallations {
+  success: boolean
+  errors: any
+  records: VRMAPIUsersInstallationsRecord[]
+}
+
+interface VRMAPIUsersSiteId {
+  success: boolean
+  errors: any
+  records: {
+    site_id: string
+  }
+}
+
 export class VRM {
   server: Server
   logger: Logger
@@ -164,18 +184,6 @@ export class VRM {
 
     this.good("Getting installations...")
 
-    interface VRMAPIUsersInstallationsRecord {
-      identifier: string
-      name: string
-      mqtt_host: string
-    }
-
-    interface VRMAPIUsersInstallations {
-      success: boolean
-      errors: any
-      records: VRMAPIUsersInstallationsRecord[]
-    }
-
     try {
       const res = await axios.get(`${apiUrl}/users/${this.server.secrets.vrmUserId}/installations`, {
         headers: { "X-Authorization": `Token ${this.server.secrets.vrmToken}` },
@@ -196,5 +204,56 @@ export class VRM {
       this.fail(`Getting installations failed: ${error}`)
       throw error
     }
+  }
+
+  async getInstallationName(portalId: string, logger: Logger): Promise<string | undefined> {
+    if (this.server.secrets.vrmToken === undefined || this.server.secrets.vrmUserId === undefined) {
+      return undefined
+    }
+
+    logger.info(`get installationName...`)
+
+    let siteId: string
+    let installationName: string
+
+    // get siteId from portalId
+    try {
+      const res = await axios.post(
+        `${apiUrl}/users/${this.server.secrets.vrmUserId}/get-site-id`,
+        { installation_identifier: portalId },
+        { headers: { "X-Authorization": `Token ${this.server.secrets.vrmToken}` } },
+      )
+      const response: VRMAPIUsersSiteId = res.data
+      if (res.status === 200 && response.success) {
+        siteId = response.records.site_id
+      } else {
+        logger.error(`get installationName failed: ${JSON.stringify(response.errors)}`)
+        return undefined
+      }
+    } catch (error) {
+      logger.error(`get installationName failed: ${error}`)
+      return undefined
+    }
+
+    // get installationName for siteId
+    try {
+      const res = await axios.get(`${apiUrl}/users/${this.server.secrets.vrmUserId}/installations`, {
+        headers: { "X-Authorization": `Token ${this.server.secrets.vrmToken}` },
+        params: { idSite: siteId },
+      })
+      const response: VRMAPIUsersInstallations = res.data
+      if (res.status === 200 && response.success && response.records.length == 1) {
+        installationName = response.records[0].name
+      } else {
+        logger.error(`get installationName failed: ${JSON.stringify(response.errors)}`)
+        return undefined
+      }
+    } catch (error) {
+      logger.error(`get installationName failed: ${error}`)
+      return undefined
+    }
+
+    logger.info(`installationName: "${installationName}"`)
+    return installationName
   }
 }
