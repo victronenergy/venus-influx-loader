@@ -355,7 +355,7 @@ export class Server {
     const location = this.configFiles.configLocation
     const defaultConfig = createAppConfig({
       influxdb: {
-        protocol: defaultInfluxDBURL.protocol as AppInfluxDBProtocol,
+        protocol: defaultInfluxDBURL.protocol.replace(":", "") as AppInfluxDBProtocol,
         host: defaultInfluxDBURL.hostname,
         port: defaultInfluxDBURL.port,
         path: defaultInfluxDBURL.pathname,
