@@ -71,9 +71,10 @@ log(`Automatic Data Collection Expiry: ${autoExpiryDuration > 0 ? ms(autoExpiryD
 const signals = ["SIGTERM", "SIGINT"]
 signals.forEach((signal: string) => {
   process.on(signal, function () {
-  server.stop()
-  process.exit()
-})})
+    server.stop()
+    process.exit()
+  })
+})
 
 const server = new Server({
   configPath: options.configPath,

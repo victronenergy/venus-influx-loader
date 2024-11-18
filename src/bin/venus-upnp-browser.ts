@@ -92,9 +92,10 @@ const browser = new UPNP(serverMock)
 const signals = ["SIGTERM", "SIGINT"]
 signals.forEach((signal: string) => {
   process.on(signal, function () {
-  browser.stop()
-  process.exit()
-})})
+    browser.stop()
+    process.exit()
+  })
+})
 
 // start browsing
 browser.start()
