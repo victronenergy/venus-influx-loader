@@ -1,6 +1,17 @@
 import React from "react"
 import { useEffect, useState } from "react"
-import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CFormSelect, CButton } from "@coreui/react"
+import {
+  CCard,
+  CCardBody,
+  CCardFooter,
+  CForm,
+  CFormLabel,
+  CFormInput,
+  CFormSelect,
+  CButton,
+  CCol,
+  CRow,
+} from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
@@ -31,7 +42,7 @@ function InfluxDB() {
     )
   })
 
-  function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const clone = { ...temporaryConfig!!! }
     const [name, value] = extractParameterNameAndValue(event)
     // TODO: fix this
@@ -51,49 +62,58 @@ function InfluxDB() {
       <CCard>
         <CCardBody>
           <CForm>
-            <div className="mb-3">
-              <CFormLabel htmlFor="host">Host</CFormLabel>
-              <CFormInput
-                type="text"
-                name="host"
-                placeholder="influxdb"
-                value={temporaryConfig.influxdb.host}
-                onChange={(event) => handleFormInputChange(event)}
-              />
-            </div>
-            <div className="mb-3">
-              <CFormLabel htmlFor="port">Port</CFormLabel>
-              <CFormInput
-                type="text"
-                name="port"
-                placeholder="8086"
-                value={temporaryConfig.influxdb.port}
-                onChange={(event) => handleFormInputChange(event)}
-              />
-            </div>
-            <div className="mb-3">
-              <CFormLabel htmlFor="protocol">Protocol</CFormLabel>
-              <CFormSelect
-                id="protocol"
-                name="protocol"
-                value={temporaryConfig.influxdb.protocol}
-                onChange={(event) => handleFormInputChange(event)}
-              >
-                <option value="">Select a protocol</option>
-                <option value="http">HTTP</option>
-                <option value="https">HTTPS</option>
-              </CFormSelect>
-            </div>
-            <div className="mb-3">
-              <CFormLabel htmlFor="path">Path</CFormLabel>
-              <CFormInput
-                type="text"
-                name="path"
-                placeholder=""
-                value={temporaryConfig.influxdb.path}
-                onChange={(event) => handleFormInputChange(event)}
-              />
-            </div>
+            <CRow>
+              <CCol sm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="protocol">Protocol</CFormLabel>
+                  <CFormSelect
+                    id="protocol"
+                    name="protocol"
+                    value={temporaryConfig.influxdb.protocol}
+                    onChange={(event) => handleFormInputChange(event)}
+                  >
+                    <option value="http">http</option>
+                    <option value="https">https</option>
+                  </CFormSelect>
+                </div>
+              </CCol>
+              <CCol sm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="host">Host</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="host"
+                    placeholder="influxdb"
+                    value={temporaryConfig.influxdb.host}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+              </CCol>
+              <CCol sm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="port">Port</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="port"
+                    placeholder="8086"
+                    value={temporaryConfig.influxdb.port}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+              </CCol>
+              <CCol sm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="path">Path</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="path"
+                    placeholder=""
+                    value={temporaryConfig.influxdb.path}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+              </CCol>
+            </CRow>
             <div className="mb-3">
               <CFormLabel htmlFor="database">Database Name</CFormLabel>
               <CFormInput
