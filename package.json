@@ -16,7 +16,7 @@
     "watch-influx-loader": "concurrently npm:watch:bin \"babel-watch dist/bin/venus-influx-loader.js -- --config-path ./config/ --port 8088\"",
     "watch-upnp-browser": "concurrently npm:watch:bin \"babel-watch dist/bin/venus-upnp-browser.js\"",
     "start": "VIL_INFLUXDB_URL=http://localhost:8086 VIL_INFLUXDB_USERNAME=s3cr4t VIL_INFLUXDB_PASSWORD=s3cr4t concurrently npm:watch-influx-loader npm:watch-client",
-    "prepare": "npm run build"
+    "prepare": "(husky || true) && npm run prebuild"
   },
   "repository": {
     "type": "git",
@@ -26,16 +26,7 @@
     "url": "https://github.com/victronenergy/venus-influx-loader/issues"
   },
   "lint-staged": {
-    "linters": {
-      "lib/*.js*": [
-        "prettier-standard",
-        "git add"
-      ],
-      "index.js": [
-        "prettier-standard",
-        "git add"
-      ]
-    }
+    "*.{js,jsx,ts,tsx}": "npm run lint"
   },
   "bin": {
     "venus-influx-loader": "./dist/bin/venus-influx-loader.js",
