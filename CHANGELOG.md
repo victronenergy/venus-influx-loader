@@ -1,3 +1,15 @@
+## [1.3.1](https://github.com/victronenergy/venus-influx-loader/compare/1.3.0...1.3.1) (2024-11-19)
+
+
+### Bug Fixes
+
+* Add method to get installationName for portalId ([0765ec5](https://github.com/victronenergy/venus-influx-loader/commit/0765ec5b3c2743e0487c969457acb025833619fd))
+* Make `npm run watch-influx-loader` work again. ([50e7df4](https://github.com/victronenergy/venus-influx-loader/commit/50e7df4d7bf1e38623d22d5ee01eef7795316bae))
+* Make sure VRM API is usable before starting Loader ([fe394ae](https://github.com/victronenergy/venus-influx-loader/commit/fe394aeb5198184a4f5d990db7d263e1ab166b4b))
+* Remove deprecated VRM username/password login method ([c040645](https://github.com/victronenergy/venus-influx-loader/commit/c04064596f28058ace4b2d35d8908b8179542247))
+* Update lint-staged config ([a6fcdaf](https://github.com/victronenergy/venus-influx-loader/commit/a6fcdaf2709c3dc21ece3daafc56d48a50ebee24))
+* Use installationName from VRM for VRM connections ([59476ef](https://github.com/victronenergy/venus-influx-loader/commit/59476ef758b11621957dec2d60618091341e4cd3))
+
 # [1.3.0](https://github.com/victronenergy/venus-influx-loader/compare/1.2.1...1.3.0) (2024-11-12)
 
 
