@@ -12,7 +12,7 @@ export function useFormValidation(validate: () => boolean) {
 }
 
 export function extractParameterNameAndValue<AppConfigNestedKey>(
-  event: React.ChangeEvent<HTMLInputElement>,
+  event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
 ): [AppConfigNestedKey, string | number | boolean] {
   let value: string | number | boolean = event.target.type === "checkbox" ? event.target.checked : event.target.value
   // TODO: figure how to better handle this ???
