@@ -12,12 +12,16 @@ import {
   CTableHeaderCell,
   CTableDataCell,
   CTableRow,
+  CBadge,
+  CCardFooter,
 } from "@coreui/react"
 
 import { usePutDebug } from "../../hooks/useAdminApi"
 import { AppState } from "../../store"
 import { LogEntry } from "../../../shared/types"
 import { WebSocketStatus } from "../settings/WebsocketStatus"
+import ms from "ms"
+import { useEffect, useRef, useState } from "react"
 
 function Troubleshooting() {
   const log = useSelector((state: AppState) => state.log)
@@ -30,10 +34,28 @@ function Troubleshooting() {
     return <WebSocketStatus websocketStatus={websocketStatus} />
   }
 
+  // scroll to bottom on new messages
+  const containerRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight
+    }
+  }, [log])
+
+  // re-render every 5 seconds to update timestamps
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastUpdated(new Date())
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     log &&
     log.entries && (
-      <CCard>
+      <CCard className="flex-grow-1 d-flex flex-column">
         <CCardHeader>
           <CForm>
             <CInputGroup>
@@ -46,9 +68,12 @@ function Troubleshooting() {
             </CInputGroup>
           </CForm>
         </CCardHeader>
-        <CCardBody>
-          <LogList entries={log.entries} />
+        <CCardBody className="d-flex flex-column p-0" style={{ height: "1rem" }}>
+          <div className="overflow-auto always-scroll" ref={containerRef}>
+            <LogList entries={log.entries} />
+          </div>
         </CCardBody>
+        <CCardFooter>Last update: {lastUpdated.toLocaleString()}</CCardFooter>
       </CCard>
     )
   )
@@ -60,11 +85,10 @@ interface LogListProps {
 
 function LogList(props: LogListProps) {
   return (
-    <CTable bordered>
-      <CTableHead>
+    <CTable hover className="m-0 mb-3 p-0 lh-1">
+      <CTableHead color="primary" style={{ position: "sticky", top: "0" }}>
         <CTableRow>
           <CTableHeaderCell>Time</CTableHeaderCell>
-          <CTableHeaderCell>Type</CTableHeaderCell>
           <CTableHeaderCell>Label</CTableHeaderCell>
           <CTableHeaderCell>Message</CTableHeaderCell>
         </CTableRow>
@@ -72,25 +96,41 @@ function LogList(props: LogListProps) {
       <CTableBody>
         {props.entries &&
           props.entries.map((entry, index) => {
-            let levelClass
+            let levelColor
             if (entry.level === "error") {
-              levelClass = "text-danger"
+              levelColor = "danger"
             } else if (entry.level === "info") {
-              levelClass = "text-info"
+              levelColor = "info"
             } else if (entry.level === "warn") {
-              levelClass = "text-warning"
+              levelColor = "warning"
             } else {
-              levelClass = "text-success"
+              levelColor = "success"
             }
+
+            let timeStamp = new Date(entry.timestamp)
+            let relative = timeStamp.getTime() - Date.now()
 
             return (
               <CTableRow key={index}>
-                <CTableDataCell>{entry.timestamp}</CTableDataCell>
                 <CTableDataCell>
-                  <p className={levelClass}>{entry.level}</p>
+                  <CBadge shape="rounded-pill" color={levelColor} size="sm" className="me-1">
+                    {ms(relative)}
+                  </CBadge>
+                  <CBadge shape="rounded-pill" color={levelColor} size="sm" className="me-1">
+                    {entry.level}
+                  </CBadge>
+                  <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill" size="sm">
+                    {entry.timestamp}
+                  </CBadge>
                 </CTableDataCell>
-                <CTableDataCell>{entry.label}</CTableDataCell>
-                <CTableDataCell>{entry.message}</CTableDataCell>
+                <CTableDataCell>
+                  <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill" size="sm">
+                    {entry.label}
+                  </CBadge>
+                </CTableDataCell>
+                <CTableDataCell>
+                  <div className="small text-body-primary">{entry.message}</div>
+                </CTableDataCell>
               </CTableRow>
             )
           })}
