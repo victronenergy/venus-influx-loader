@@ -52,6 +52,7 @@ export interface AppStateVRMDiscoveryAction extends AppStateBaseAction {
 export interface VRMStatus {
   status: "success" | "failure"
   message: string
+  tokenInfo?: string
 }
 
 export interface AppStateVRMStatusAction extends AppStateBaseAction {

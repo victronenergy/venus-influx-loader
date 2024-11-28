@@ -16,6 +16,18 @@ interface VRMAPIUsersInstallations {
   records: VRMAPIUsersInstallationsRecord[]
 }
 
+interface VRMAPIUsersTokensRecord {
+  name: string
+  idAccessToken: string
+  lastSuccessfulAuth: number
+}
+
+interface VRMAPIUsersTokens {
+  success: boolean
+  errors: any
+  tokens: VRMAPIUsersTokensRecord[]
+}
+
 interface VRMAPIUsersSiteId {
   success: boolean
   errors: any
@@ -33,13 +45,13 @@ export class VRM {
     this.logger = server.getLogger("vrm")
   }
 
-  good(msg: string) {
-    this.server.emit("vrmStatus", { status: "success", message: msg })
+  good(msg: string, tokenInfo: string = "") {
+    this.server.emit("vrmStatus", { status: "success", message: msg, tokenInfo: tokenInfo })
     this.logger.info(msg)
   }
 
-  fail(msg: string) {
-    this.server.emit("vrmStatus", { status: "failure", message: msg })
+  fail(msg: string, tokenInfo: string = "") {
+    this.server.emit("vrmStatus", { status: "failure", message: msg, tokenInfo: tokenInfo })
     this.logger.error(msg)
   }
 
@@ -176,32 +188,55 @@ export class VRM {
       return
     }
 
+    this.good("Validating VRM Token...")
+    let tokenInfo: string
+    try {
+      const res = await axios.get(`${apiUrl}/users/${this.server.secrets.vrmUserId}/accesstokens/list`, {
+        headers: { "X-Authorization": `Token ${this.server.secrets.vrmToken}` },
+      })
+      const response: VRMAPIUsersTokens = res.data
+      this.logger.debug(`refresh /accesstokens response: ${JSON.stringify(response)}`)
+
+      if (res.status === 200 && response.tokens?.length > 0) {
+        const _tokens = response.tokens.sort((a, b) => {
+          return b.lastSuccessfulAuth - a.lastSuccessfulAuth
+        })
+        tokenInfo = `${_tokens[0].name} (${_tokens[0].idAccessToken})`
+        this.good("VRM Token Validated", tokenInfo)
+      } else {
+        throw `${JSON.stringify(response.errors)}`
+      }
+    } catch (error) {
+      this.fail(`Validating VRM Token failed: ${error}`)
+      throw error
+    }
+
     if (!this.server.config.vrm.enabled) {
       this.server.emit("vrmDiscovered", [])
-      this.fail("Connection to Venus Devices via VRM is disabled")
+      this.fail("Connection to Venus Devices via VRM is disabled", tokenInfo)
       return
     }
 
-    this.good("Getting installations...")
+    this.good("Getting installations...", tokenInfo)
 
     try {
       const res = await axios.get(`${apiUrl}/users/${this.server.secrets.vrmUserId}/installations`, {
         headers: { "X-Authorization": `Token ${this.server.secrets.vrmToken}` },
       })
       const response: VRMAPIUsersInstallations = res.data
-      this.logger.debug(`refresh response: ${JSON.stringify(response)}`)
+      this.logger.debug(`refresh /installations response: ${JSON.stringify(response)}`)
 
       if (res.status === 200) {
         const devices = response.records.map((record) => {
           return { portalId: String(record.identifier), name: record.name, address: record.mqtt_host }
         })
         this.server.emit("vrmDiscovered", devices)
-        this.good("Installations Retrieved")
+        this.good("Installations Retrieved", tokenInfo)
       } else {
         throw `${JSON.stringify(response.errors)}`
       }
     } catch (error) {
-      this.fail(`Getting installations failed: ${error}`)
+      this.fail(`Getting installations failed: ${error}`, tokenInfo)
       throw error
     }
   }
