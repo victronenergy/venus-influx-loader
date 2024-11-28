@@ -1,4 +1,6 @@
+import React from "react"
 import { useSelector } from "react-redux"
+import { useNavigate } from "react-router-dom"
 import {
   CCard,
   CCardBody,
@@ -13,6 +15,7 @@ import {
   CTableRow,
   CContainer,
   CBadge,
+  CLink,
 } from "@coreui/react"
 
 import CIcon from "@coreui/icons-react"
@@ -42,6 +45,16 @@ function Dashboard() {
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
     return <WebSocketStatus websocketStatus={websocketStatus} />
+  }
+
+  const navigate = useNavigate()
+
+  const handleLabelFilterChange = (
+    event: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement, MouseEvent>,
+    label: string,
+  ) => {
+    event.preventDefault()
+    navigate("../troubleshooting", { replace: true, state: { filter: label } })
   }
 
   return (
@@ -75,6 +88,7 @@ function Dashboard() {
             <CTableBody>
               {deviceKeys.map((key) => {
                 const deviceStats = deviceStatistics[key]
+                const logLabel = `${deviceStats.type}:${deviceStats.address}`
                 return (
                   <CTableRow key={key}>
                     <CTableDataCell>
@@ -91,9 +105,15 @@ function Dashboard() {
                               {deviceStats.name || deviceStats.address}
                               &nbsp; &nbsp;
                             </strong>
-                            <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
-                              {deviceStats.type} {deviceStats.address}
-                            </CBadge>
+                            <CLink
+                              href="#"
+                              onClick={(event) => handleLabelFilterChange(event, logLabel)}
+                              className="text-decoration-none"
+                            >
+                              <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
+                                {deviceStats.type} {deviceStats.address}
+                              </CBadge>
+                            </CLink>
                             &nbsp; &nbsp;
                             {deviceStats.expiry !== undefined && deviceStats.expiry > 0 && (
                               <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
