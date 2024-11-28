@@ -20,6 +20,7 @@ import {
   CCol,
   CRow,
   CLink,
+  CInputGroup,
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig, useVRMLogin, useVRMLogout, useVRMRefresh } from "../../hooks/useAdminApi"
@@ -271,13 +272,17 @@ function VRM() {
       <CCard>
         <CCardHeader>
           <CForm>
-            <CFormCheck
-              name="enabled"
-              id="enabled"
-              label="Connect to Venus Devices via VRM"
-              onChange={(event) => handleEnableChange(event)}
-              checked={temporaryConfig.vrm.enabled}
-            />
+            <CInputGroup>
+              <CFormCheck
+                name="enabled"
+                id="enabled"
+                label="Connect to Venus Devices via VRM"
+                onChange={(event) => handleEnableChange(event)}
+                checked={temporaryConfig.vrm.enabled}
+                className="flex-grow-1"
+              />
+              {temporaryConfig.vrm.hasToken && <div className="text-secondary">VRM Token: {vrmStatus.tokenInfo}</div>}
+            </CInputGroup>
           </CForm>
         </CCardHeader>
         <CCardBody>
