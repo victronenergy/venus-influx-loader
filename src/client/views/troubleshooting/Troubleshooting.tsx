@@ -25,6 +25,10 @@ import { WebSocketStatus } from "../settings/WebsocketStatus"
 import ms from "ms"
 import { useEffect, useRef, useState } from "react"
 
+function TinyCloseButton() {
+  return <span className="opacity-50 ps-1">✕</span>
+}
+
 function Troubleshooting() {
   const log = useSelector((state: AppState) => state.log)
   const isDebugLevelEnabled = useSelector((state: AppState) => state.debug)
@@ -89,7 +93,7 @@ function Troubleshooting() {
                   className="text-decoration-none"
                 >
                   <CBadge color="primary" shape="rounded-pill" size="sm">
-                    {labelFilter}
+                    {labelFilter} <TinyCloseButton />
                   </CBadge>
                 </CLink>
               )}
@@ -125,7 +129,7 @@ function LogList(props: LogListProps) {
           <CTableHeaderCell className="small text-nowrap" style={{ width: "1%" }}>
             Time
           </CTableHeaderCell>
-          <CTableHeaderCell className="small text-nowrap" style={{ width: "8rem" }}>
+          <CTableHeaderCell className="small text-nowrap" style={{ width: "10rem" }}>
             Label
           </CTableHeaderCell>
           <CTableHeaderCell className="small">Message</CTableHeaderCell>
@@ -171,6 +175,7 @@ function LogList(props: LogListProps) {
                     >
                       <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill" size="sm">
                         {entry.label}
+                        {props.labelFilter && <TinyCloseButton />}
                       </CBadge>
                     </CLink>
                   </CTableDataCell>
