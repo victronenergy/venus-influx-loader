@@ -66,7 +66,7 @@ function Dashboard() {
           <CRow>
             <CCol xs="12" md="6">
               <CCallout color="info">
-                <small className="text-muted">Total Measurement Rate (measurements/second)</small>
+                <small className="text-muted">Total Measurement Rate (measurements/sec)</small>
                 <br />
                 <strong className="h4">{measurementRate.toFixed(1)}</strong>
               </CCallout>
@@ -125,8 +125,8 @@ function Dashboard() {
                           </CCol>
                           <CCol className="text-end" xs="auto">
                             <strong> {deviceStats.measurementRate} </strong>(
-                            {((deviceStats.measurementRate / adjustedMeasurementRate) * 100).toFixed(0)}
-                            %)
+                            {((deviceStats.measurementRate / adjustedMeasurementRate) * 100).toFixed(0)}%)
+                            <small className="text-muted"> measurements/sec </small>
                           </CCol>
                         </CRow>
                         <CRow className="align-items-end">
