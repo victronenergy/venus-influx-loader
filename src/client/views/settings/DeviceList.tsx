@@ -3,6 +3,7 @@ import { CFormCheck, CTable, CTableHead, CTableBody, CTableHeaderCell, CTableDat
 import { AppDataCollectionExpiryConfig, AppUPNPConfig, AppVRMConfig } from "../../../shared/types"
 import { DiscoveredDevice } from "../../../shared/state"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
+import { MQTTSubscriptionsOptionList } from "./MQTTSubscriptionsOptionList"
 
 interface DeviceListProps {
   hidden?: boolean
@@ -13,6 +14,7 @@ interface DeviceListProps {
   onEnableAllPortalsChange: React.ChangeEventHandler<HTMLInputElement>
   availablePortalIds: DiscoveredDevice[]
   defaultExpiryDuration?: number
+  onPortalSubscriptionChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
   onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
@@ -23,6 +25,7 @@ export function DeviceList(props: DeviceListProps) {
         <CTableRow>
           <CTableHeaderCell>Installation Name</CTableHeaderCell>
           <CTableHeaderCell>Portal ID</CTableHeaderCell>
+          <CTableHeaderCell>Subscription</CTableHeaderCell>
           {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
           <CTableHeaderCell>
             <CFormCheck
@@ -45,6 +48,13 @@ export function DeviceList(props: DeviceListProps) {
               <CTableRow key={element.portalId}>
                 <CTableDataCell>{element.name}</CTableDataCell>
                 <CTableDataCell>{element.portalId}</CTableDataCell>
+                <CTableDataCell>
+                  <MQTTSubscriptionsOptionList
+                    index={index}
+                    portalId={element.portalId}
+                    onSelectionDidChange={props.onPortalSubscriptionChange}
+                  />
+                </CTableDataCell>
                 {props.defaultExpiryDuration && (
                   <CTableDataCell>
                     <AutoExpiryOptionList
