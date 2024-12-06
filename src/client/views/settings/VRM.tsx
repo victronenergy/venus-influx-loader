@@ -308,7 +308,7 @@ function VRM() {
                       setDisplayedDevices("discovered")
                     }}
                   >
-                    Discovered ({vrmDiscovered.length})
+                    My Installations ({vrmDiscovered.length})
                   </CNavLink>
                 </CNavItem>
                 <CNavItem>
@@ -320,7 +320,7 @@ function VRM() {
                       setDisplayedDevices("configured")
                     }}
                   >
-                    Configured ({temporaryConfig.vrm.manualPortalIds.length})
+                    Other ({temporaryConfig.vrm.manualPortalIds.length})
                   </CNavLink>
                 </CNavItem>
               </CNav>
