@@ -89,7 +89,7 @@ function Dashboard() {
             <CTableBody>
               {deviceKeys.map((key) => {
                 const deviceStats = deviceStatistics[key]
-                const logLabel = `${deviceStats.type}:${deviceStats.address}`
+                const logLabel = `${deviceStats.type}:${deviceStats.portalId ?? deviceStats.address}`
                 return (
                   <CTableRow key={key}>
                     <CTableDataCell>
