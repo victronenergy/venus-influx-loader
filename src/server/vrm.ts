@@ -128,6 +128,7 @@ export class VRM {
         name: string
         email: string
         country: string
+        idAccessToken: string
       }
     }
 
@@ -144,6 +145,7 @@ export class VRM {
         this.server.secrets.vrmToken = token
         this.server.secrets.vrmUserId = response.user.id
         this.server.secrets.vrmUsername = response.user.email
+        this.server.secrets.vrmTokenId = response.user.idAccessToken
         this.server.config.vrm.hasToken = true
         await this.server.saveSecrets()
         await this.server.saveConfig()
@@ -198,10 +200,12 @@ export class VRM {
       this.logger.debug(`refresh /accesstokens response: ${JSON.stringify(response)}`)
 
       if (res.status === 200 && response.tokens?.length > 0) {
-        const _tokens = response.tokens.sort((a, b) => {
+        const tokens = response.tokens.sort((a, b) => {
           return b.lastSuccessfulAuth - a.lastSuccessfulAuth
         })
-        tokenInfo = `${_tokens[0].name} (${_tokens[0].idAccessToken})`
+        const matching = tokens.filter((token) => token.idAccessToken == this.server.secrets.vrmTokenId)
+        const token = matching.length >= 1 ? matching[0] : tokens[0]
+        tokenInfo = `${token.name} (${token.idAccessToken})`
         this.good("VRM Token Validated", tokenInfo)
       } else {
         throw `${JSON.stringify(response.errors)}`

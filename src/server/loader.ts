@@ -483,6 +483,7 @@ class VenusMqttClient {
       address: this.device.address,
       isConnected: false,
       expiry: this.expiry,
+      portalId: this.device.portalId,
       name: this.device.name || this.device.portalId!!,
       totalMeasurementsCount: 0,
       distinctMeasurementsCount: 0,

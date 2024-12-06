@@ -64,6 +64,7 @@ export interface DeviceStatisticsDetails {
   type: "UPNP" | "VRM" | "IP"
   address: string
   name: string
+  portalId?: string
   isConnected: boolean
   expiry?: number
   measurementRate: number

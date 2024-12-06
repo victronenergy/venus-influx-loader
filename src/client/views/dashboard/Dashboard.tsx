@@ -23,6 +23,7 @@ import { cilRss } from "@coreui/icons"
 import { AppState } from "../../store"
 import { WebSocketStatus } from "../settings/WebsocketStatus"
 import ms from "ms"
+import { TinyFilterActionButton } from "../troubleshooting/Troubleshooting"
 
 function Dashboard() {
   const {
@@ -65,7 +66,7 @@ function Dashboard() {
           <CRow>
             <CCol xs="12" md="6">
               <CCallout color="info">
-                <small className="text-muted">Total Measurement Rate (measurements/second)</small>
+                <small className="text-muted">Total Measurement Rate (measurements/sec)</small>
                 <br />
                 <strong className="h4">{measurementRate.toFixed(1)}</strong>
               </CCallout>
@@ -88,7 +89,7 @@ function Dashboard() {
             <CTableBody>
               {deviceKeys.map((key) => {
                 const deviceStats = deviceStatistics[key]
-                const logLabel = `${deviceStats.type}:${deviceStats.address}`
+                const logLabel = `${deviceStats.type}:${deviceStats.portalId ?? deviceStats.address}`
                 return (
                   <CTableRow key={key}>
                     <CTableDataCell>
@@ -112,6 +113,7 @@ function Dashboard() {
                             >
                               <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
                                 {deviceStats.type} {deviceStats.address}
+                                <TinyFilterActionButton isFilterActive={false} height={16} />
                               </CBadge>
                             </CLink>
                             &nbsp; &nbsp;
@@ -123,8 +125,8 @@ function Dashboard() {
                           </CCol>
                           <CCol className="text-end" xs="auto">
                             <strong> {deviceStats.measurementRate} </strong>(
-                            {((deviceStats.measurementRate / adjustedMeasurementRate) * 100).toFixed(0)}
-                            %)
+                            {((deviceStats.measurementRate / adjustedMeasurementRate) * 100).toFixed(0)}%)
+                            <small className="text-muted"> measurements/sec </small>
                           </CCol>
                         </CRow>
                         <CRow className="align-items-end">
