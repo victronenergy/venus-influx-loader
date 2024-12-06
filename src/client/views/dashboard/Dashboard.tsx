@@ -23,6 +23,7 @@ import { cilRss } from "@coreui/icons"
 import { AppState } from "../../store"
 import { WebSocketStatus } from "../settings/WebsocketStatus"
 import ms from "ms"
+import { TinyFilterActionButton } from "../troubleshooting/Troubleshooting"
 
 function Dashboard() {
   const {
@@ -112,6 +113,7 @@ function Dashboard() {
                             >
                               <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
                                 {deviceStats.type} {deviceStats.address}
+                                <TinyFilterActionButton isFilterActive={false} height={16} />
                               </CBadge>
                             </CLink>
                             &nbsp; &nbsp;

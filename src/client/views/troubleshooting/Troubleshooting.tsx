@@ -25,8 +25,18 @@ import { WebSocketStatus } from "../settings/WebsocketStatus"
 import ms from "ms"
 import { useEffect, useRef, useState } from "react"
 
-function TinyCloseButton() {
-  return <span className="opacity-50 ps-1">✕</span>
+import CIcon from "@coreui/icons-react"
+import { cilX, cilListFilter } from "@coreui/icons"
+
+export function TinyFilterActionButton(props: { isFilterActive: boolean; size?: "sm" | "custom"; height?: number }) {
+  return (
+    <CIcon
+      icon={props.isFilterActive ? cilX : cilListFilter}
+      size={props.size || "sm"}
+      height={props.height || 12}
+      className="ms-1"
+    />
+  )
 }
 
 function Troubleshooting() {
@@ -93,7 +103,7 @@ function Troubleshooting() {
                   className="text-decoration-none"
                 >
                   <CBadge color="primary" shape="rounded-pill" size="sm">
-                    {labelFilter} <TinyCloseButton />
+                    {labelFilter} <TinyFilterActionButton isFilterActive={labelFilter !== undefined} />
                   </CBadge>
                 </CLink>
               )}
@@ -175,7 +185,7 @@ function LogList(props: LogListProps) {
                     >
                       <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill" size="sm">
                         {entry.label}
-                        {props.labelFilter && <TinyCloseButton />}
+                        {<TinyFilterActionButton isFilterActive={props.labelFilter !== undefined} />}
                       </CBadge>
                     </CLink>
                   </CTableDataCell>
