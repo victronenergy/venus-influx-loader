@@ -9,7 +9,6 @@ export interface AutoExpiryOptionListProps {
   portalId: string
   configuredExpiryTime?: number
   defaultExpiryDuration?: number
-  value?: number
   onSelectionDidChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
