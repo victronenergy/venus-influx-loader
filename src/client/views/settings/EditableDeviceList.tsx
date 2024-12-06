@@ -13,6 +13,7 @@ import {
 import { AppDataCollectionExpiryConfig, AppDeviceConfig, AppInstallationConfig } from "../../../shared/types"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 import { DiscoveredDevice } from "../../../shared/state"
+import { MQTTSubscriptionsOptionList } from "./MQTTSubscriptionsOptionList"
 
 interface EditableDeviceListProps {
   hidden?: boolean
@@ -27,6 +28,7 @@ interface EditableDeviceListProps {
   entryTitleText: string
   addEntryButtonText: string
   defaultExpiryDuration?: number
+  onPortalSubscriptionChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
   onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
@@ -37,6 +39,7 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>{props.entryTitleText}</CTableHeaderCell>
+            <CTableHeaderCell>Subscription</CTableHeaderCell>
             {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
             <CTableHeaderCell>
               <CFormCheck
@@ -67,6 +70,13 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                       placeholder=""
                       value={key}
                       onChange={(event) => props.onEntryValueChange(event, index)}
+                    />
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <MQTTSubscriptionsOptionList
+                      index={index}
+                      portalId={"xxx"}
+                      onSelectionDidChange={props.onPortalSubscriptionChange}
                     />
                   </CTableDataCell>
                   {props.defaultExpiryDuration && (
