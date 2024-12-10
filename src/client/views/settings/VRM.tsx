@@ -26,12 +26,23 @@ import {
 import { useGetConfig, usePutConfig, useVRMLogin, useVRMLogout, useVRMRefresh } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
-import { AppConfig, AppVRMConfig, AppVRMConfigKey } from "../../../shared/types"
+import AppDeviceSubscriptionsConfig, {
+  AppConfig,
+  AppVRMConfig,
+  AppVRMConfigKey,
+  VenusMQTTTopic,
+} from "../../../shared/types"
 import { AppState } from "../../store"
 import { VRMDeviceType, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
 import { WebSocketStatus } from "./WebsocketStatus"
-import { arrayExpiryToKeyed, EditableDeviceList, keyedExpiryToArray } from "./EditableDeviceList"
+import {
+  arrayExpiryToKeyed,
+  arraySubscriptionsToKeyed,
+  EditableDeviceList,
+  keyedExpiryToArray,
+  keyedSubscriptionsToArray,
+} from "./EditableDeviceList"
 
 function VRM() {
   // auto load loader config on first page render
@@ -60,12 +71,16 @@ function VRM() {
 
   const [referenceTime, setReferenceTime] = useState<number>(0)
   const [temporaryExpiry, setTemporaryExpiry] = useState<(number | undefined)[]>([])
+  const [temporarySubscriptions, setTemporarySubscriptions] = useState<AppDeviceSubscriptionsConfig>({})
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
     setReferenceTime(Date.now())
     populateDefaultExpiry(config)
     setTemporaryConfig(config)
     setTemporaryExpiry(keyedExpiryToArray(config?.vrm.expiry ?? {}, config?.vrm.manualPortalIds ?? []))
+    setTemporarySubscriptions(
+      keyedSubscriptionsToArray(config?.vrm.subscriptions ?? {}, config?.vrm.manualPortalIds ?? []),
+    )
     setIsTemporaryConfigDirty(false)
   }, [config, vrmDiscovered, defaultExpiryDuration])
 
@@ -259,6 +274,42 @@ function VRM() {
     setIsTemporaryConfigDirty(true)
   }
 
+  function handleDiscoveredPortalSubscriptionChange(
+    event: React.ChangeEvent<HTMLSelectElement>,
+    _index: number,
+    portalId: string,
+  ) {
+    const clone = { ...temporaryConfig!! }
+    const value = String(event.target.value) as VenusMQTTTopic
+    if (value) {
+      clone.vrm.subscriptions[portalId] = [value]
+    } else {
+      delete clone.vrm.subscriptions[portalId]
+    }
+    setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
+  }
+
+  function handleConfiguredPortalSubscriptionChange(
+    event: React.ChangeEvent<HTMLSelectElement>,
+    index: number,
+    _portalId: string,
+  ) {
+    const clone = { ...temporaryConfig!! }
+    const value = String(event.target.value) as VenusMQTTTopic
+    const newSubscriptions = { ...temporarySubscriptions!! }
+    newSubscriptions[index] = [value]
+    clone.vrm.subscriptions = arraySubscriptionsToKeyed(
+      newSubscriptions,
+      clone.vrm.manualPortalIds,
+      clone.vrm.subscriptions,
+      vrmDiscovered,
+    )
+    setTemporarySubscriptions(newSubscriptions)
+    setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
+  }
+
   const [displayedDevices, setDisplayedDevices] = useState<VRMDeviceType>("discovered")
   const [showStatusPane, setShowStatusPane] = useState(false)
 
@@ -333,11 +384,13 @@ function VRM() {
                       settings={temporaryConfig.vrm}
                       referenceTime={referenceTime}
                       expirySettings={temporaryConfig.vrm.expiry}
+                      subscriptionSettings={temporaryConfig.vrm.subscriptions}
                       availablePortalIds={vrmDiscovered}
                       onEnablePortalChange={handleEnableDiscoveredPortalChange}
                       onEnableAllPortalsChange={handleEnableAllDiscoveredPortalsChange}
                       defaultExpiryDuration={defaultExpiryDuration}
                       onPortalExpiryChange={handleDiscoveredPortalExpiryChange}
+                      onPortalSubscriptionChange={handleDiscoveredPortalSubscriptionChange}
                     />
                   </CForm>
                   <CButton
@@ -360,6 +413,7 @@ function VRM() {
                       entries={temporaryConfig.vrm.manualPortalIds}
                       referenceTime={referenceTime}
                       expirySettings={temporaryExpiry}
+                      subscriptionSettings={temporarySubscriptions}
                       onEntryValueChange={handlePortalIdChange}
                       onEnableEntryChange={handleEnableConfiguredPortalChange}
                       onEnableAllEntriesChange={handleEnableAllConfiguredPortalsChange}
@@ -369,6 +423,7 @@ function VRM() {
                       addEntryButtonText="Add Installation"
                       defaultExpiryDuration={defaultExpiryDuration}
                       onPortalExpiryChange={handleConfiguredPortalExpiryChange}
+                      onPortalSubscriptionChange={handleConfiguredPortalSubscriptionChange}
                     />
                   </CForm>
                 </CTabPane>
