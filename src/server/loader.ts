@@ -227,6 +227,7 @@ export class Loader {
     if (d === undefined) return
     if (this.upnpConnections[d.portalId]) {
       this.upnpConnections[d.portalId].updateExpiry(expiry)
+      this.upnpConnections[d.portalId].updateSubscriptions(this.prepareVenusMQTTSubscriptions(subscriptions))
       return
     }
     const device: ConfiguredDevice = {
@@ -245,6 +246,7 @@ export class Loader {
     if (hostName === undefined) return
     if (this.manualConnections[hostName]) {
       this.manualConnections[hostName].updateExpiry(expiry)
+      this.manualConnections[hostName].updateSubscriptions(this.prepareVenusMQTTSubscriptions(subscriptions))
       return
     }
     const device: ConfiguredDevice = {
@@ -262,6 +264,7 @@ export class Loader {
     if (portalId === undefined) return
     if (this.vrmConnections[portalId]) {
       this.vrmConnections[portalId].updateExpiry(expiry)
+      this.vrmConnections[portalId].updateSubscriptions(this.prepareVenusMQTTSubscriptions(subscriptions))
       return
     }
     const device: ConfiguredDevice = {
@@ -286,7 +289,7 @@ export class Loader {
   }
 
   private prepareVenusMQTTSubscriptions(subscriptions?: VenusMQTTTopic[]) {
-    if (subscriptions && subscriptions.length > 0) {
+    if (subscriptions && subscriptions.filter((topic) => topic === "/#").length == 0) {
       return [...subscriptions, ...niceToHaveVenusMQTTSubscriptions]
     }
     return defaultVenusMQTTSubscriptions
@@ -451,7 +454,6 @@ class VenusMqttClient {
       if (this.isDetectingPortalId && measurement === "system/Serial") {
         this.logger.info("Detected portalId %s", json.value)
         this.client.subscribe(`N/${json.value}/settings/0/Settings/SystemSetup/SystemName`)
-        this.logger.info(`Subscribing to ${JSON.stringify(this.device.subscriptions)}`)
         for (const sub of this.device.subscriptions) {
           const x = `N/${json.value}${sub}`
           this.logger.info(`Subscribing to '${x}'`)
@@ -550,6 +552,35 @@ class VenusMqttClient {
     portalStats.totalMeasurementsCount++
     portalStats.distinctMeasurementsCount = this.distinctMeasurements.size
     portalStats.lastMeasurement = new Date()
+  }
+
+  updateSubscriptions(subscriptions: VenusMQTTTopic[]) {
+    const existingSubs = this.device.subscriptions
+    const newSubs = subscriptions
+    const diff = arrayDifference(existingSubs, newSubs)
+    if (existingSubs.length == newSubs.length && diff.length == 0) {
+      return
+    }
+
+    const toSubscribe = arrayDifference(newSubs, existingSubs)
+    const toUnsubscribe = arrayDifference(existingSubs, newSubs)
+    const toKeep = arrayDifference(existingSubs, toUnsubscribe)
+    this.logger.info(
+      `updateSubscriptions, unsubscribe: ${JSON.stringify(toUnsubscribe)}, keep: ${JSON.stringify(toKeep)}, subscribe: ${JSON.stringify(toSubscribe)}`,
+    )
+    this.device.subscriptions = [...toSubscribe, ...toKeep]
+    if (!this.isDetectingPortalId) {
+      for (const topic of toUnsubscribe) {
+        const x = `N/${this.device.portalId}${topic}`
+        this.logger.info(`Unsubscribing from '${x}'`)
+        this.client.unsubscribe(x)
+      }
+      for (const topic of toSubscribe) {
+        const x = `N/${this.device.portalId}${topic}`
+        this.logger.info(`Subscribing to '${x}'`)
+        this.client.subscribe(x)
+      }
+    }
   }
 
   updateExpiry(expiry?: number) {
