@@ -10,7 +10,11 @@ import {
   CFormInput,
   CButton,
 } from "@coreui/react"
-import { AppDataCollectionExpiryConfig, AppDeviceConfig, AppInstallationConfig } from "../../../shared/types"
+import AppDeviceSubscriptionsConfig, {
+  AppDataCollectionExpiryConfig,
+  AppDeviceConfig,
+  AppInstallationConfig,
+} from "../../../shared/types"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 import { DiscoveredDevice } from "../../../shared/state"
 import { MQTTSubscriptionsOptionList } from "./MQTTSubscriptionsOptionList"
@@ -20,6 +24,7 @@ interface EditableDeviceListProps {
   entries: AppDeviceConfig[] | AppInstallationConfig[]
   referenceTime: number
   expirySettings: (number | undefined)[]
+  subscriptionSettings: AppDeviceSubscriptionsConfig
   onEntryValueChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableEntryChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableAllEntriesChange: (_event: React.ChangeEvent<HTMLInputElement>) => void
@@ -75,7 +80,8 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                   <CTableDataCell>
                     <MQTTSubscriptionsOptionList
                       index={index}
-                      portalId={"xxx"}
+                      portalId={key}
+                      configuredMQTTSubscriptions={props.subscriptionSettings[index]}
                       onSelectionDidChange={props.onPortalSubscriptionChange}
                     />
                   </CTableDataCell>
@@ -134,4 +140,26 @@ export function keyedExpiryToArray(
 ): (number | undefined)[] {
   // @ts-expect-error
   return devices.map((device) => expiry[device.hostName ?? device.portalId])
+}
+
+export function arraySubscriptionsToKeyed(
+  subscriptions: AppDeviceSubscriptionsConfig,
+  devices: AppDeviceConfig[] | AppInstallationConfig[],
+  existingSubscriptions: AppDeviceSubscriptionsConfig = {},
+  discoveredDevices: DiscoveredDevice[] = [],
+): AppDeviceSubscriptionsConfig {
+  const a = Object.fromEntries(
+    discoveredDevices.map((device) => [device.portalId, existingSubscriptions[device.portalId]]),
+  )
+  // @ts-expect-error
+  const b = Object.fromEntries(devices.map((device, i) => [device.hostName ?? device.portalId, subscriptions[i]]))
+  return { ...a, ...b }
+}
+
+export function keyedSubscriptionsToArray(
+  subscriptions: AppDeviceSubscriptionsConfig,
+  devices: AppDeviceConfig[] | AppInstallationConfig[],
+): AppDeviceSubscriptionsConfig {
+  // @ts-expect-error
+  return devices.map((device) => subscriptions[device.hostName ?? device.portalId])
 }

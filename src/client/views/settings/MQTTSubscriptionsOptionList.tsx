@@ -1,12 +1,12 @@
 import React from "react"
 import { CFormSelect } from "@coreui/react"
 import { useEffect, useState } from "react"
-import { VenusMQTTTopics } from "../../../shared/types"
+import { VenusMQTTTopic, VenusMQTTTopics } from "../../../shared/types"
 
 export interface MQTTSubscriptionsOptionListProps {
   index: number
   portalId: string
-  configuredMQTTSubscription?: string
+  configuredMQTTSubscriptions: VenusMQTTTopic[]
   onSelectionDidChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
@@ -20,18 +20,22 @@ interface MQTTSubscriptionsOptionListOptions {
   options: MQTTSubscriptionsListOption[]
 }
 
-function generateOptions(configuredMQTTSubscription?: string): MQTTSubscriptionsOptionListOptions {
+function generateOptions(configuredMQTTSubscriptions: VenusMQTTTopic[]): MQTTSubscriptionsOptionListOptions {
+  let defaultValue = `/#`
+  if (configuredMQTTSubscriptions && configuredMQTTSubscriptions.length > 0) {
+    defaultValue = configuredMQTTSubscriptions[0]
+  }
   const options = VenusMQTTTopics.map((x) => {
     return { label: x, value: x }
   })
-  return { default: configuredMQTTSubscription || `/#`, options: options }
+  return { default: defaultValue, options: options }
 }
 
 export function MQTTSubscriptionsOptionList(props: MQTTSubscriptionsOptionListProps) {
   const [options, setOptions] = useState<MQTTSubscriptionsOptionListOptions>({ default: "", options: [] })
   useEffect(() => {
-    setOptions(generateOptions(props.configuredMQTTSubscription))
-  }, [props.configuredMQTTSubscription])
+    setOptions(generateOptions(props.configuredMQTTSubscriptions))
+  }, [props.configuredMQTTSubscriptions])
   return (
     <CFormSelect
       options={options.options}

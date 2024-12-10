@@ -1,6 +1,10 @@
 import React from "react"
 import { CFormCheck, CTable, CTableHead, CTableBody, CTableHeaderCell, CTableDataCell, CTableRow } from "@coreui/react"
-import { AppDataCollectionExpiryConfig, AppUPNPConfig, AppVRMConfig } from "../../../shared/types"
+import AppDeviceSubscriptionsConfig, {
+  AppDataCollectionExpiryConfig,
+  AppUPNPConfig,
+  AppVRMConfig,
+} from "../../../shared/types"
 import { DiscoveredDevice } from "../../../shared/state"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 import { MQTTSubscriptionsOptionList } from "./MQTTSubscriptionsOptionList"
@@ -10,6 +14,7 @@ interface DeviceListProps {
   settings: AppUPNPConfig | AppVRMConfig
   referenceTime: number
   expirySettings: AppDataCollectionExpiryConfig
+  subscriptionSettings: AppDeviceSubscriptionsConfig
   onEnablePortalChange: React.ChangeEventHandler<HTMLInputElement>
   onEnableAllPortalsChange: React.ChangeEventHandler<HTMLInputElement>
   availablePortalIds: DiscoveredDevice[]
@@ -52,6 +57,7 @@ export function DeviceList(props: DeviceListProps) {
                   <MQTTSubscriptionsOptionList
                     index={index}
                     portalId={element.portalId}
+                    configuredMQTTSubscriptions={props.subscriptionSettings[element.portalId]}
                     onSelectionDidChange={props.onPortalSubscriptionChange}
                   />
                 </CTableDataCell>
