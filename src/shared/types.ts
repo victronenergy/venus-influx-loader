@@ -58,6 +58,7 @@ export type AppManualConfigKey = keyof AppManualConfig
 
 // Taken from https://github.com/victronenergy/dbus_modbustcp/blob/master/attributes.csv
 // Using: `cut -d',' -f 1 attributes.csv | sort |  uniq | cut -d '.' -f 3`
+// `/settings/#` added manually
 export const VenusMQTTTopics = [
   `/#`,
   `/acload/#`,
@@ -90,12 +91,13 @@ export const VenusMQTTTopics = [
   `/tank/#`,
   `/temperature/#`,
   `/vebus/#`,
+  `/settings/#`,
 ] as const
 
 export type VenusMQTTTopic = (typeof VenusMQTTTopics)[number]
 
 export default interface AppDeviceSubscriptionsConfig {
-  [portalId: string]: [VenusMQTTTopic] // MQTT topics to subscribe to
+  [portalId: string]: VenusMQTTTopic[] // MQTT topics to subscribe to
 }
 
 export interface AppDataCollectionExpiryConfig {

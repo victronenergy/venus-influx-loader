@@ -7,10 +7,14 @@ import { Server } from "./server"
 import { Logger } from "winston"
 import { ConfiguredDevice, DiscoveredDevice, LoaderStatistics } from "../shared/state.js"
 import ms from "ms"
+import { VenusMQTTTopic } from "../shared/types.js"
 
 const collectStatsInterval = 5
 const checkExpiryInterval = 60
 const keepAliveInterval = 30
+
+const defaultVenusMQTTSubscriptions: VenusMQTTTopic[] = ["/#"]
+const niceToHaveVenusMQTTSubscriptions: VenusMQTTTopic[] = ["/system/#", "/settings/#"]
 
 export class Loader {
   server: Server
@@ -131,7 +135,11 @@ export class Loader {
     })
     // connect to Venus devices that are enabled and not expired
     remaining.forEach((portalId) =>
-      this.initiateUpnpDeviceConnection(this.server.upnpDevices[portalId], config.expiry[portalId]),
+      this.initiateUpnpDeviceConnection(
+        this.server.upnpDevices[portalId],
+        config.subscriptions[portalId],
+        config.expiry[portalId],
+      ),
     )
     // disable expired devices in the config file
     this.server.config.upnp.enabledPortalIds = remaining
@@ -163,7 +171,9 @@ export class Loader {
       delete this.manualConnections[hostName]
     })
     // connect to Venus devices that are enabled
-    remaining.forEach((hostName) => this.initiateHostnameDeviceConnection(hostName, config.expiry[hostName]))
+    remaining.forEach((hostName) =>
+      this.initiateHostnameDeviceConnection(hostName, config.subscriptions[hostName], config.expiry[hostName]),
+    )
     // disable expired devices in the config file
     expired.forEach((hostName) => {
       this.server.config.manual.hosts.forEach((host) => {
@@ -198,7 +208,9 @@ export class Loader {
       delete this.vrmConnections[portalId]
     })
     // connect to Venus devices that are enabled
-    remaining.forEach((portalId) => this.initiateVrmDeviceConnection(portalId, config.expiry[portalId]))
+    remaining.forEach((portalId) =>
+      this.initiateVrmDeviceConnection(portalId, config.subscriptions[portalId], config.expiry[portalId]),
+    )
     // disable expired devices in the config file
     expired.forEach((portalId) => {
       this.server.config.vrm.enabledPortalIds = this.server.config.vrm.enabledPortalIds.filter((x) => x !== portalId)
@@ -211,39 +223,53 @@ export class Loader {
     this.isConfigFileDirty = this.isConfigFileDirty ? true : expired.length > 0
   }
 
-  private async initiateUpnpDeviceConnection(d: DiscoveredDevice, expiry?: number) {
+  private async initiateUpnpDeviceConnection(d: DiscoveredDevice, subscriptions: VenusMQTTTopic[], expiry?: number) {
     if (d === undefined) return
     if (this.upnpConnections[d.portalId]) {
       this.upnpConnections[d.portalId].updateExpiry(expiry)
       return
     }
-    const device: ConfiguredDevice = { type: "UPNP", address: d.address, portalId: d.portalId }
+    const device: ConfiguredDevice = {
+      type: "UPNP",
+      address: d.address,
+      portalId: d.portalId,
+      subscriptions: this.prepareVenusMQTTSubscriptions(subscriptions),
+    }
     this.logger.debug(`initiateUpnpDeviceConnection: ${JSON.stringify(device)}`)
     const mqttClient = new VenusMqttClient(this, device, expiry)
     this.upnpConnections[d.portalId] = mqttClient
     await mqttClient.start()
   }
 
-  private async initiateHostnameDeviceConnection(hostName: string, expiry?: number) {
+  private async initiateHostnameDeviceConnection(hostName: string, subscriptions: VenusMQTTTopic[], expiry?: number) {
     if (hostName === undefined) return
     if (this.manualConnections[hostName]) {
       this.manualConnections[hostName].updateExpiry(expiry)
       return
     }
-    const device: ConfiguredDevice = { type: "IP", address: hostName }
+    const device: ConfiguredDevice = {
+      type: "IP",
+      address: hostName,
+      subscriptions: this.prepareVenusMQTTSubscriptions(subscriptions),
+    }
     this.logger.debug(`initiateHostnameDeviceConnection: ${JSON.stringify(device)}`)
     const mqttClient = new VenusMqttClient(this, device, expiry)
     this.manualConnections[hostName] = mqttClient
     await mqttClient.start()
   }
 
-  private async initiateVrmDeviceConnection(portalId: string, expiry?: number) {
+  private async initiateVrmDeviceConnection(portalId: string, subscriptions: VenusMQTTTopic[], expiry?: number) {
     if (portalId === undefined) return
     if (this.vrmConnections[portalId]) {
       this.vrmConnections[portalId].updateExpiry(expiry)
       return
     }
-    const device: ConfiguredDevice = { type: "VRM", portalId: portalId, address: this.calculateVrmBrokerURL(portalId) }
+    const device: ConfiguredDevice = {
+      type: "VRM",
+      portalId: portalId,
+      address: this.calculateVrmBrokerURL(portalId),
+      subscriptions: this.prepareVenusMQTTSubscriptions(subscriptions),
+    }
     this.logger.debug(`initiateVrmDeviceConnection: ${JSON.stringify(device)}`)
     const mqttClient = new VenusMqttClient(this, device, expiry, true)
     this.vrmConnections[portalId] = mqttClient
@@ -257,6 +283,13 @@ export class Loader {
       sum = sum + lowered.charCodeAt(i)
     }
     return `mqtt${sum % 128}.victronenergy.com`
+  }
+
+  private prepareVenusMQTTSubscriptions(subscriptions?: VenusMQTTTopic[]) {
+    if (subscriptions && subscriptions.length > 0) {
+      return [...subscriptions, ...niceToHaveVenusMQTTSubscriptions]
+    }
+    return defaultVenusMQTTSubscriptions
   }
 }
 
@@ -336,9 +369,13 @@ class VenusMqttClient {
         this.isDetectingPortalId = true
       } else {
         // we do know the portalId already (vrm + upnp connection)
-        this.logger.info("Subscribing to portalId %s", this.device.portalId)
+        this.logger.info("Using portalId %s", this.device.portalId)
         this.client.subscribe(`N/${this.device.portalId}/settings/0/Settings/SystemSetup/SystemName`)
-        this.client.subscribe(`N/${this.device.portalId}/#`)
+        for (const topic of this.device.subscriptions) {
+          const x = `N/${this.device.portalId}${topic}`
+          this.logger.info(`Subscribing to '${x}'`)
+          this.client.subscribe(x)
+        }
         this.client.publish(`R/${this.device.portalId}/settings/0/Settings/SystemSetup/SystemName`, "")
         this.client.publish(`R/${this.device.portalId}/system/0/Serial`, "")
         this.isDetectingPortalId = false
@@ -414,7 +451,12 @@ class VenusMqttClient {
       if (this.isDetectingPortalId && measurement === "system/Serial") {
         this.logger.info("Detected portalId %s", json.value)
         this.client.subscribe(`N/${json.value}/settings/0/Settings/SystemSetup/SystemName`)
-        this.client.subscribe(`N/${json.value}/#`)
+        this.logger.info(`Subscribing to ${JSON.stringify(this.device.subscriptions)}`)
+        for (const sub of this.device.subscriptions) {
+          const x = `N/${json.value}${sub}`
+          this.logger.info(`Subscribing to '${x}'`)
+          this.client.subscribe(x)
+        }
         this.client.publish(`R/${json.value}/settings/0/Settings/SystemSetup/SystemName`, "")
         this.client.publish(`R/${json.value}/system/0/Serial`, "")
         this.isDetectingPortalId = false
