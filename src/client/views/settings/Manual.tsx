@@ -170,7 +170,7 @@ function Manual() {
               entries={temporaryConfig.manual.hosts}
               referenceTime={referenceTime}
               expirySettings={temporaryExpiry}
-              subscriptionSettings={temporarySubscriptions}
+              mqttSubscriptionsSettings={temporarySubscriptions}
               onEntryValueChange={handleHostNameChange}
               onEnableEntryChange={handleEnableHostChange}
               onEnableAllEntriesChange={handleEnableAllHostsChange}
@@ -180,7 +180,7 @@ function Manual() {
               addEntryButtonText="Add Host"
               defaultExpiryDuration={defaultExpiryDuration}
               onPortalExpiryChange={handlePortalExpiryChange}
-              onPortalSubscriptionChange={handlePortalSubscriptionChange}
+              onPortalMQTTSubscriptionsChange={handlePortalSubscriptionChange}
             />
           </CForm>
         </CCardBody>

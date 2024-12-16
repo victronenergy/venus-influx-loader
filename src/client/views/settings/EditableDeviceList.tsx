@@ -24,7 +24,7 @@ interface EditableDeviceListProps {
   entries: AppDeviceConfig[] | AppInstallationConfig[]
   referenceTime: number
   expirySettings: (number | undefined)[]
-  subscriptionSettings: AppDeviceSubscriptionsConfig
+  mqttSubscriptionsSettings: AppDeviceSubscriptionsConfig
   onEntryValueChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableEntryChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableAllEntriesChange: (_event: React.ChangeEvent<HTMLInputElement>) => void
@@ -33,7 +33,11 @@ interface EditableDeviceListProps {
   entryTitleText: string
   addEntryButtonText: string
   defaultExpiryDuration?: number
-  onPortalSubscriptionChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
+  onPortalMQTTSubscriptionsChange: (
+    _event: React.ChangeEvent<HTMLSelectElement>,
+    _index: number,
+    _portalId: string,
+  ) => void
   onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
@@ -81,8 +85,8 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                     <MQTTSubscriptionsOptionList
                       index={index}
                       portalId={key}
-                      configuredMQTTSubscriptions={props.subscriptionSettings[index]}
-                      onSelectionDidChange={props.onPortalSubscriptionChange}
+                      configuredMQTTSubscriptions={props.mqttSubscriptionsSettings[index]}
+                      onSelectionDidChange={props.onPortalMQTTSubscriptionsChange}
                     />
                   </CTableDataCell>
                   {props.defaultExpiryDuration && (

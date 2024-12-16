@@ -384,13 +384,13 @@ function VRM() {
                       settings={temporaryConfig.vrm}
                       referenceTime={referenceTime}
                       expirySettings={temporaryConfig.vrm.expiry}
-                      subscriptionSettings={temporaryConfig.vrm.subscriptions}
+                      mqttSubscriptionsSettings={temporaryConfig.vrm.subscriptions}
                       availablePortalIds={vrmDiscovered}
                       onEnablePortalChange={handleEnableDiscoveredPortalChange}
                       onEnableAllPortalsChange={handleEnableAllDiscoveredPortalsChange}
                       defaultExpiryDuration={defaultExpiryDuration}
                       onPortalExpiryChange={handleDiscoveredPortalExpiryChange}
-                      onPortalSubscriptionChange={handleDiscoveredPortalSubscriptionChange}
+                      onPortalMQTTSubscriptionsChange={handleDiscoveredPortalSubscriptionChange}
                     />
                   </CForm>
                   <CButton
@@ -413,7 +413,7 @@ function VRM() {
                       entries={temporaryConfig.vrm.manualPortalIds}
                       referenceTime={referenceTime}
                       expirySettings={temporaryExpiry}
-                      subscriptionSettings={temporarySubscriptions}
+                      mqttSubscriptionsSettings={temporarySubscriptions}
                       onEntryValueChange={handlePortalIdChange}
                       onEnableEntryChange={handleEnableConfiguredPortalChange}
                       onEnableAllEntriesChange={handleEnableAllConfiguredPortalsChange}
@@ -423,7 +423,7 @@ function VRM() {
                       addEntryButtonText="Add Installation"
                       defaultExpiryDuration={defaultExpiryDuration}
                       onPortalExpiryChange={handleConfiguredPortalExpiryChange}
-                      onPortalSubscriptionChange={handleConfiguredPortalSubscriptionChange}
+                      onPortalMQTTSubscriptionsChange={handleConfiguredPortalSubscriptionChange}
                     />
                   </CForm>
                 </CTabPane>

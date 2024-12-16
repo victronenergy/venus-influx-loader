@@ -14,12 +14,16 @@ interface DeviceListProps {
   settings: AppUPNPConfig | AppVRMConfig
   referenceTime: number
   expirySettings: AppDataCollectionExpiryConfig
-  subscriptionSettings: AppDeviceSubscriptionsConfig
+  mqttSubscriptionsSettings: AppDeviceSubscriptionsConfig
   onEnablePortalChange: React.ChangeEventHandler<HTMLInputElement>
   onEnableAllPortalsChange: React.ChangeEventHandler<HTMLInputElement>
   availablePortalIds: DiscoveredDevice[]
   defaultExpiryDuration?: number
-  onPortalSubscriptionChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
+  onPortalMQTTSubscriptionsChange: (
+    _event: React.ChangeEvent<HTMLSelectElement>,
+    _index: number,
+    _portalId: string,
+  ) => void
   onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
@@ -57,8 +61,8 @@ export function DeviceList(props: DeviceListProps) {
                   <MQTTSubscriptionsOptionList
                     index={index}
                     portalId={element.portalId}
-                    configuredMQTTSubscriptions={props.subscriptionSettings[element.portalId]}
-                    onSelectionDidChange={props.onPortalSubscriptionChange}
+                    configuredMQTTSubscriptions={props.mqttSubscriptionsSettings[element.portalId]}
+                    onSelectionDidChange={props.onPortalMQTTSubscriptionsChange}
                   />
                 </CTableDataCell>
                 {props.defaultExpiryDuration && (

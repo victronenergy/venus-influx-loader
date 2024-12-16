@@ -150,13 +150,13 @@ function Discovery() {
               settings={temporaryConfig.upnp}
               referenceTime={referenceTime}
               expirySettings={temporaryConfig.upnp.expiry}
-              subscriptionSettings={temporaryConfig.upnp.subscriptions}
+              mqttSubscriptionsSettings={temporaryConfig.upnp.subscriptions}
               availablePortalIds={upnpDiscovered}
               onEnablePortalChange={handleEnablePortalChange}
               onEnableAllPortalsChange={handleEnableAllPortalsChange}
               defaultExpiryDuration={defaultExpiryDuration}
               onPortalExpiryChange={handlePortalExpiryChange}
-              onPortalSubscriptionChange={handlePortalSubscriptionChange}
+              onPortalMQTTSubscriptionsChange={handlePortalSubscriptionChange}
             />
           </CForm>
         </CCardBody>
