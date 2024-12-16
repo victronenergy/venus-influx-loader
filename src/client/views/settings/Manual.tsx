@@ -3,9 +3,15 @@ import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck 
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
-import { arrayExpiryToKeyed, EditableDeviceList, keyedExpiryToArray } from "./EditableDeviceList"
+import {
+  arrayExpiryToKeyed,
+  arraySubscriptionsToKeyed,
+  EditableDeviceList,
+  keyedExpiryToArray,
+  keyedSubscriptionsToArray,
+} from "./EditableDeviceList"
 import { useEffect, useState } from "react"
-import { AppConfig } from "../../../shared/types"
+import AppDeviceSubscriptionsConfig, { AppConfig, VenusMQTTTopic } from "../../../shared/types"
 import { WebSocketStatus } from "./WebsocketStatus"
 import { useSelector } from "react-redux"
 import { AppState } from "../../store"
@@ -29,12 +35,14 @@ function Manual() {
 
   const [referenceTime, setReferenceTime] = useState<number>(0)
   const [temporaryExpiry, setTemporaryExpiry] = useState<(number | undefined)[]>([])
+  const [temporarySubscriptions, setTemporarySubscriptions] = useState<AppDeviceSubscriptionsConfig>({})
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   useEffect(() => {
     setReferenceTime(Date.now())
     populateDefaultExpiry(config)
     setTemporaryConfig(config)
     setTemporaryExpiry(keyedExpiryToArray(config?.manual.expiry ?? {}, config?.manual.hosts ?? []))
+    setTemporarySubscriptions(keyedSubscriptionsToArray(config?.manual.subscriptions ?? {}, config?.manual.hosts ?? []))
     setIsTemporaryConfigDirty(false)
   }, [config])
 
@@ -111,6 +119,21 @@ function Manual() {
     setIsTemporaryConfigDirty(true)
   }
 
+  function handlePortalSubscriptionChange(
+    event: React.ChangeEvent<HTMLSelectElement>,
+    index: number,
+    _portalId: string,
+  ) {
+    const clone = { ...temporaryConfig!! }
+    const value = String(event.target.value) as VenusMQTTTopic
+    const newSubscriptions = { ...temporarySubscriptions!! }
+    newSubscriptions[index] = [value]
+    clone.manual.subscriptions = arraySubscriptionsToKeyed(newSubscriptions, clone.manual.hosts)
+    setTemporarySubscriptions(newSubscriptions)
+    setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
+  }
+
   function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, index: number, _portalId: string) {
     const clone = { ...temporaryConfig!! }
     const value = Number(event.target.value)
@@ -147,6 +170,7 @@ function Manual() {
               entries={temporaryConfig.manual.hosts}
               referenceTime={referenceTime}
               expirySettings={temporaryExpiry}
+              mqttSubscriptionsSettings={temporarySubscriptions}
               onEntryValueChange={handleHostNameChange}
               onEnableEntryChange={handleEnableHostChange}
               onEnableAllEntriesChange={handleEnableAllHostsChange}
@@ -156,6 +180,7 @@ function Manual() {
               addEntryButtonText="Add Host"
               defaultExpiryDuration={defaultExpiryDuration}
               onPortalExpiryChange={handlePortalExpiryChange}
+              onPortalMQTTSubscriptionsChange={handlePortalSubscriptionChange}
             />
           </CForm>
         </CCardBody>

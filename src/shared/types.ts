@@ -17,6 +17,7 @@ export interface AppUPNPConfig {
   enabled: boolean
   enabledPortalIds: string[]
   expiry: AppDataCollectionExpiryConfig
+  subscriptions: AppDeviceSubscriptionsConfig
 }
 
 export type AppUPNPConfigKey = keyof AppUPNPConfig
@@ -26,6 +27,7 @@ export interface AppVRMConfig {
   enabledPortalIds: string[]
   manualPortalIds: AppInstallationConfig[]
   expiry: AppDataCollectionExpiryConfig
+  subscriptions: AppDeviceSubscriptionsConfig
   hasToken: boolean
 }
 
@@ -49,9 +51,52 @@ export interface AppManualConfig {
   enabled: boolean
   hosts: AppDeviceConfig[]
   expiry: AppDataCollectionExpiryConfig
+  subscriptions: AppDeviceSubscriptionsConfig
 }
 
 export type AppManualConfigKey = keyof AppManualConfig
+
+// Taken from https://github.com/victronenergy/dbus_modbustcp/blob/master/attributes.csv
+// Using: `cut -d',' -f 1 attributes.csv | sort |  uniq | cut -d '.' -f 3`
+// `/system/#` and `/settings/#` removed as we always subscribe to them
+export const VenusMQTTTopics = [
+  `/#`,
+  `/acload/#`,
+  `/acsystem/#`,
+  `/alternator/#`,
+  `/battery/#`,
+  `/charger/#`,
+  `/dcdc/#`,
+  `/dcgenset/#`,
+  `/dcload/#`,
+  `/dcsource/#`,
+  `/dcsystem/#`,
+  `/digitalinput/#`,
+  `/evcharger/#`,
+  `/fuelcell/#`,
+  `/generator/#`,
+  `/genset/#`,
+  `/gps/#`,
+  `/grid/#`,
+  `/hub4/#`,
+  `/inverter/#`,
+  `/meteo/#`,
+  `/motordrive/#`,
+  `/multi/#`,
+  `/pulsemeter/#`,
+  `/pump/#`,
+  `/pvinverter/#`,
+  `/solarcharger/#`,
+  `/tank/#`,
+  `/temperature/#`,
+  `/vebus/#`,
+] as const
+
+export type VenusMQTTTopic = (typeof VenusMQTTTopics)[number] | "/system/#" | "/settings/#"
+
+export default interface AppDeviceSubscriptionsConfig {
+  [portalId: string]: VenusMQTTTopic[] // MQTT topics to subscribe to
+}
 
 export interface AppDataCollectionExpiryConfig {
   [portalId: string]: number | undefined // absolute time in millis when data collection will expire
@@ -111,11 +156,13 @@ const defaultAppConfigValues: AppConfig = {
     enabled: true,
     enabledPortalIds: [],
     expiry: {},
+    subscriptions: {},
   },
   manual: {
     enabled: true,
     hosts: [],
     expiry: {},
+    subscriptions: {},
   },
   vrm: {
     enabled: true,
@@ -123,6 +170,7 @@ const defaultAppConfigValues: AppConfig = {
     manualPortalIds: [],
     hasToken: false,
     expiry: {},
+    subscriptions: {},
   },
   influxdb: {
     protocol: "http",

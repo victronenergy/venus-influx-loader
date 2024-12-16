@@ -10,15 +10,21 @@ import {
   CFormInput,
   CButton,
 } from "@coreui/react"
-import { AppDataCollectionExpiryConfig, AppDeviceConfig, AppInstallationConfig } from "../../../shared/types"
+import AppDeviceSubscriptionsConfig, {
+  AppDataCollectionExpiryConfig,
+  AppDeviceConfig,
+  AppInstallationConfig,
+} from "../../../shared/types"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 import { DiscoveredDevice } from "../../../shared/state"
+import { MQTTSubscriptionsOptionList } from "./MQTTSubscriptionsOptionList"
 
 interface EditableDeviceListProps {
   hidden?: boolean
   entries: AppDeviceConfig[] | AppInstallationConfig[]
   referenceTime: number
   expirySettings: (number | undefined)[]
+  mqttSubscriptionsSettings: AppDeviceSubscriptionsConfig
   onEntryValueChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableEntryChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableAllEntriesChange: (_event: React.ChangeEvent<HTMLInputElement>) => void
@@ -27,6 +33,11 @@ interface EditableDeviceListProps {
   entryTitleText: string
   addEntryButtonText: string
   defaultExpiryDuration?: number
+  onPortalMQTTSubscriptionsChange: (
+    _event: React.ChangeEvent<HTMLSelectElement>,
+    _index: number,
+    _portalId: string,
+  ) => void
   onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
 }
 
@@ -37,6 +48,7 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>{props.entryTitleText}</CTableHeaderCell>
+            <CTableHeaderCell>Subscription</CTableHeaderCell>
             {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
             <CTableHeaderCell>
               <CFormCheck
@@ -67,6 +79,14 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                       placeholder=""
                       value={key}
                       onChange={(event) => props.onEntryValueChange(event, index)}
+                    />
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <MQTTSubscriptionsOptionList
+                      index={index}
+                      portalId={key}
+                      configuredMQTTSubscriptions={props.mqttSubscriptionsSettings[index]}
+                      onSelectionDidChange={props.onPortalMQTTSubscriptionsChange}
                     />
                   </CTableDataCell>
                   {props.defaultExpiryDuration && (
@@ -124,4 +144,26 @@ export function keyedExpiryToArray(
 ): (number | undefined)[] {
   // @ts-expect-error
   return devices.map((device) => expiry[device.hostName ?? device.portalId])
+}
+
+export function arraySubscriptionsToKeyed(
+  subscriptions: AppDeviceSubscriptionsConfig,
+  devices: AppDeviceConfig[] | AppInstallationConfig[],
+  existingSubscriptions: AppDeviceSubscriptionsConfig = {},
+  discoveredDevices: DiscoveredDevice[] = [],
+): AppDeviceSubscriptionsConfig {
+  const a = Object.fromEntries(
+    discoveredDevices.map((device) => [device.portalId, existingSubscriptions[device.portalId]]),
+  )
+  // @ts-expect-error
+  const b = Object.fromEntries(devices.map((device, i) => [device.hostName ?? device.portalId, subscriptions[i]]))
+  return { ...a, ...b }
+}
+
+export function keyedSubscriptionsToArray(
+  subscriptions: AppDeviceSubscriptionsConfig,
+  devices: AppDeviceConfig[] | AppInstallationConfig[],
+): AppDeviceSubscriptionsConfig {
+  // @ts-expect-error
+  return devices.map((device) => subscriptions[device.hostName ?? device.portalId])
 }

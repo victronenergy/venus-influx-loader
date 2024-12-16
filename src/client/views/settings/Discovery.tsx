@@ -6,7 +6,7 @@ import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
 import { useEffect, useState } from "react"
-import { AppConfig } from "../../../shared/types"
+import { AppConfig, VenusMQTTTopic } from "../../../shared/types"
 import { AppState } from "../../store"
 import { WebSocketStatus } from "./WebsocketStatus"
 
@@ -97,6 +97,22 @@ function Discovery() {
     setIsTemporaryConfigDirty(true)
   }
 
+  function handlePortalSubscriptionChange(
+    event: React.ChangeEvent<HTMLSelectElement>,
+    _index: number,
+    portalId: string,
+  ) {
+    const clone = { ...temporaryConfig!! }
+    const value = String(event.target.value) as VenusMQTTTopic
+    if (value) {
+      clone.upnp.subscriptions[portalId] = [value]
+    } else {
+      delete clone.upnp.subscriptions[portalId]
+    }
+    setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
+  }
+
   function handlePortalExpiryChange(event: React.ChangeEvent<HTMLSelectElement>, _index: number, portalId: string) {
     const clone = { ...temporaryConfig!! }
     const value = Number(event.target.value)
@@ -134,11 +150,13 @@ function Discovery() {
               settings={temporaryConfig.upnp}
               referenceTime={referenceTime}
               expirySettings={temporaryConfig.upnp.expiry}
+              mqttSubscriptionsSettings={temporaryConfig.upnp.subscriptions}
               availablePortalIds={upnpDiscovered}
               onEnablePortalChange={handleEnablePortalChange}
               onEnableAllPortalsChange={handleEnableAllPortalsChange}
               defaultExpiryDuration={defaultExpiryDuration}
               onPortalExpiryChange={handlePortalExpiryChange}
+              onPortalMQTTSubscriptionsChange={handlePortalSubscriptionChange}
             />
           </CForm>
         </CCardBody>
