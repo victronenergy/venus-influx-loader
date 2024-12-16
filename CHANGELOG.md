@@ -1,3 +1,26 @@
+# [1.4.0](https://github.com/victronenergy/venus-influx-loader/compare/1.3.1...1.4.0) (2024-12-16)
+
+
+### Bug Fixes
+
+* Add Filter/Close button to device pills ([ed4812b](https://github.com/victronenergy/venus-influx-loader/commit/ed4812beb8ac39ed18a3a22531059a9a1a5d53b7))
+* Clarify measurements/sec on Dashboard ([70962e6](https://github.com/victronenergy/venus-influx-loader/commit/70962e6d1402b9af21891535f8af8d592ad50376))
+* Display VRM token name/id in UI ([8b60d91](https://github.com/victronenergy/venus-influx-loader/commit/8b60d91205a1d43a39d316a45a8d7ff78439f0c3))
+* Implement basic log filtering ([e0bff62](https://github.com/victronenergy/venus-influx-loader/commit/e0bff62b0a5d7c1d35c5a132be7d50327c03d254))
+* Implement correct log filtering for VRM devices ([cbf044b](https://github.com/victronenergy/venus-influx-loader/commit/cbf044b7518eac668e00106bb553dd802aa2e2ab))
+* Improve Troubleshooting page experience ([0de2907](https://github.com/victronenergy/venus-influx-loader/commit/0de290743b43ad66e36d3278c9f205a9624f1d00))
+* Show badge close button to indicate filter is active ([3298db5](https://github.com/victronenergy/venus-influx-loader/commit/3298db5c723d9dff355ad8506f795f3c86fb94fd))
+* Turn AppContent into flex container ([4d98480](https://github.com/victronenergy/venus-influx-loader/commit/4d98480a0e56cf5af17e1a1358e63e8dca02103f))
+* Use `idAccessToken` returned via `/me` endpoint to derive VRM token name ([80c6b57](https://github.com/victronenergy/venus-influx-loader/commit/80c6b578147ebb4ae3299a132164b92752701fc2))
+* Use `My Installations`, and `Other` in VRM settings ([66e65fa](https://github.com/victronenergy/venus-influx-loader/commit/66e65fa973d1ea8685cce2700937c1dc2dee548f))
+* Validate VRM token on refresh, determine token name ([5b04cba](https://github.com/victronenergy/venus-influx-loader/commit/5b04cbaf92b52fa2f51dabcce9b52be116b1beb8))
+
+
+### Features
+
+* Allow custom per device MQTT subscription ([1b06965](https://github.com/victronenergy/venus-influx-loader/commit/1b0696562d0fb28e40030a30ee6467b3c39f161c))
+* **influxdb:** add path and protocol to config input ([#206](https://github.com/victronenergy/venus-influx-loader/issues/206)) ([5508a88](https://github.com/victronenergy/venus-influx-loader/commit/5508a88c7944138c6040edfbbebbb5d40edd0b36))
+
 ## [1.3.1](https://github.com/victronenergy/venus-influx-loader/compare/1.3.0...1.3.1) (2024-11-19)
 
 
