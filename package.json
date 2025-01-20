@@ -81,7 +81,7 @@
     "@types/node": "^22.10.5",
     "@types/node-ssdp": "^4.0.4",
     "@types/primus": "^7.3.9",
-    "@types/react": "^19.0.2",
+    "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@types/tsscmp": "^1.0.2",
     "@types/xml2js": "^0.4.14",
