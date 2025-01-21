@@ -78,7 +78,7 @@
     "@types/eslint__js": "^8.42.3",
     "@types/lodash": "^4.17.14",
     "@types/ms": "^2.1.0",
-    "@types/node": "^22.10.5",
+    "@types/node": "^22.10.7",
     "@types/node-ssdp": "^4.0.4",
     "@types/primus": "^7.3.9",
     "@types/react": "^19.0.7",
