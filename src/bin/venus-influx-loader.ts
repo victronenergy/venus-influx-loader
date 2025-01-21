@@ -5,7 +5,7 @@ import { program } from "commander"
 import buildInfo from "../buildInfo.cjs"
 
 import { Server } from "../server/server"
-import ms from "ms"
+import ms, { StringValue } from "ms"
 
 const autoExpiryDefault = "30d"
 
@@ -53,7 +53,7 @@ const grafanaUrl = options.grafanaUrl
 let autoExpiryDuration: number
 if (process.argv.includes("--enable-auto-expiry")) {
   autoExpiryDuration =
-    options.enableAutoExpiry === true ? ms(autoExpiryDefault) : ms(options.enableAutoExpiry as string)
+    options.enableAutoExpiry === true ? ms(autoExpiryDefault) : ms(options.enableAutoExpiry as StringValue)
 } else {
   autoExpiryDuration = 0 // disabled
 }
