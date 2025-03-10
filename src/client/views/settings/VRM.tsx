@@ -43,6 +43,7 @@ import {
   keyedExpiryToArray,
   keyedSubscriptionsToArray,
 } from "./EditableDeviceList"
+import ms from "ms"
 
 function VRM() {
   // auto load loader config on first page render
@@ -332,7 +333,23 @@ function VRM() {
                 checked={temporaryConfig.vrm.enabled}
                 className="flex-grow-1"
               />
-              {temporaryConfig.vrm.hasToken && <div className="text-secondary">VRM Token: {vrmStatus.tokenInfo}</div>}
+              {temporaryConfig.vrm.hasToken && <span className="text-secondary">VRM Token: {vrmStatus.tokenInfo}</span>}
+              {temporaryConfig.vrm.hasToken && vrmStatus.tokenExpires && (
+                <>
+                  <span className="text-secondary">, &nbsp;</span>
+                  <span
+                    className={
+                      vrmStatus.tokenExpires < 7 * 24 * 60 * 60 * 1000
+                        ? "text-danger"
+                        : vrmStatus.tokenExpires < 30 * 24 * 60 * 60 * 1000
+                          ? "text-warning"
+                          : "text-secondary"
+                    }
+                  >
+                    expires in: {ms(vrmStatus.tokenExpires, { long: true })}
+                  </span>
+                </>
+              )}
             </CInputGroup>
           </CForm>
         </CCardHeader>

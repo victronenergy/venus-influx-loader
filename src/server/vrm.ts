@@ -1,6 +1,7 @@
-import axios from "axios"
+import axios, { AxiosError } from "axios"
 import { Server } from "./server"
 import { Logger } from "winston"
+import ms from "ms"
 
 const apiUrl = "https://vrmapi.victronenergy.com/v2"
 
@@ -20,6 +21,7 @@ interface VRMAPIUsersTokensRecord {
   name: string
   idAccessToken: string
   lastSuccessfulAuth: number
+  expires?: number
 }
 
 interface VRMAPIUsersTokens {
@@ -45,13 +47,13 @@ export class VRM {
     this.logger = server.getLogger("vrm")
   }
 
-  good(msg: string, tokenInfo: string = "") {
-    this.server.emit("vrmStatus", { status: "success", message: msg, tokenInfo: tokenInfo })
+  good(msg: string, tokenInfo: string = "", tokenExpires?: number) {
+    this.server.emit("vrmStatus", { status: "success", message: msg, tokenInfo: tokenInfo, tokenExpires: tokenExpires })
     this.logger.info(msg)
   }
 
-  fail(msg: string, tokenInfo: string = "") {
-    this.server.emit("vrmStatus", { status: "failure", message: msg, tokenInfo: tokenInfo })
+  fail(msg: string, tokenInfo: string = "", tokenExpires?: number) {
+    this.server.emit("vrmStatus", { status: "failure", message: msg, tokenInfo: tokenInfo, tokenExpires: tokenExpires })
     this.logger.error(msg)
   }
 
@@ -154,7 +156,11 @@ export class VRM {
         throw `${JSON.stringify(response.errors)}`
       }
     } catch (error) {
-      this.fail(`Login failed: ${error}`)
+      var reason = `${error}`
+      if (error instanceof AxiosError && error.status === 401) {
+        reason = `invalid or expired VRM Token (${error})`
+      }
+      this.fail(`Login failed: ${reason}`)
       throw error
     }
   }
@@ -192,6 +198,7 @@ export class VRM {
 
     this.good("Validating VRM Token...")
     let tokenInfo: string
+    let tokenExpires: number | undefined
     try {
       const res = await axios.get(`${apiUrl}/users/${this.server.secrets.vrmUserId}/accesstokens/list`, {
         headers: { "X-Authorization": `Token ${this.server.secrets.vrmToken}` },
@@ -206,22 +213,31 @@ export class VRM {
         const matching = tokens.filter((token) => token.idAccessToken == this.server.secrets.vrmTokenId)
         const token = matching.length >= 1 ? matching[0] : tokens[0]
         tokenInfo = `${token.name} (${token.idAccessToken})`
-        this.good("VRM Token Validated", tokenInfo)
+        tokenExpires = token.expires ? token.expires * 1000 - Date.now() : undefined
+        this.good(
+          `VRM Token Validated, expires: ${tokenExpires ? ms(tokenExpires, { long: true }) : "never"}`,
+          tokenInfo,
+          tokenExpires,
+        )
       } else {
         throw `${JSON.stringify(response.errors)}`
       }
     } catch (error) {
-      this.fail(`Validating VRM Token failed: ${error}`)
+      var reason = `${error}`
+      if (error instanceof AxiosError && error.status === 401) {
+        reason = `invalid or expired VRM Token (${error})`
+      }
+      this.fail(`Validating VRM Token failed: ${reason}`)
       throw error
     }
 
     if (!this.server.config.vrm.enabled) {
       this.server.emit("vrmDiscovered", [])
-      this.fail("Connection to Venus Devices via VRM is disabled", tokenInfo)
+      this.fail("Connection to Venus Devices via VRM is disabled", tokenInfo, tokenExpires)
       return
     }
 
-    this.good("Getting installations...", tokenInfo)
+    this.good("Getting installations...", tokenInfo, tokenExpires)
 
     try {
       const res = await axios.get(`${apiUrl}/users/${this.server.secrets.vrmUserId}/installations`, {
@@ -235,12 +251,12 @@ export class VRM {
           return { portalId: String(record.identifier), name: record.name, address: record.mqtt_host }
         })
         this.server.emit("vrmDiscovered", devices)
-        this.good("Installations Retrieved", tokenInfo)
+        this.good("Installations Retrieved", tokenInfo, tokenExpires)
       } else {
         throw `${JSON.stringify(response.errors)}`
       }
     } catch (error) {
-      this.fail(`Getting installations failed: ${error}`, tokenInfo)
+      this.fail(`Getting installations failed: ${error}`, tokenInfo, tokenExpires)
       throw error
     }
   }

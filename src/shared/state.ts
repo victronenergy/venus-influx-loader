@@ -54,6 +54,7 @@ export interface VRMStatus {
   status: "success" | "failure"
   message: string
   tokenInfo?: string
+  tokenExpires?: number
 }
 
 export interface AppStateVRMStatusAction extends AppStateBaseAction {
