@@ -95,7 +95,7 @@
     "concurrently": "^9.1.2",
     "confusing-browser-globals": "^1.0.11",
     "css-loader": "^7.1.2",
-    "eslint": "^9.21.0",
+    "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-react": "^7.37.4",
