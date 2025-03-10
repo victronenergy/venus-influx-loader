@@ -358,10 +358,6 @@ class VenusMqttClient {
     delete this.loader.loaderStatistics.deviceStatistics[this.statisticsKey]
   }
 
-  async changeExpirationDate() {
-    // TODO: change expiration date, and if expired, disconnect
-  }
-
   private setupMqttClient() {
     this.client.on("connect", () => {
       this.logger.info(`MQTT connected to ${this.clientRemoteAddress}`)
