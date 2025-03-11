@@ -48,7 +48,7 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
         <CTableHead>
           <CTableRow>
             <CTableHeaderCell>{props.entryTitleText}</CTableHeaderCell>
-            <CTableHeaderCell>Subscription</CTableHeaderCell>
+            <CTableHeaderCell>Subscriptions</CTableHeaderCell>
             {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
             <CTableHeaderCell>
               <CFormCheck

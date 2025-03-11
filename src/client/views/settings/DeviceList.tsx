@@ -34,7 +34,7 @@ export function DeviceList(props: DeviceListProps) {
         <CTableRow>
           <CTableHeaderCell>Installation Name</CTableHeaderCell>
           <CTableHeaderCell>Portal ID</CTableHeaderCell>
-          <CTableHeaderCell>Subscription</CTableHeaderCell>
+          <CTableHeaderCell>Subscriptions</CTableHeaderCell>
           {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
           <CTableHeaderCell>
             <CFormCheck

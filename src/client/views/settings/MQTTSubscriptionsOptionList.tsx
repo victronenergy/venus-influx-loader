@@ -1,5 +1,5 @@
 import React from "react"
-import { CFormSelect } from "@coreui/react"
+import { CButton, CCollapse, CFormSelect } from "@coreui/react"
 import { useEffect, useState } from "react"
 import { VenusMQTTTopic, VenusMQTTTopics } from "../../../shared/types"
 
@@ -33,15 +33,24 @@ function generateOptions(configuredMQTTSubscriptions: VenusMQTTTopic[]): MQTTSub
 
 export function MQTTSubscriptionsOptionList(props: MQTTSubscriptionsOptionListProps) {
   const [options, setOptions] = useState<MQTTSubscriptionsOptionListOptions>({ default: [""], options: [] })
+  const [expanded, setExpanded] = useState<boolean>(false)
   useEffect(() => {
     setOptions(generateOptions(props.configuredMQTTSubscriptions))
   }, [props.configuredMQTTSubscriptions])
   return (
-    <CFormSelect
-      multiple
-      options={options.options}
-      value={options.default}
-      onChange={(event) => props.onSelectionDidChange(event, props.index, props.portalId)}
-    />
+    <>
+      <CButton className="mb-1" size="sm" color="primary" onClick={() => setExpanded(!expanded)}>
+        {`Edit Subscriptions (${props.configuredMQTTSubscriptions.length})`}
+      </CButton>
+      <CCollapse visible={expanded}>
+        <CFormSelect
+          multiple
+          htmlSize={10}
+          options={options.options}
+          value={options.default}
+          onChange={(event) => props.onSelectionDidChange(event, props.index, props.portalId)}
+        />
+      </CCollapse>
+    </>
   )
 }
