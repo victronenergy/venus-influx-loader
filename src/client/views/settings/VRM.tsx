@@ -281,9 +281,9 @@ function VRM() {
     portalId: string,
   ) {
     const clone = { ...temporaryConfig!! }
-    const value = String(event.target.value) as VenusMQTTTopic
+    const value = Array.from(event.target.selectedOptions).map((option) => option.value as VenusMQTTTopic)
     if (value) {
-      clone.vrm.subscriptions[portalId] = [value]
+      clone.vrm.subscriptions[portalId] = value
     } else {
       delete clone.vrm.subscriptions[portalId]
     }
@@ -297,9 +297,9 @@ function VRM() {
     _portalId: string,
   ) {
     const clone = { ...temporaryConfig!! }
-    const value = String(event.target.value) as VenusMQTTTopic
+    const value = Array.from(event.target.selectedOptions).map((option) => option.value as VenusMQTTTopic)
     const newSubscriptions = { ...temporarySubscriptions!! }
-    newSubscriptions[index] = [value]
+    newSubscriptions[index] = value
     clone.vrm.subscriptions = arraySubscriptionsToKeyed(
       newSubscriptions,
       clone.vrm.manualPortalIds,

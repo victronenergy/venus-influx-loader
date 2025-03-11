@@ -16,14 +16,14 @@ interface MQTTSubscriptionsListOption {
 }
 
 interface MQTTSubscriptionsOptionListOptions {
-  default: string
+  default: string[]
   options: MQTTSubscriptionsListOption[]
 }
 
 function generateOptions(configuredMQTTSubscriptions: VenusMQTTTopic[]): MQTTSubscriptionsOptionListOptions {
-  let defaultValue = `/#`
+  let defaultValue = [`/#`]
   if (configuredMQTTSubscriptions && configuredMQTTSubscriptions.length > 0) {
-    defaultValue = configuredMQTTSubscriptions[0]
+    defaultValue = configuredMQTTSubscriptions
   }
   const options = VenusMQTTTopics.map((x) => {
     return { label: x, value: x }
@@ -32,12 +32,13 @@ function generateOptions(configuredMQTTSubscriptions: VenusMQTTTopic[]): MQTTSub
 }
 
 export function MQTTSubscriptionsOptionList(props: MQTTSubscriptionsOptionListProps) {
-  const [options, setOptions] = useState<MQTTSubscriptionsOptionListOptions>({ default: "", options: [] })
+  const [options, setOptions] = useState<MQTTSubscriptionsOptionListOptions>({ default: [""], options: [] })
   useEffect(() => {
     setOptions(generateOptions(props.configuredMQTTSubscriptions))
   }, [props.configuredMQTTSubscriptions])
   return (
     <CFormSelect
+      multiple
       options={options.options}
       value={options.default}
       onChange={(event) => props.onSelectionDidChange(event, props.index, props.portalId)}

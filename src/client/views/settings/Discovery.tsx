@@ -103,9 +103,9 @@ function Discovery() {
     portalId: string,
   ) {
     const clone = { ...temporaryConfig!! }
-    const value = String(event.target.value) as VenusMQTTTopic
+    const value = Array.from(event.target.selectedOptions).map((option) => option.value as VenusMQTTTopic)
     if (value) {
-      clone.upnp.subscriptions[portalId] = [value]
+      clone.upnp.subscriptions[portalId] = value
     } else {
       delete clone.upnp.subscriptions[portalId]
     }
