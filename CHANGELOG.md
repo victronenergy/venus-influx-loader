@@ -1,3 +1,19 @@
+# [1.5.0](https://github.com/victronenergy/venus-influx-loader/compare/1.4.0...1.5.0) (2025-03-12)
+
+
+### Bug Fixes
+
+* Address TS issue in ms package ([8c021bd](https://github.com/victronenergy/venus-influx-loader/commit/8c021bd0caf0ec9321ea58fd6be1e423f280f1cf))
+* Ensure MQTT subscriptions are always valid ([e7da4a4](https://github.com/victronenergy/venus-influx-loader/commit/e7da4a46fa87a2fb07ae495fa81b2d77a8511a70))
+
+
+### Features
+
+* Allow selection of multiple MQTT subscriptions ([06219b9](https://github.com/victronenergy/venus-influx-loader/commit/06219b9f16da826fb902bbb733695205beca54f5))
+* Display VRM token expiry in the Admin UI ([5443902](https://github.com/victronenergy/venus-influx-loader/commit/5443902404624b5a962385fc2872c7a9c6eca975))
+* Prevent saving invalid config, flag errors in form ([1e0c90f](https://github.com/victronenergy/venus-influx-loader/commit/1e0c90f96228f6f1c13ea1459c34522c64ee2882))
+* Show/Hide multiple selection box for MQTT subscriptions ([30be976](https://github.com/victronenergy/venus-influx-loader/commit/30be976a0e75d5df2f1a27dedaabc1f2e54d54fc))
+
 # [1.4.0](https://github.com/victronenergy/venus-influx-loader/compare/1.3.1...1.4.0) (2024-12-16)
 
 
