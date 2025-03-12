@@ -85,7 +85,7 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                     <MQTTSubscriptionsOptionList
                       index={index}
                       portalId={key}
-                      configuredMQTTSubscriptions={props.mqttSubscriptionsSettings[index]}
+                      configuredMQTTSubscriptions={props.mqttSubscriptionsSettings[index] || []}
                       onSelectionDidChange={props.onPortalMQTTSubscriptionsChange}
                     />
                   </CTableDataCell>

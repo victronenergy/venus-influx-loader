@@ -61,7 +61,7 @@ export function DeviceList(props: DeviceListProps) {
                   <MQTTSubscriptionsOptionList
                     index={index}
                     portalId={element.portalId}
-                    configuredMQTTSubscriptions={props.mqttSubscriptionsSettings[element.portalId]}
+                    configuredMQTTSubscriptions={props.mqttSubscriptionsSettings[element.portalId] || []}
                     onSelectionDidChange={props.onPortalMQTTSubscriptionsChange}
                   />
                 </CTableDataCell>
