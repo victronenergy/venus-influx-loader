@@ -42,6 +42,7 @@ import {
   EditableDeviceList,
   keyedExpiryToArray,
   keyedSubscriptionsToArray,
+  validateEntries,
 } from "./EditableDeviceList"
 import ms from "ms"
 
@@ -74,6 +75,7 @@ function VRM() {
   const [temporaryExpiry, setTemporaryExpiry] = useState<(number | undefined)[]>([])
   const [temporarySubscriptions, setTemporarySubscriptions] = useState<AppDeviceSubscriptionsConfig>({})
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
+  const [entriesValidity, setEntriesValidity] = useState<boolean[]>([])
   useEffect(() => {
     setReferenceTime(Date.now())
     populateDefaultExpiry(config)
@@ -82,6 +84,7 @@ function VRM() {
     setTemporarySubscriptions(
       keyedSubscriptionsToArray(config?.vrm.subscriptions ?? {}, config?.vrm.manualPortalIds ?? []),
     )
+    revalidateEntries()
     setIsTemporaryConfigDirty(false)
   }, [config, vrmDiscovered, defaultExpiryDuration])
 
@@ -114,6 +117,7 @@ function VRM() {
     return (
       temporaryConfig !== undefined &&
       temporaryConfig.vrm.manualPortalIds.filter((x) => x.portalId === "").length === 0 &&
+      entriesValidity.filter((x) => x === false).length === 0 &&
       isTemporaryConfigDirty
     )
   })
@@ -217,6 +221,7 @@ function VRM() {
     clone.vrm.expiry = arrayExpiryToKeyed(newExpiry, clone.vrm.manualPortalIds, clone.vrm.expiry, vrmDiscovered)
     setTemporaryExpiry(newExpiry)
     setTemporaryConfig(clone)
+    revalidateEntries()
     setIsTemporaryConfigDirty(true)
   }
 
@@ -231,6 +236,7 @@ function VRM() {
     clone.vrm.expiry = arrayExpiryToKeyed(newExpiry, clone.vrm.manualPortalIds, clone.vrm.expiry, vrmDiscovered)
     setTemporaryExpiry(newExpiry)
     setTemporaryConfig(clone)
+    revalidateEntries()
     setIsTemporaryConfigDirty(true)
   }
 
@@ -240,6 +246,7 @@ function VRM() {
     const newExpiry = [...temporaryExpiry]
     clone.vrm.expiry = arrayExpiryToKeyed(newExpiry, clone.vrm.manualPortalIds, clone.vrm.expiry, vrmDiscovered)
     setTemporaryConfig(clone)
+    revalidateEntries()
     setIsTemporaryConfigDirty(true)
   }
 
@@ -309,6 +316,10 @@ function VRM() {
     setTemporarySubscriptions(newSubscriptions)
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
+  }
+
+  function revalidateEntries() {
+    setEntriesValidity(validateEntries(config?.vrm.manualPortalIds.map((entry) => entry.portalId) || []))
   }
 
   const [displayedDevices, setDisplayedDevices] = useState<VRMDeviceType>("discovered")
@@ -428,6 +439,7 @@ function VRM() {
                   <CForm>
                     <EditableDeviceList
                       entries={temporaryConfig.vrm.manualPortalIds}
+                      entriesValidity={entriesValidity}
                       referenceTime={referenceTime}
                       expirySettings={temporaryExpiry}
                       mqttSubscriptionsSettings={temporarySubscriptions}

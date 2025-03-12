@@ -9,6 +9,7 @@ import {
   EditableDeviceList,
   keyedExpiryToArray,
   keyedSubscriptionsToArray,
+  validateEntries,
 } from "./EditableDeviceList"
 import { useEffect, useState } from "react"
 import AppDeviceSubscriptionsConfig, { AppConfig, VenusMQTTTopic } from "../../../shared/types"
@@ -37,12 +38,14 @@ function Manual() {
   const [temporaryExpiry, setTemporaryExpiry] = useState<(number | undefined)[]>([])
   const [temporarySubscriptions, setTemporarySubscriptions] = useState<AppDeviceSubscriptionsConfig>({})
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
+  const [entriesValidity, setEntriesValidity] = useState<boolean[]>([])
   useEffect(() => {
     setReferenceTime(Date.now())
     populateDefaultExpiry(config)
     setTemporaryConfig(config)
     setTemporaryExpiry(keyedExpiryToArray(config?.manual.expiry ?? {}, config?.manual.hosts ?? []))
     setTemporarySubscriptions(keyedSubscriptionsToArray(config?.manual.subscriptions ?? {}, config?.manual.hosts ?? []))
+    revalidateEntries()
     setIsTemporaryConfigDirty(false)
   }, [config])
 
@@ -56,6 +59,7 @@ function Manual() {
     return (
       temporaryConfig !== undefined &&
       temporaryConfig.manual.hosts.filter((x) => x.hostName === "").length === 0 &&
+      entriesValidity.filter((x) => x === false).length === 0 &&
       isTemporaryConfigDirty
     )
   })
@@ -93,6 +97,7 @@ function Manual() {
     clone.manual.expiry = arrayExpiryToKeyed(newExpiry, clone.manual.hosts)
     setTemporaryExpiry(newExpiry)
     setTemporaryConfig(clone)
+    revalidateEntries()
     setIsTemporaryConfigDirty(true)
   }
 
@@ -107,6 +112,7 @@ function Manual() {
     clone.manual.expiry = arrayExpiryToKeyed(newExpiry, clone.manual.hosts)
     setTemporaryExpiry(newExpiry)
     setTemporaryConfig(clone)
+    revalidateEntries()
     setIsTemporaryConfigDirty(true)
   }
 
@@ -116,6 +122,7 @@ function Manual() {
     const newExpiry = [...temporaryExpiry]
     clone.manual.expiry = arrayExpiryToKeyed(newExpiry, clone.manual.hosts)
     setTemporaryConfig(clone)
+    revalidateEntries()
     setIsTemporaryConfigDirty(true)
   }
 
@@ -145,6 +152,10 @@ function Manual() {
     setIsTemporaryConfigDirty(true)
   }
 
+  function revalidateEntries() {
+    setEntriesValidity(validateEntries(config?.manual.hosts.map((entry) => entry.hostName) || []))
+  }
+
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
     return <WebSocketStatus websocketStatus={websocketStatus} />
@@ -168,6 +179,7 @@ function Manual() {
           <CForm>
             <EditableDeviceList
               entries={temporaryConfig.manual.hosts}
+              entriesValidity={entriesValidity}
               referenceTime={referenceTime}
               expirySettings={temporaryExpiry}
               mqttSubscriptionsSettings={temporarySubscriptions}

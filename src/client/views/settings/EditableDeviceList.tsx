@@ -22,6 +22,7 @@ import { MQTTSubscriptionsOptionList } from "./MQTTSubscriptionsOptionList"
 interface EditableDeviceListProps {
   hidden?: boolean
   entries: AppDeviceConfig[] | AppInstallationConfig[]
+  entriesValidity: boolean[]
   referenceTime: number
   expirySettings: (number | undefined)[]
   mqttSubscriptionsSettings: AppDeviceSubscriptionsConfig
@@ -79,6 +80,9 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                       placeholder=""
                       value={key}
                       onChange={(event) => props.onEntryValueChange(event, index)}
+                      required
+                      feedbackInvalid="Duplicate entries are not allowed"
+                      invalid={!props.entriesValidity[index]}
                     />
                   </CTableDataCell>
                   <CTableDataCell>
@@ -166,4 +170,13 @@ export function keyedSubscriptionsToArray(
 ): AppDeviceSubscriptionsConfig {
   // @ts-expect-error
   return devices.map((device) => subscriptions[device.hostName ?? device.portalId])
+}
+
+export function validateEntries(entries: string[]): boolean[] {
+  const occurrences: Record<string, number> = {}
+  entries.forEach((item) => {
+    occurrences[item] = (occurrences[item] || 0) + 1
+  })
+  const result = entries.map((item) => occurrences[item] === 1)
+  return result
 }

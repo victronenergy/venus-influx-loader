@@ -40,7 +40,7 @@ export function MQTTSubscriptionsOptionList(props: MQTTSubscriptionsOptionListPr
   return (
     <>
       <CButton className="mb-1" size="sm" color="primary" onClick={() => setExpanded(!expanded)}>
-        {`Edit Subscriptions (${props.configuredMQTTSubscriptions.length})`}
+        {`Edit Subscriptions (${options.default.length})`}
       </CButton>
       <CCollapse visible={expanded}>
         <CFormSelect
