@@ -328,7 +328,7 @@ class VenusMqttClient {
     }
     return new Promise((resolve, _reject) => {
       const clientId = Math.random().toString(16).slice(3)
-      let options
+      let options: mqtt.IClientOptions
       if (this.isVrm) {
         options = {
           rejectUnauthorized: false,
@@ -337,12 +337,14 @@ class VenusMqttClient {
           // use random clientId + vrmTokenId to identify this loader instance
           clientId: `venus_influx_loader_${buildVersion}_${clientId}_${this.loader.server.secrets.vrmTokenId}`,
           reconnectPeriod: 10_000,
+          protocolVersion: 5,
         }
       } else {
         options = {
           // use random clientId to identify this loader instance
           clientId: `venus_influx_loader_${buildVersion}_${clientId}`,
           reconnectPeriod: 10_000,
+          protocolVersion: 5,
         }
       }
       this.logger.info(`MQTT connecting to ${this.address}:${this.port} using clientId: ${options.clientId}`)
@@ -385,6 +387,7 @@ class VenusMqttClient {
           this.keepAlive()
         }, keepAliveInterval * 1000)
         this.logger.debug(`Starting keep alive timer`)
+        this.keepAlive()
       }
     })
 
@@ -409,7 +412,7 @@ class VenusMqttClient {
 
       // update stats
       if (this.device.portalId) {
-        this.loader.loaderStatistics.deviceStatistics[this.statisticsKey].isConnected = false
+        this.loader.loaderStatistics.deviceStatistics[this.statisticsKey].isReceivingData = false
       }
     })
 
@@ -486,10 +489,27 @@ class VenusMqttClient {
   }
 
   private sendKeepAlive(isFirstKeepAliveRequest: boolean) {
-    this.logger.debug(`sendKeepAlive: isFirstKeepAliveRequest: ${isFirstKeepAliveRequest}`)
+    if (isFirstKeepAliveRequest) {
+      this.logger.info(`sendKeepAlive: isFirstKeepAliveRequest: ${isFirstKeepAliveRequest}`)
+    } else {
+      this.logger.debug(`sendKeepAlive: isFirstKeepAliveRequest: ${isFirstKeepAliveRequest}`)
+    }
+    let portalStats = this.loader.loaderStatistics.deviceStatistics[this.statisticsKey]!!
+    let logger = this.logger
     this.client.publish(
       `R/${this.device.portalId}/system/0/Serial`,
       isFirstKeepAliveRequest ? "" : '{ "keepalive-options" : ["suppress-republish"] }',
+      { qos: 1 },
+      function (error) {
+        if (error) {
+          logger.error(
+            `sendKeepAlive: isFirstKeepAliveRequest: ${isFirstKeepAliveRequest} failed with error: ${JSON.stringify(error)}`,
+          )
+          portalStats.hasReceivedKeepAliveConfirmation = false
+        } else {
+          portalStats.hasReceivedKeepAliveConfirmation = true
+        }
+      },
     )
   }
 
@@ -521,7 +541,8 @@ class VenusMqttClient {
     this.loader.loaderStatistics.deviceStatistics[this.statisticsKey] = {
       type: this.device.type,
       address: this.device.address,
-      isConnected: false,
+      isReceivingData: false,
+      hasReceivedKeepAliveConfirmation: false,
       expiry: this.expiry,
       portalId: this.device.portalId,
       name: this.device.name || this.device.portalId!!,
@@ -543,7 +564,7 @@ class VenusMqttClient {
     this.distinctMeasurements.add(measurement)
 
     let portalStats = this.loader.loaderStatistics.deviceStatistics[this.statisticsKey]!!
-    portalStats.isConnected = true
+    portalStats.isReceivingData = true
     portalStats.name = this.device.name || this.device.portalId!!
     portalStats.totalMeasurementsCount++
     portalStats.distinctMeasurementsCount = this.distinctMeasurements.size

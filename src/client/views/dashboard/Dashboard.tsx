@@ -97,7 +97,13 @@ function Dashboard() {
                         <CRow className="align-items-start mb-1">
                           <CCol>
                             <CIcon
-                              className={deviceStats.isConnected ? "text-success" : "text-danger"}
+                              className={
+                                deviceStats.hasReceivedKeepAliveConfirmation
+                                  ? deviceStats.isReceivingData
+                                    ? "text-success"
+                                    : "text-warning"
+                                  : "text-danger"
+                              }
                               icon={cilRss}
                               size="lg"
                             />
@@ -124,9 +130,13 @@ function Dashboard() {
                             )}
                           </CCol>
                           <CCol className="text-end" xs="auto">
-                            <strong> {deviceStats.measurementRate} </strong>(
-                            {((deviceStats.measurementRate / adjustedMeasurementRate) * 100).toFixed(0)}%)
-                            <small className="text-muted"> measurements/sec </small>
+                            {deviceStats.hasReceivedKeepAliveConfirmation ? (
+                              <>
+                                <strong> {deviceStats.measurementRate} </strong>(
+                                {((deviceStats.measurementRate / adjustedMeasurementRate) * 100).toFixed(0)}%)
+                                <small className="text-muted"> measurements/sec </small>
+                              </>
+                            ) : null}
                           </CCol>
                         </CRow>
                         <CRow className="align-items-end">

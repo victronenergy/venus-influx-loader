@@ -67,7 +67,8 @@ export interface DeviceStatisticsDetails {
   address: string
   name: string
   portalId?: string
-  isConnected: boolean
+  isReceivingData: boolean
+  hasReceivedKeepAliveConfirmation: boolean
   expiry?: number
   measurementRate: number
   totalMeasurementsCount: number
