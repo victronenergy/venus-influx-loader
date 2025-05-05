@@ -43,12 +43,12 @@ function Dashboard() {
   const deviceKeys = Object.keys(deviceStatistics || {}).sort()
   const adjustedMeasurementRate = measurementRate !== 0 ? measurementRate : 0.001
 
+  const navigate = useNavigate()
+
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
     return <WebSocketStatus websocketStatus={websocketStatus} />
   }
-
-  const navigate = useNavigate()
 
   const handleLabelFilterChange = (
     event: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement, MouseEvent>,

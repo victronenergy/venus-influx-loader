@@ -45,11 +45,6 @@ function Troubleshooting() {
 
   const [, toggleDebugLevel, _cancelToggleDebugLevel] = usePutDebug()
 
-  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
-  if (websocketStatus !== "open") {
-    return <WebSocketStatus websocketStatus={websocketStatus} />
-  }
-
   const location = useLocation()
   const { filter } = location.state || {}
 
@@ -81,6 +76,13 @@ function Troubleshooting() {
 
     return () => clearInterval(interval)
   }, [])
+
+  // The websocketStatus needs to be the last of the React use* hooks
+  // because we return early when not connected to ws
+  const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
+  if (websocketStatus !== "open") {
+    return <WebSocketStatus websocketStatus={websocketStatus} />
+  }
 
   return (
     log &&
