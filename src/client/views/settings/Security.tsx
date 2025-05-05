@@ -40,6 +40,8 @@ function Security() {
     setIsStateDirty(true)
   }
 
+  // The websocketStatus needs to be the last of the React use* hooks
+  // because we return early when not connected to ws
   const websocketStatus = useSelector((state: AppState) => state.websocketStatus)
   if (websocketStatus !== "open") {
     return <WebSocketStatus websocketStatus={websocketStatus} />
