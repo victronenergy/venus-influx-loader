@@ -1,3 +1,16 @@
+# [1.6.0](https://github.com/victronenergy/venus-influx-loader/compare/1.5.0...1.6.0) (2025-05-13)
+
+
+### Bug Fixes
+
+* Only return after all use* hooks initialized, closes [#326](https://github.com/victronenergy/venus-influx-loader/issues/326) ([bee27da](https://github.com/victronenergy/venus-influx-loader/commit/bee27da9300a34e9003f839624b2e8753b5c2b23))
+
+
+### Features
+
+* Retain VRM config on invalid token ([#331](https://github.com/victronenergy/venus-influx-loader/issues/331)) ([0840277](https://github.com/victronenergy/venus-influx-loader/commit/08402776e13540e327a33d20889afec63737169f))
+* Use MQTT 5 to analyze keep alive packet result ([#319](https://github.com/victronenergy/venus-influx-loader/issues/319)) ([910d2c3](https://github.com/victronenergy/venus-influx-loader/commit/910d2c313da7318b1fa337a7326556090855d727))
+
 # [1.5.0](https://github.com/victronenergy/venus-influx-loader/compare/1.4.0...1.5.0) (2025-03-12)
 
 
