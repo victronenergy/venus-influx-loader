@@ -84,6 +84,13 @@ export class VRM {
 
       // validate & parse response
       if (res.status == 200) {
+        // if another VRM user logged in, delete previous VRM config
+        if (response.idUser !== this.server.secrets.vrmUserId) {
+          this.server.config.vrm.enabledPortalIds = []
+          this.server.config.vrm.manualPortalIds = []
+          this.server.config.vrm.expiry = {}
+          this.server.config.vrm.subscriptions = {}
+        }
         this.server.secrets.vrmUsername = username
         this.server.secrets.vrmUserId = response.idUser
       } else {
@@ -144,6 +151,13 @@ export class VRM {
 
       // validate & parse response
       if (res.status == 200 && response.success === true) {
+        // if another VRM user logged in, delete previous VRM config
+        if (response.user.id !== this.server.secrets.vrmUserId) {
+          this.server.config.vrm.enabledPortalIds = []
+          this.server.config.vrm.manualPortalIds = []
+          this.server.config.vrm.expiry = {}
+          this.server.config.vrm.subscriptions = {}
+        }
         this.server.secrets.vrmToken = token
         this.server.secrets.vrmUserId = response.user.id
         this.server.secrets.vrmUsername = response.user.email
@@ -177,15 +191,12 @@ export class VRM {
       this.fail(`Logout failed: ${error}`)
     }
 
-    // NOTE: we do not check response code,
-    // we simply delete secrets, and forget enabled portals
+    // NOTE: we do not check the response code,
+    // delete vrm token, but leave vrm username + config around
+    // so that new VRM login with fresh token will retain the config
+    // if the vrmUserId matches previous config
     delete this.server.secrets.vrmToken
     delete this.server.secrets.vrmTokenId
-    delete this.server.secrets.vrmUserId
-    delete this.server.secrets.vrmUsername
-    this.server.config.vrm.enabledPortalIds = []
-    this.server.config.vrm.manualPortalIds = []
-    this.server.config.vrm.expiry = {}
     this.server.config.vrm.hasToken = false
     await this.server.saveSecrets()
     await this.server.saveConfig()
