@@ -227,7 +227,7 @@ export class VRM {
       if (error instanceof AxiosError && error.status === 401) {
         reason = `invalid or expired VRM Token (${error})`
       }
-      this.fail(`Validating VRM Token failed: ${reason}`)
+      this.fail(`Validating VRM Token failed: ${reason}`, ``, -1000)
       throw error
     }
 

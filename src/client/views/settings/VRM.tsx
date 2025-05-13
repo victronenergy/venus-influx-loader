@@ -349,7 +349,8 @@ function VRM() {
               {temporaryConfig.vrm.hasToken && <span className="text-secondary">VRM Token: {vrmStatus.tokenInfo}</span>}
               {temporaryConfig.vrm.hasToken && vrmStatus.tokenExpires && (
                 <>
-                  <span className="text-secondary">, &nbsp;</span>
+                  {vrmStatus.tokenInfo && <span className="text-secondary">,&nbsp;</span>}
+                  {!vrmStatus.tokenInfo && <span className="text-secondary">&nbsp;</span>}
                   <span
                     className={
                       vrmStatus.tokenExpires < 7 * 24 * 60 * 60 * 1000
@@ -359,7 +360,10 @@ function VRM() {
                           : "text-secondary"
                     }
                   >
-                    expires in: {ms(vrmStatus.tokenExpires, { long: true })}
+                    {vrmStatus.tokenExpires > 0 && (
+                      <span>expires in: {ms(vrmStatus.tokenExpires, { long: true })}</span>
+                    )}
+                    {vrmStatus.tokenExpires <= 0 && <span>expired</span>}
                   </span>
                 </>
               )}
