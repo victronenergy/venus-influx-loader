@@ -38,7 +38,7 @@ Configuration details and necessary usernames and passwords are stored in `confi
 Configuration files can either be created manually, or by starting the Venus Influx Loader, and accessing the Admin UI by browsing to `http://localhost:8088`. The default usernname and password is `admin`, `admin`.
 
 ```
- € npx venus-influx-loader --help
+$ npx venus-influx-loader --help
 Usage: venus-influx-loader [options]
 
 Monitor Venus devices and capture & store realtime data to serve Grafana
@@ -57,7 +57,8 @@ Options:
   --hide-settings-venus-discovery
   --hide-settings-venus-manual
   --hide-settings-venus-vrm
-  -h, --help                       display help for command```
+  -h, --help                       display help for command
+```
 
 #### Tip: Run Influx Loader headless
 
@@ -89,7 +90,7 @@ To workaround the limitations, `venus-upnp-browser` actually runs in docker host
 Note: `host` and `bridge` network mode work properly only on Linux, support is being added to Docker Desktop for Windows and Mac incrementally. UPNP does not work in Docker Desktop for Mac at all.
 
 ```
-€ npx venus-upnp-browser --help
+$ npx venus-upnp-browser --help
 Usage: venus-upnp-browser [options]
 
 Discover Venus devices running on local network using UPNP
