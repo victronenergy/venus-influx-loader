@@ -113,7 +113,7 @@
     "redux": "^5.0.1",
     "redux-thunk": "^3.1.0",
     "rimraf": "^6.0.1",
-    "sass": "^1.89.0",
+    "sass": "^1.89.1",
     "sass-loader": "^16.0.5",
     "source-list-map": "2.0.1",
     "style-loader": "^4.0.0",
