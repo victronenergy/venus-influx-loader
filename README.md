@@ -57,7 +57,8 @@ Options:
   --hide-settings-venus-discovery
   --hide-settings-venus-manual
   --hide-settings-venus-vrm
-  -h, --help                       display help for command```
+  -h, --help                       display help for command
+  ```
 
 #### Tip: Run Influx Loader headless
 
