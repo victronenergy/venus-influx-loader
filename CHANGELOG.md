@@ -1,3 +1,11 @@
+## [1.6.1](https://github.com/victronenergy/venus-influx-loader/compare/1.6.0...1.6.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* Improve error reporting around publish error 135 ([aff7deb](https://github.com/victronenergy/venus-influx-loader/commit/aff7debecaae7c4d005dc49f8fd75e01be60bfe6))
+* use $ instead of € in shell example prompts ([63540ff](https://github.com/victronenergy/venus-influx-loader/commit/63540ff5da5d0777759d48b82b48046f696d4fe3))
+
 # [1.6.0](https://github.com/victronenergy/venus-influx-loader/compare/1.5.0...1.6.0) (2025-05-13)
 
 
