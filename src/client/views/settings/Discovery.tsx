@@ -166,7 +166,7 @@ function Discovery() {
           <CButton
             color="primary"
             onClick={() => {
-              beforeSave(), save({ data: temporaryConfig })
+              ;(beforeSave(), save({ data: temporaryConfig }))
             }}
             disabled={!isSaveEnabled}
           >
