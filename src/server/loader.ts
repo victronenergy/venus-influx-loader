@@ -502,9 +502,13 @@ class VenusMqttClient {
       { qos: 1 },
       function (error) {
         if (error) {
-          logger.error(
-            `sendKeepAlive: isFirstKeepAliveRequest: ${isFirstKeepAliveRequest} failed with error: ${JSON.stringify(error)}`,
-          )
+          let errorMessage: string
+          if (error instanceof mqtt.ErrorWithReasonCode) {
+            errorMessage = `${error.message} (code: ${error.code})`
+          } else {
+            errorMessage = `${error.message}`
+          }
+          logger.error(`sendKeepAlive: ${errorMessage}. Ensure the system is assigned to your team.`)
           portalStats.hasReceivedKeepAliveConfirmation = false
         } else {
           portalStats.hasReceivedKeepAliveConfirmation = true
