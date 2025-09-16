@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/victronenergy/venus-influx-loader/compare/1.6.1...1.6.2) (2025-09-16)
+
+
+### Bug Fixes
+
+* Add `/logger/#` and `/switch/#` to MQTT topics list ([33c5d48](https://github.com/victronenergy/venus-influx-loader/commit/33c5d48c58c99750f46c7c93da755863e2c3d357))
+
 ## [1.6.1](https://github.com/victronenergy/venus-influx-loader/compare/1.6.0...1.6.1) (2025-07-07)
 
 
