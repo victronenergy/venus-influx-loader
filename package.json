@@ -84,7 +84,7 @@
     "@types/react-dom": "^19.1.9",
     "@types/tsscmp": "^1.0.2",
     "@types/xml2js": "^0.4.14",
-    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.43.0",
     "autoprefixer": "^10.4.21",
     "axios-hooks": "^5.1.1",
