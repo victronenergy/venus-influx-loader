@@ -117,7 +117,7 @@
     "sass-loader": "^16.0.5",
     "source-list-map": "2.0.1",
     "style-loader": "^4.0.0",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.44.1",
     "webpack": "^5.101.3",
     "webpack-cli": "^6.0.1",
