@@ -51,7 +51,7 @@
     "body-parser": "^2.2.1",
     "commander": "^14.0.2",
     "debug": "^4.4.3",
-    "express": "^5.1.0",
+    "express": "^5.2.1",
     "influx": "^5.11.0",
     "lodash": "^4.17.21",
     "mqtt": "^5.14.1",
