@@ -60,7 +60,7 @@
     "primus": "^8.0.9",
     "tsscmp": "^1.0.6",
     "winston": "^3.18.3",
-    "ws": "^8.18.3",
+    "ws": "^8.19.0",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
