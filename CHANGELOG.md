@@ -1,3 +1,17 @@
+# [1.7.0](https://github.com/victronenergy/venus-influx-loader/compare/1.6.2...1.7.0) (2026-03-19)
+
+
+### Bug Fixes
+
+* bump @coreui/* ([09a44d2](https://github.com/victronenergy/venus-influx-loader/commit/09a44d2f57eaa26c11097f1d08e6691607244796))
+* Replace SASS [@import](https://github.com/import) with [@use](https://github.com/use) ([8c8b18d](https://github.com/victronenergy/venus-influx-loader/commit/8c8b18d26c6a393b8b95206084dd5d889e6b2a9e))
+* Use node:22-alpine as base image ([5022c21](https://github.com/victronenergy/venus-influx-loader/commit/5022c210e07d231a4b04fc7028653792f187e048))
+
+
+### Features
+
+* Use node 22 ([72a6627](https://github.com/victronenergy/venus-influx-loader/commit/72a662720b2fb57fad59ee197ebcddb34e54c8ec))
+
 ## [1.6.2](https://github.com/victronenergy/venus-influx-loader/compare/1.6.1...1.6.2) (2025-09-16)
 
 
