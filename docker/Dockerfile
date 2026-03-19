@@ -1,19 +1,22 @@
 # Stage 1: build from source
-FROM node:22 AS build
+FROM node:22-alpine AS build
 
 ARG BUILD_VERSION=develop
 ENV BUILD_VERSION=${BUILD_VERSION}
+ENV HUSKY=0
 
 WORKDIR /venus-influx-loader
+
+RUN apk add --no-cache git
 
 COPY . .
 RUN npm install
 RUN npm run build
 
 # Stage 2: minimize
-FROM node:22-slim
+FROM node:22-alpine
 
-RUN apt-get update && apt-get install -y curl
+RUN apk add --no-cache curl
 
 WORKDIR /venus-influx-loader
 
