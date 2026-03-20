@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/victronenergy/venus-influx-loader/compare/1.7.0...1.7.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* Use `npm ci` instead of `npm i` for docker builds ([0c07915](https://github.com/victronenergy/venus-influx-loader/commit/0c07915c0dde8e01f48045131cc1ee4ba68c2aaf))
+
 # [1.7.0](https://github.com/victronenergy/venus-influx-loader/compare/1.6.2...1.7.0) (2026-03-19)
 
 
