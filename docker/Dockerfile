@@ -10,7 +10,7 @@ WORKDIR /venus-influx-loader
 RUN apk add --no-cache git
 
 COPY . .
-RUN npm install
+RUN npm ci
 RUN npm run build
 
 # Stage 2: minimize
@@ -23,7 +23,7 @@ WORKDIR /venus-influx-loader
 COPY --from=build /venus-influx-loader/package*.json ./
 COPY --from=build /venus-influx-loader/dist/ ./
 
-RUN npm install --omit=dev --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts
 
 USER root
 RUN mkdir -p /config && chown -R node /config
