@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/victronenergy/venus-influx-loader/compare/1.7.1...1.7.2) (2026-04-17)
+
+
+### Bug Fixes
+
+* trigger release ([ad2fd0d](https://github.com/victronenergy/venus-influx-loader/commit/ad2fd0de26791c194e4f8d41c941d039ca22e3f7))
+
 ## [1.7.1](https://github.com/victronenergy/venus-influx-loader/compare/1.7.0...1.7.1) (2026-03-20)
 
 
