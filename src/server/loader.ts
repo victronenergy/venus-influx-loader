@@ -1,4 +1,4 @@
-import mqtt, { MqttClient } from "mqtt"
+import mqtt, { IPublishPacket, MqttClient } from "mqtt"
 import ignoredMeasurements from "./ignoredMeasurements.js"
 // @ts-expect-error
 import buildInfo from "../buildInfo.cjs"
@@ -383,7 +383,7 @@ class VenusMqttClient {
       }
     })
 
-    this.client.on("message", (topic, message) => this.onMessage(topic, message))
+    this.client.on("message", (topic, message, packet) => this.onMessage(topic, message, packet))
 
     this.client.on("error", (error) => {
       this.logger.error(`MQTT connection to ${this.clientRemoteAddress}, ${error}`)
@@ -417,10 +417,15 @@ class VenusMqttClient {
     })
   }
 
-  private onMessage(topic: string, message: Buffer) {
+  private onMessage(topic: string, message: Buffer, packet: IPublishPacket) {
     // this.logger.debug(`${topic}: ${message}`)
 
     if (message === undefined || message == null || message.length === 0) {
+      return
+    }
+
+    if (packet.dup) {
+      this.logger.debug(`Skipping duplicate ${topic}`)
       return
     }
 
