@@ -363,31 +363,23 @@ class VenusMqttClient {
   private setupMqttClient() {
     this.client.on("connect", () => {
       this.logger.info(`MQTT connected to ${this.clientRemoteAddress}`)
+      // every connect should trigger full republish on first keepalive
+      this.isFirstKeepAliveRequest = true
       if (this.device.portalId === undefined) {
         // we do not know the portalId yet (manual connection)
         this.logger.info("Detecting portalId...")
-        this.client.subscribe("N/+/#")
+        this.client.subscribe("N/+/#", { qos: 1 })
         this.isDetectingPortalId = true
       } else {
         // we do know the portalId already (vrm + upnp connection)
         this.logger.info("Using portalId %s", this.device.portalId)
-        this.client.subscribe(`N/${this.device.portalId}/settings/0/Settings/SystemSetup/SystemName`)
-        for (const topic of this.device.subscriptions) {
-          const x = `N/${this.device.portalId}${topic}`
-          this.logger.info(`Subscribing to '${x}'`)
-          this.client.subscribe(x)
-        }
-        this.client.publish(`R/${this.device.portalId}/settings/0/Settings/SystemSetup/SystemName`, "")
-        this.client.publish(`R/${this.device.portalId}/system/0/Serial`, "")
-        this.isDetectingPortalId = false
+        this.subscribeAndRequestRepublish()
       }
       if (!this.venusKeepAlive) {
-        this.isFirstKeepAliveRequest = true
         this.venusKeepAlive = setInterval(() => {
           this.keepAlive()
         }, keepAliveInterval * 1000)
         this.logger.debug(`Starting keep alive timer`)
-        this.keepAlive()
       }
     })
 
@@ -452,16 +444,8 @@ class VenusMqttClient {
       // detect portalId for manual connections
       if (this.isDetectingPortalId && measurement === "system/Serial") {
         this.logger.info("Detected portalId %s", json.value)
-        this.client.subscribe(`N/${json.value}/settings/0/Settings/SystemSetup/SystemName`)
-        for (const sub of this.device.subscriptions) {
-          const x = `N/${json.value}${sub}`
-          this.logger.info(`Subscribing to '${x}'`)
-          this.client.subscribe(x)
-        }
-        this.client.publish(`R/${json.value}/settings/0/Settings/SystemSetup/SystemName`, "")
-        this.client.publish(`R/${json.value}/system/0/Serial`, "")
-        this.isDetectingPortalId = false
         this.device.portalId = json.value
+        this.subscribeAndRequestRepublish()
         return
       }
 
@@ -515,6 +499,20 @@ class VenusMqttClient {
         }
       },
     )
+  }
+
+  private subscribeAndRequestRepublish() {
+    const portalId = this.device.portalId!!
+    this.client.subscribe(`N/${portalId}/settings/0/Settings/SystemSetup/SystemName`, { qos: 1 })
+    for (const topic of this.device.subscriptions) {
+      const x = `N/${portalId}${topic}`
+      this.logger.info(`Subscribing to '${x}'`)
+      this.client.subscribe(x, { qos: 1 })
+    }
+    this.client.publish(`R/${portalId}/settings/0/Settings/SystemSetup/SystemName`, "", { qos: 1 })
+    // first keepalive carries empty payload, asking the broker for full republish
+    this.keepAlive()
+    this.isDetectingPortalId = false
   }
 
   private keepAlive() {
@@ -599,7 +597,7 @@ class VenusMqttClient {
       for (const topic of toSubscribe) {
         const x = `N/${this.device.portalId}${topic}`
         this.logger.info(`Subscribing to '${x}'`)
-        this.client.subscribe(x)
+        this.client.subscribe(x, { qos: 1 })
       }
     }
   }
