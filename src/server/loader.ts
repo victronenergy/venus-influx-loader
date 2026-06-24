@@ -368,7 +368,8 @@ class VenusMqttClient {
       if (this.device.portalId === undefined) {
         // we do not know the portalId yet (manual connection)
         this.logger.info("Detecting portalId...")
-        this.client.subscribe("N/+/#", { qos: 1 })
+        // dbus-flashmq only supports publishing at QoS 0
+        this.client.subscribe("N/+/#", { qos: 0 })
         this.isDetectingPortalId = true
       } else {
         // we do know the portalId already (vrm + upnp connection)
@@ -508,11 +509,13 @@ class VenusMqttClient {
 
   private subscribeAndRequestRepublish() {
     const portalId = this.device.portalId!!
-    this.client.subscribe(`N/${portalId}/settings/0/Settings/SystemSetup/SystemName`, { qos: 1 })
+    // dbus-flashmq only supports publishing at QoS 0
+    this.client.subscribe(`N/${portalId}/settings/0/Settings/SystemSetup/SystemName`, { qos: 0 })
     for (const topic of this.device.subscriptions) {
       const x = `N/${portalId}${topic}`
       this.logger.info(`Subscribing to '${x}'`)
-      this.client.subscribe(x, { qos: 1 })
+      // dbus-flashmq only supports publishing at QoS 0
+      this.client.subscribe(x, { qos: 0 })
     }
     this.client.publish(`R/${portalId}/settings/0/Settings/SystemSetup/SystemName`, "", { qos: 1 })
     // first keepalive carries empty payload, asking the broker for full republish
@@ -602,7 +605,8 @@ class VenusMqttClient {
       for (const topic of toSubscribe) {
         const x = `N/${this.device.portalId}${topic}`
         this.logger.info(`Subscribing to '${x}'`)
-        this.client.subscribe(x, { qos: 1 })
+        // dbus-flashmq only supports publishing at QoS 0
+        this.client.subscribe(x, { qos: 0 })
       }
     }
   }
