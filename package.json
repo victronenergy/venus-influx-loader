@@ -91,7 +91,7 @@
     "babel-loader": "^10.1.1",
     "babel-watch": "^7.8.1",
     "clean-webpack-plugin": "^4.0.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "confusing-browser-globals": "^1.0.11",
     "css-loader": "^7.1.4",
     "eslint": "^9.39.2",
