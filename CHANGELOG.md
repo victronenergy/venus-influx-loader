@@ -1,3 +1,16 @@
+# [1.8.0](https://github.com/victronenergy/venus-influx-loader/compare/1.7.2...1.8.0) (2026-06-24)
+
+
+### Bug Fixes
+
+* dbus-flashmq only supports publishing at QoS 0 ([01a3203](https://github.com/victronenergy/venus-influx-loader/commit/01a3203134756d0cd1a00dd3ea44d09ebfec80fc))
+* Do not store QoS 1 re-transmits (lost PUBACK) into InfluxDB ([f75f40e](https://github.com/victronenergy/venus-influx-loader/commit/f75f40e9429956d50344c2140b43fef828392a03))
+
+
+### Features
+
+* Use QoS 1 to prevent loosing updates on back pressure ([7889b42](https://github.com/victronenergy/venus-influx-loader/commit/7889b420ba5618667966c4d1d82368db9aaf2a28))
+
 ## [1.7.2](https://github.com/victronenergy/venus-influx-loader/compare/1.7.1...1.7.2) (2026-04-17)
 
 
