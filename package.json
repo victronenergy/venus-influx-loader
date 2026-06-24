@@ -84,8 +84,6 @@
     "@types/react-dom": "^19.2.3",
     "@types/tsscmp": "^1.0.2",
     "@types/xml2js": "^0.4.14",
-    "@typescript-eslint/eslint-plugin": "^8.59.1",
-    "@typescript-eslint/parser": "^8.59.1",
     "autoprefixer": "^10.5.1",
     "axios-hooks": "^5.1.1",
     "babel-loader": "^10.1.1",
@@ -119,7 +117,7 @@
     "source-list-map": "2.0.1",
     "style-loader": "^4.0.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.1",
+    "typescript-eslint": "^8.62.0",
     "webpack": "^5.107.2",
     "webpack-cli": "^7.0.3",
     "webpack-dev-server": "^5.2.5"
