@@ -108,7 +108,7 @@
     "postcss-loader": "^8.2.1",
     "prettier": "^3.8.4",
     "react": "^19.2.7",
-    "react-dom": "^19.2.5",
+    "react-dom": "^19.2.7",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.14.2",
     "redux": "^5.0.1",
