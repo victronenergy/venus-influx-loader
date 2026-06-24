@@ -71,7 +71,7 @@
     "@coreui/coreui": "^5.8.0",
     "@coreui/icons": "^3.1.0",
     "@coreui/icons-react": "^2.3.0",
-    "@coreui/react": "^5.10.0",
+    "@coreui/react": "^5.12.0",
     "@eslint/js": "^9.39.2",
     "@popperjs/core": "^2.11.8",
     "@types/basic-auth": "^1.1.8",
