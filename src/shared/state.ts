@@ -8,12 +8,7 @@ export type SettingsActions = "LOADER_SETTINGS" | "UI_SETTINGS"
 export type MiscActions = "set" | "LOADER_STATISTICS"
 
 export type AppStateActionType =
-  | MiscActions
-  | WebSocketActions
-  | DiscoveryActions
-  | VRMActions
-  | SettingsActions
-  | DebugActions
+  MiscActions | WebSocketActions | DiscoveryActions | VRMActions | SettingsActions | DebugActions
 
 export interface AppStateBaseAction {
   type: AppStateActionType
