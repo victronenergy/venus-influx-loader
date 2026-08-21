@@ -539,7 +539,7 @@ function VRMLoginPane(props: VRMLoginPaneProps) {
             <div className="mb-3">
               <CFormLabel htmlFor="token">
                 VRM Token (
-                <CLink target="_blank" href="https://vrm.victronenergy.com/access-tokens">
+                <CLink target="_blank" href="https://vrm.victronenergy.com/profile/integrations">
                   Get Yours Here
                 </CLink>
                 )
