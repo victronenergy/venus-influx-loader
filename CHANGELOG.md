@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/victronenergy/venus-influx-loader/compare/1.8.0...1.8.1) (2026-08-21)
+
+
+### Bug Fixes
+
+* update VRM token link to /profile/integrations ([fd63b60](https://github.com/victronenergy/venus-influx-loader/commit/fd63b60cd6ea653efaed5e81d346ac109542021d))
+
 # [1.8.0](https://github.com/victronenergy/venus-influx-loader/compare/1.7.2...1.8.0) (2026-06-24)
 
 
