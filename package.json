@@ -75,7 +75,7 @@
     "@eslint/js": "^10.0.1",
     "@popperjs/core": "^2.11.8",
     "@types/basic-auth": "^1.1.8",
-    "@types/lodash": "^4.17.24",
+    "@types/lodash": "^4.17.25",
     "@types/ms": "^2.1.0",
     "@types/node": "^26.0.0",
     "@types/node-ssdp": "^4.0.5",
