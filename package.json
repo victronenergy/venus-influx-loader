@@ -116,7 +116,7 @@
     "source-list-map": "2.0.1",
     "style-loader": "^4.0.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.62.0",
+    "typescript-eslint": "^8.67.0",
     "webpack": "^5.107.2",
     "webpack-cli": "^7.0.3",
     "webpack-dev-server": "^5.2.5"
