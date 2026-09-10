@@ -142,7 +142,7 @@ Server is written in TypeScript/JavaScript and compiled using `tsc`.
 
 ### Venus Influx Loader Admin UI
 
-The directory `src/client` contains react.js based web admin interface to manage configuration of `src/server`. Influx Loader Admin UI app uses `webpack` to compile the browser JavaScript, HTML, and CSS code.
+The directory `src/client` contains react.js based web admin interface to manage configuration of `src/server`. Influx Loader Admin UI app uses `vite` to compile the browser JavaScript, HTML, and CSS code.
 
 ## Development
 
@@ -164,6 +164,12 @@ and Influx Loader Admin UI:
 
 ```
 $ npm run watch-client
+```
+
+### Run unit tests
+
+```
+$ npm test
 ```
 
 ## Internal API Documentation
