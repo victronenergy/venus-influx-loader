@@ -16,6 +16,38 @@ const keepAliveInterval = 30
 const defaultVenusMQTTSubscriptions: VenusMQTTTopic[] = ["/#"]
 const niceToHaveVenusMQTTSubscriptions: VenusMQTTTopic[] = ["/system/#", "/settings/#"]
 
+export interface VenusTopic {
+  portalId: string
+  instanceNumber: string
+  measurement: string
+}
+
+// N/<portalId>/<service>/<instance>/<path...> -> { portalId, instanceNumber, measurement: "<service>/<path...>" }
+export function parseVenusTopic(topic: string): VenusTopic {
+  const split = topic.split("/")
+  const portalId = split[1]
+  const instanceNumber = split[3]
+  split.splice(0, 2)
+  split.splice(1, 1)
+  return { portalId, instanceNumber, measurement: split.join("/") }
+}
+
+export function calculateVrmBrokerURL(portalId: string): string {
+  let sum = 0
+  const lowered = portalId.toLowerCase()
+  for (let i = 0; i < lowered.length; i++) {
+    sum = sum + lowered.charCodeAt(i)
+  }
+  return `mqtt${sum % 128}.victronenergy.com`
+}
+
+export function prepareVenusMQTTSubscriptions(subscriptions?: VenusMQTTTopic[]): VenusMQTTTopic[] {
+  if (subscriptions && subscriptions.filter((topic) => topic === "/#").length == 0) {
+    return [...subscriptions, ...niceToHaveVenusMQTTSubscriptions]
+  }
+  return defaultVenusMQTTSubscriptions
+}
+
 export class Loader {
   server: Server
   logger: Logger
@@ -227,14 +259,14 @@ export class Loader {
     if (d === undefined) return
     if (this.upnpConnections[d.portalId]) {
       this.upnpConnections[d.portalId].updateExpiry(expiry)
-      this.upnpConnections[d.portalId].updateSubscriptions(this.prepareVenusMQTTSubscriptions(subscriptions))
+      this.upnpConnections[d.portalId].updateSubscriptions(prepareVenusMQTTSubscriptions(subscriptions))
       return
     }
     const device: ConfiguredDevice = {
       type: "UPNP",
       address: d.address,
       portalId: d.portalId,
-      subscriptions: this.prepareVenusMQTTSubscriptions(subscriptions),
+      subscriptions: prepareVenusMQTTSubscriptions(subscriptions),
     }
     this.logger.debug(`initiateUpnpDeviceConnection: ${JSON.stringify(device)}`)
     const mqttClient = new VenusMqttClient(this, device, expiry)
@@ -246,13 +278,13 @@ export class Loader {
     if (hostName === undefined) return
     if (this.manualConnections[hostName]) {
       this.manualConnections[hostName].updateExpiry(expiry)
-      this.manualConnections[hostName].updateSubscriptions(this.prepareVenusMQTTSubscriptions(subscriptions))
+      this.manualConnections[hostName].updateSubscriptions(prepareVenusMQTTSubscriptions(subscriptions))
       return
     }
     const device: ConfiguredDevice = {
       type: "IP",
       address: hostName,
-      subscriptions: this.prepareVenusMQTTSubscriptions(subscriptions),
+      subscriptions: prepareVenusMQTTSubscriptions(subscriptions),
     }
     this.logger.debug(`initiateHostnameDeviceConnection: ${JSON.stringify(device)}`)
     const mqttClient = new VenusMqttClient(this, device, expiry)
@@ -264,35 +296,19 @@ export class Loader {
     if (portalId === undefined) return
     if (this.vrmConnections[portalId]) {
       this.vrmConnections[portalId].updateExpiry(expiry)
-      this.vrmConnections[portalId].updateSubscriptions(this.prepareVenusMQTTSubscriptions(subscriptions))
+      this.vrmConnections[portalId].updateSubscriptions(prepareVenusMQTTSubscriptions(subscriptions))
       return
     }
     const device: ConfiguredDevice = {
       type: "VRM",
       portalId: portalId,
-      address: this.calculateVrmBrokerURL(portalId),
-      subscriptions: this.prepareVenusMQTTSubscriptions(subscriptions),
+      address: calculateVrmBrokerURL(portalId),
+      subscriptions: prepareVenusMQTTSubscriptions(subscriptions),
     }
     this.logger.debug(`initiateVrmDeviceConnection: ${JSON.stringify(device)}`)
     const mqttClient = new VenusMqttClient(this, device, expiry, true)
     this.vrmConnections[portalId] = mqttClient
     await mqttClient.start()
-  }
-
-  private calculateVrmBrokerURL(portalId: string) {
-    let sum = 0
-    const lowered = portalId.toLowerCase()
-    for (let i = 0; i < lowered.length; i++) {
-      sum = sum + lowered.charCodeAt(i)
-    }
-    return `mqtt${sum % 128}.victronenergy.com`
-  }
-
-  private prepareVenusMQTTSubscriptions(subscriptions?: VenusMQTTTopic[]) {
-    if (subscriptions && subscriptions.filter((topic) => topic === "/#").length == 0) {
-      return [...subscriptions, ...niceToHaveVenusMQTTSubscriptions]
-    }
-    return defaultVenusMQTTSubscriptions
   }
 }
 
@@ -430,13 +446,7 @@ class VenusMqttClient {
       return
     }
 
-    const split = topic.split("/")
-    const id = split[1]
-    const instanceNumber = split[3]
-
-    split.splice(0, 2)
-    split.splice(1, 1)
-    const measurement = split.join("/")
+    const { portalId: id, instanceNumber, measurement } = parseVenusTopic(topic)
 
     if (ignoredMeasurements.find((path) => measurement.startsWith(path))) {
       return
@@ -630,6 +640,6 @@ class VenusMqttClient {
   }
 }
 
-function arrayDifference<T>(arr1: T[], arr2: T[]): T[] {
+export function arrayDifference<T>(arr1: T[], arr2: T[]): T[] {
   return arr1.filter((item) => !arr2.includes(item))
 }
