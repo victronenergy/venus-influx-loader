@@ -1,5 +1,5 @@
 # Stage 1: build from source
-FROM node:22-alpine AS build
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 
 ARG BUILD_VERSION=develop
 ENV BUILD_VERSION=${BUILD_VERSION}
