@@ -55,8 +55,7 @@ export class Server {
   logger: Logger
 
   influxdb!: InfluxDBBackend
-  // TODO: convert to ES class
-  loader!: any
+  loader!: Loader
   upnp!: UPNP
   vrm!: VRM
 

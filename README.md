@@ -202,7 +202,7 @@ The directory `/src/server` is a [Node.js](https://nodejs.org/en/) app that is c
 
 3. `/grafana-api` that is unprotected and used by [Grafana JSON Datasource](https://grafana.com/grafana/plugins/simpod-json-datasource/) to query Venus OS devices being watched.
    - `/grafana-api/` `GET`
-   - `/grafana-api/search` `POST`
+   - `/grafana-api/metrics` `POST`
    - `/grafana-api/query ` `POST`
 
 4. Interface for `venus-upnp-browser`. Unprotected.
