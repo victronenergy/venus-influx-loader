@@ -71,7 +71,7 @@ export class InfluxDBBackend {
     }
   }
 
-  async store(portalId: string, name: string, instanceNumber: string, measurement: string, value: number) {
+  async store(portalId: string, name: string, instanceNumber: string, measurement: string, value: unknown) {
     if (!this.isConnected || value === undefined || value === null) {
       return
     }
