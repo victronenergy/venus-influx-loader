@@ -1,12 +1,8 @@
 import { Dispatch } from "redux"
 import { AppStateAction } from "../shared/state"
 
-// NOTE: defined as global via webpack.DefinePlugin
-declare const VENUS_INFLUX_LOADER_ADMIN_API_PORT: number | undefined
-
 export function openServerEventsConnection(dispatch: Dispatch<AppStateAction>) {
-  console.log(`VENUS_INFLUX_LOADER_ADMIN_API_PORT: ${VENUS_INFLUX_LOADER_ADMIN_API_PORT}`)
-  const host = `${window.location.hostname}:${VENUS_INFLUX_LOADER_ADMIN_API_PORT || window.location.port}`
+  const host = window.location.host
 
   console.log("openServerEventsConnection: host: " + host)
   const proto = window.location.protocol === "https:" ? "wss" : "ws"

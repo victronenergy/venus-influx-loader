@@ -6,6 +6,7 @@ import globals from "globals"
 import confusingBrowserGlobals from "confusing-browser-globals"
 
 export default [
+  { ignores: ["dist/", "coverage/"] },
   js.configs.recommended,
   prettierPluginRecommended,
   {
@@ -29,7 +30,6 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
-        VENUS_INFLUX_LOADER_ADMIN_API_PORT: true,
         VENUS_INFLUX_LOADER_BUILD_VERSION: true,
       },
     },

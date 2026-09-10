@@ -1,6 +1,6 @@
 import { CFooter } from "@coreui/react"
 
-// NOTE: defined as global via webpack.DefinePlugin
+// NOTE: defined as global via vite define
 declare const VENUS_INFLUX_LOADER_BUILD_VERSION: string
 
 const AppFooter = () => {
