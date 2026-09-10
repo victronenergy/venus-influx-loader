@@ -10,7 +10,7 @@ export default [
   js.configs.recommended,
   prettierPluginRecommended,
   {
-    files: ["**/*.{js,jsx,mjs,cjs,ts,tsx}"],
+    files: ["**/*.{js,jsx,mjs,cjs,ts,mts,tsx}"],
     plugins: {
       typescript: tsPlugin,
     },
