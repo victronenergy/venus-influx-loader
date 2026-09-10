@@ -6,8 +6,7 @@ import { createRootLogger, LogStorageTransport } from "./logger.js"
 import { InfluxDBBackend } from "./influxdb"
 import { WebSocketChannel } from "./websocket.js"
 import bodyParser from "body-parser"
-import compare from "tsscmp"
-import auth from "basic-auth"
+import { createBasicAuthMiddleware, defaultAdminPassword, defaultAdminUsername } from "./auth"
 import {
   AppConfig,
   AppConfigFiles,
@@ -29,9 +28,6 @@ const defaultInfluxDBUsername = process.env.VIL_INFLUXDB_USERNAME || ""
 const defaultInfluxDBPassword = process.env.VIL_INFLUXDB_PASSWORD || ""
 const defaultInfluxDBDatabase = "venus"
 const defaultInfluxDBRetention = "30d"
-
-const defaultAdminUsername = "admin"
-const defaultAdminPassword = "admin"
 
 export interface ServerOptions {
   configPath: string
@@ -123,21 +119,7 @@ export class Server {
     app.use(bodyParser.json())
 
     // basic auth
-    const adminCredentials = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-      const credentials = auth(req)
-      let login = this.secrets.login
-      if (
-        !credentials ||
-        compare(credentials.name, login?.username ?? defaultAdminUsername) === false ||
-        compare(credentials.pass, login?.password ?? defaultAdminPassword) === false
-      ) {
-        res.statusCode = 401
-        res.setHeader("WWW-Authenticate", 'Basic realm="venus-influx-loader"')
-        res.status(401).send()
-      } else {
-        next()
-      }
-    }
+    const adminCredentials = createBasicAuthMiddleware(() => this.secrets.login)
 
     // setup /admin-api routes and authentication, if enabled
     if (this.options.adminApiEndpoint) {
