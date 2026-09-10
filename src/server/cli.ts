@@ -60,7 +60,7 @@ export function parseCliOptions(argv: string[], version: string): ServerOptions 
     uiSettings: {
       grafanaUrl: options.grafanaUrl,
       showEditDiscoverySettings: !options.hideSettingsVenusDiscovery,
-      showEditVRMSettings: !options.hideSettingsVenusVRM,
+      showEditVRMSettings: !options.hideSettingsVenusVrm,
       showEditManualSettings: !options.hideSettingsVenusManual,
       showEditSecuritySettings: !options.hideSettingsSecurity && adminApiAuthEnabled,
       showEditInfluxDBSettings: !options.hideSettingsInfluxdb,
