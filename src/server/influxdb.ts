@@ -1,7 +1,7 @@
 import { InfluxDB } from "influx"
-import { Server } from "./server"
+import { Server } from "./server.js"
 import { Logger } from "winston"
-import { AppInfluxDBProtocol } from "../shared/types"
+import { AppInfluxDBProtocol } from "../shared/types.js"
 import { posix } from "node:path"
 
 export class InfluxDBBackend {

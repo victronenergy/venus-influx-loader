@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { InfluxDBBackend } from "./influxdb"
-import { Server } from "./server"
+import { InfluxDBBackend } from "./influxdb.js"
+import { Server } from "./server.js"
 
 function createBackend(batchWriteInterval?: number) {
   const logger = { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() }

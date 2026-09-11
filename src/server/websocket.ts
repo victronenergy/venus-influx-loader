@@ -1,5 +1,5 @@
 import Primus from "primus"
-import { Server } from "./server"
+import { Server } from "./server.js"
 import { Logger } from "winston"
 
 export class WebSocketChannel {

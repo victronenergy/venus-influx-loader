@@ -3,10 +3,10 @@ import path from "node:path"
 import http from "node:http"
 import fs from "node:fs/promises"
 import { createRootLogger, LogStorageTransport } from "./logger.js"
-import { InfluxDBBackend } from "./influxdb"
+import { InfluxDBBackend } from "./influxdb.js"
 import { WebSocketChannel } from "./websocket.js"
 import bodyParser from "body-parser"
-import { createBasicAuthMiddleware, defaultAdminPassword, defaultAdminUsername } from "./auth"
+import { createBasicAuthMiddleware, defaultAdminPassword, defaultAdminUsername } from "./auth.js"
 import {
   AppConfig,
   AppConfigFiles,
@@ -16,10 +16,10 @@ import {
   createAppConfig,
   createAppSecrets,
   LogLevel,
-} from "../shared/types"
+} from "../shared/types.js"
 import { LogEntry, Logger } from "winston"
-import { UPNP } from "./upnp"
-import { VRM } from "./vrm"
+import { UPNP } from "./upnp.js"
+import { VRM } from "./vrm.js"
 import { AppStateActionType, DiscoveredDevice, VRMStatus } from "../shared/state.js"
 import { Loader } from "./loader.js"
 
@@ -128,7 +128,7 @@ export class Server {
       if (this.options.adminApiEndpointAuthEnabled) {
         app.use("/admin", adminCredentials)
       }
-      app.use("/admin", express.static(path.join(__dirname, "../client")))
+      app.use("/admin", express.static(path.join(import.meta.dirname, "../client")))
       app.get("/", (req, res) => {
         res.redirect("/admin")
       })
@@ -138,10 +138,10 @@ export class Server {
         app.use(this.options.adminApiEndpoint, adminCredentials)
       }
 
-      const configureAdminRoutes = (await import("./admin-api")).default
+      const configureAdminRoutes = (await import("./admin-api.js")).default
       app.use(this.options.adminApiEndpoint, configureAdminRoutes(this))
 
-      const configureVRMRoutes = (await import("./vrm-api")).default
+      const configureVRMRoutes = (await import("./vrm-api.js")).default
       app.use(this.options.adminApiEndpoint, configureVRMRoutes(this))
 
       // prepare websocket channel for communication with Admin UI
@@ -152,14 +152,14 @@ export class Server {
     // setup /discovery-api routes, if enabled
     if (this.options.discoveryApiEndpoint) {
       this.logger.info(`Setting up ${this.options.discoveryApiEndpoint} routes`)
-      const configureDiscoveryApiRoutes = (await import("./discovery-api")).default
+      const configureDiscoveryApiRoutes = (await import("./discovery-api.js")).default
       app.use(this.options.discoveryApiEndpoint, configureDiscoveryApiRoutes(this))
     }
 
     // setup /grafana-api routes, if enabled
     if (this.options.grafanaApiEndpoint) {
       this.logger.info(`Setting up ${this.options.grafanaApiEndpoint} routes`)
-      const configureGrafanaApiRoutes = (await import("./grafana-api")).default
+      const configureGrafanaApiRoutes = (await import("./grafana-api.js")).default
       app.use(this.options.grafanaApiEndpoint, configureGrafanaApiRoutes(this))
     }
 

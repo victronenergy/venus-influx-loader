@@ -1,7 +1,7 @@
 import express from "express"
 import auth from "basic-auth"
 import compare from "tsscmp"
-import { AppSecrets } from "../shared/types"
+import { AppSecrets } from "../shared/types.js"
 
 export const defaultAdminUsername = "admin"
 export const defaultAdminPassword = "admin"

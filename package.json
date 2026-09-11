@@ -2,6 +2,7 @@
   "name": "venus-influx-loader",
   "version": "1.0.0",
   "description": ".",
+  "type": "module",
   "scripts": {
     "prebuild": "./generateBuildInfo.sh",
     "build:bin": "tsc -p tsconfig.build.json",
@@ -10,7 +11,7 @@
     "build": "npm run build:bin && npm run build:client",
     "clean": "rimraf ./dist",
     "lint": "eslint . --fix",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -p tsconfig.client.json && tsc -p tsconfig.server.json",
     "watch:bin": "tsc -p tsconfig.build.json --watch",
     "watch-client": "vite",
     "watch-influx-loader": "concurrently npm:watch:bin \"node --watch dist/bin/venus-influx-loader.js -- --config-path ./config/ --port 8088\"",

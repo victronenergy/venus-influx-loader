@@ -1,4 +1,4 @@
-import { AppConfig, LogEntry } from "./types"
+import { AppConfig, LogEntry } from "./types.js"
 
 export const ADMIN_API = "/admin-api"
 

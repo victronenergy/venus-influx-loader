@@ -1,4 +1,4 @@
-import { AppConfig, AppUISettings, LogEntry, VenusMQTTTopic } from "./types"
+import { AppConfig, AppUISettings, LogEntry, VenusMQTTTopic } from "./types.js"
 
 export type WebSocketActions = "WEBSOCKET_OPEN" | "WEBSOCKET_CLOSE" | "WEBSOCKET_ERROR"
 export type DiscoveryActions = "UPNPDISCOVERY" | "VRMDISCOVERY"

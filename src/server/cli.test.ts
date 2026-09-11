@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { parseCliOptions } from "./cli"
+import { parseCliOptions } from "./cli.js"
 
 const parse = (argv: string[]) => parseCliOptions(argv, "1.0.0-test")
 

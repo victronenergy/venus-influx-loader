@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
-// @ts-expect-error
 import buildInfo from "../buildInfo.cjs"
 import ms from "ms"
 
-import { Server } from "../server/server"
-import { parseCliOptions, programName } from "../server/cli"
+import { Server } from "../server/server.js"
+import { parseCliOptions, programName } from "../server/cli.js"
 
 const options = parseCliOptions(process.argv.slice(2), buildInfo.buildVersion)
 

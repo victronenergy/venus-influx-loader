@@ -1,6 +1,6 @@
 import { Command } from "commander"
 import ms, { StringValue } from "ms"
-import type { ServerOptions } from "./server"
+import type { ServerOptions } from "./server.js"
 
 export const programName = "venus-influx-loader"
 export const autoExpiryDefault = "30d"

@@ -1,7 +1,7 @@
 import winston from "winston"
 import Transport from "winston-transport"
-import { Server } from "./server"
-import { LogEntry, LogLevel } from "../shared/types"
+import { Server } from "./server.js"
+import { LogEntry, LogLevel } from "../shared/types.js"
 
 // custom log storage transport
 // that keeps last 100 messages

@@ -1,6 +1,6 @@
 import express from "express"
-import { Server } from "./server"
-import { DeviceStatisticsDetails } from "../shared/state"
+import { Server } from "./server.js"
+import { DeviceStatisticsDetails } from "../shared/state.js"
 
 // Grafana JSON datasource (simpod-json-datasource 0.6.x) backend:
 // exposes the list of Venus devices being watched, and when they last sent data

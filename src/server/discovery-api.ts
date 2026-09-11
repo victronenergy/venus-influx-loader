@@ -1,5 +1,5 @@
 import express from "express"
-import { Server } from "./server"
+import { Server } from "./server.js"
 
 // TODO: add TS API request/response interfaces
 // TODO: refactor out hardcoded API endpoints

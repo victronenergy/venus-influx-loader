@@ -1,4 +1,5 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "dist", "src/client", "src/**/*.test.ts"]
+  "extends": "./tsconfig.server.json",
+  "compilerOptions": { "noEmit": false },
+  "exclude": ["src/**/*.test.ts"]
 }

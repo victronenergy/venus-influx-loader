@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
-import { LogStorageTransport, createRootLogger } from "./logger"
-import { LogEntry } from "../shared/types"
-import { Server } from "./server"
+import { LogStorageTransport, createRootLogger } from "./logger.js"
+import { LogEntry } from "../shared/types.js"
+import { Server } from "./server.js"
 
 const entry = (message: string): LogEntry => ({ timestamp: "t", level: "info", label: "test", message })
 

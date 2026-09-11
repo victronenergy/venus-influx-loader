@@ -1,7 +1,7 @@
 import express from "express"
-import { Server } from "./server"
-import { AppConfig, AppSecrets } from "../shared/types"
-import { API_CONFIG, API_DEBUG, API_LOG, API_SECURITY } from "../shared/api"
+import { Server } from "./server.js"
+import { AppConfig, AppSecrets } from "../shared/types.js"
+import { API_CONFIG, API_DEBUG, API_LOG, API_SECURITY } from "../shared/api.js"
 
 // TODO: add TS API request/response interfaces
 // TODO: refactor out hardcoded API endpoints

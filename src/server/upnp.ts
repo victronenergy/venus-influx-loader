@@ -1,13 +1,17 @@
-import { LoggerMock, ServerMock } from "./server"
-import { Client } from "node-ssdp"
+import { LoggerMock, ServerMock } from "./server.js"
+import nodeSsdp from "node-ssdp"
+import type { Client as SsdpClient } from "node-ssdp"
 import axios from "axios"
 import { parseString as parseXml } from "xml2js"
-import { DiscoveredDevice } from "../shared/state"
+import { DiscoveredDevice } from "../shared/state.js"
+
+// node-ssdp is CommonJS with a module.exports object, so its members are only reachable via the default import
+const { Client } = nodeSsdp
 
 export class UPNP {
   server: ServerMock
   logger: LoggerMock
-  client: Client
+  client: SsdpClient
   private _isRunning: boolean = false
 
   constructor(server: ServerMock) {

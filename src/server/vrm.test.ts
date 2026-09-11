@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { VRM } from "./vrm"
-import { Server } from "./server"
+import { VRM } from "./vrm.js"
+import { Server } from "./server.js"
 
 const tokens = [
   { name: "a", idAccessToken: "id1", lastSuccessfulAuth: 100 },

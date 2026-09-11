@@ -1,9 +1,9 @@
 import express from "express"
 import http from "node:http"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
-import configureGrafanaApiRoutes, { portalsTable } from "./grafana-api"
-import { Server } from "./server"
-import { DeviceStatisticsDetails } from "../shared/state"
+import configureGrafanaApiRoutes, { portalsTable } from "./grafana-api.js"
+import { Server } from "./server.js"
+import { DeviceStatisticsDetails } from "../shared/state.js"
 
 const device = (name: string, lastMeasurement?: Date): DeviceStatisticsDetails => ({
   type: "UPNP",

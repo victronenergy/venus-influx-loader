@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
 import { program } from "commander"
-// @ts-expect-error
 import buildInfo from "../buildInfo.cjs"
 
 import axios from "axios"
 
-import { UPNP } from "../server/upnp"
-import { LogEntry, LogLevel } from "../shared/types"
-import { DiscoveredDevice } from "../shared/state"
+import { UPNP } from "../server/upnp.js"
+import { LogEntry, LogLevel } from "../shared/types.js"
+import { DiscoveredDevice } from "../shared/state.js"
 
 program
   .version(buildInfo.buildVersion)

@@ -1,5 +1,5 @@
 import express from "express"
-import { Server } from "./server"
+import { Server } from "./server.js"
 import {
   API_VRM_LOGIN,
   API_VRM_LOGOUT,
@@ -7,7 +7,7 @@ import {
   VRMLoginRequest,
   VRMLogoutRequest,
   VRMRefreshRequest,
-} from "../shared/api"
+} from "../shared/api.js"
 
 export default function (server: Server) {
   const router = express.Router()

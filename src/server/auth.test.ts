@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { createBasicAuthMiddleware } from "./auth"
+import { createBasicAuthMiddleware } from "./auth.js"
 
 function basic(user: string, pass: string) {
   return "Basic " + Buffer.from(`${user}:${pass}`).toString("base64")

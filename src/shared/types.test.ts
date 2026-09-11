@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { createAppConfig, createAppSecrets } from "./types"
+import { createAppConfig, createAppSecrets } from "./types.js"
 
 describe("createAppConfig", () => {
   it("returns the full default config", () => {

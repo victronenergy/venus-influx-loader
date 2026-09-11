@@ -1,9 +1,8 @@
 import mqtt, { IPublishPacket, MqttClient } from "mqtt"
 import ignoredMeasurements from "./ignoredMeasurements.js"
-// @ts-expect-error
 import buildInfo from "../buildInfo.cjs"
 const buildVersion = buildInfo.buildVersion
-import { Server } from "./server"
+import { Server } from "./server.js"
 import { Logger } from "winston"
 import { ConfiguredDevice, DiscoveredDevice, LoaderStatistics } from "../shared/state.js"
 import ms from "ms"

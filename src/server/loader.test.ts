@@ -5,9 +5,9 @@ import {
   calculateVrmBrokerURL,
   parseVenusTopic,
   prepareVenusMQTTSubscriptions,
-} from "./loader"
-import ignoredMeasurements from "./ignoredMeasurements"
-import { Server } from "./server"
+} from "./loader.js"
+import ignoredMeasurements from "./ignoredMeasurements.js"
+import { Server } from "./server.js"
 
 describe("parseVenusTopic", () => {
   it("splits portalId, instance and measurement", () => {

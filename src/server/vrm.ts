@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios"
-import { Server } from "./server"
+import { Server } from "./server.js"
 import { Logger } from "winston"
 import ms from "ms"
 
