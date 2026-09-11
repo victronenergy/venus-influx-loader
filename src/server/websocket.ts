@@ -1,5 +1,5 @@
 import Primus from "primus"
-import { Server } from "./server.js"
+import { Server, ServerEvents } from "./server.js"
 import { Logger } from "winston"
 
 export class WebSocketChannel {
@@ -15,33 +15,26 @@ export class WebSocketChannel {
   start() {
     this.logger.debug("Starting Primus/WS interface...")
 
-    const primusOptions = {
+    this.primus = new Primus(this.server.httpServer, {
       transformer: "websockets",
-      pingInterval: false,
+      pingInterval: 0, // disables heartbeats, primus treats any falsy value as off
       pathname: "/stream",
-    }
+    })
 
-    // @ts-ignore
-    this.primus = new Primus(this.server.httpServer, primusOptions)
     this.primus.on("connection", (spark) => {
       this.logger.debug(`${spark.id} connected`)
 
-      spark.on("end", function () {})
-
-      // @ts-ignore
-      spark.onDisconnects = []
-
-      const onServerEvent = (event: any) => {
+      // forward live loader events to this client until it disconnects
+      const onServerEvent = (event: ServerEvents["loaderevent"]) => {
         spark.write(event)
       }
-
       this.server.on("loaderevent", onServerEvent)
-
-      // @ts-ignore
-      spark.onDisconnects.push(() => {
+      spark.on("end", () => {
+        this.logger.debug(`${spark.id} disconnected`)
         this.server.removeListener("loaderevent", onServerEvent)
       })
 
+      // replay the current loader state and recent log entries to the new client
       Object.entries(this.server.loaderState).forEach(([type, event]) => {
         if (type !== "LOG") {
           spark.write(event)
@@ -53,13 +46,6 @@ export class WebSocketChannel {
           data: entry,
         })
       })
-    })
-
-    this.primus.on("disconnection", (spark) => {
-      this.logger.debug(`${spark.id} disconnected`)
-
-      // @ts-ignore
-      spark.onDisconnects.forEach((f: () => void) => f())
     })
   }
 
