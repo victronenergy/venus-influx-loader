@@ -26,7 +26,7 @@ import {
 import { useGetConfig, usePutConfig, useVRMLogin, useVRMLogout, useVRMRefresh } from "../../hooks/useAdminApi"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
-import AppDeviceSubscriptionsConfig, { AppConfig, AppVRMConfig, VenusMQTTTopic } from "../../../shared/types"
+import { AppConfig, AppVRMConfig, VenusMQTTTopic } from "../../../shared/types"
 import { AppState } from "../../store"
 import { VRMDeviceType, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
@@ -68,7 +68,7 @@ function VRM() {
 
   const [referenceTime, setReferenceTime] = useState<number>(0)
   const [temporaryExpiry, setTemporaryExpiry] = useState<(number | undefined)[]>([])
-  const [temporarySubscriptions, setTemporarySubscriptions] = useState<AppDeviceSubscriptionsConfig>({})
+  const [temporarySubscriptions, setTemporarySubscriptions] = useState<VenusMQTTTopic[][]>([])
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   const [entriesValidity, setEntriesValidity] = useState<boolean[]>([])
   useEffect(() => {
@@ -292,7 +292,7 @@ function VRM() {
   ) {
     const clone = { ...temporaryConfig!! }
     const value = Array.from(event.target.selectedOptions).map((option) => option.value as VenusMQTTTopic)
-    const newSubscriptions = { ...temporarySubscriptions!! }
+    const newSubscriptions = [...temporarySubscriptions]
     newSubscriptions[index] = value
     clone.vrm.subscriptions = arraySubscriptionsToKeyed(
       newSubscriptions,

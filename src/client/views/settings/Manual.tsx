@@ -12,7 +12,7 @@ import {
   validateEntries,
 } from "./EditableDeviceList"
 import { useEffect, useState } from "react"
-import AppDeviceSubscriptionsConfig, { AppConfig, VenusMQTTTopic } from "../../../shared/types"
+import { AppConfig, VenusMQTTTopic } from "../../../shared/types"
 import { WebSocketStatus } from "./WebsocketStatus"
 import { useSelector } from "react-redux"
 import { AppState } from "../../store"
@@ -36,7 +36,7 @@ function Manual() {
 
   const [referenceTime, setReferenceTime] = useState<number>(0)
   const [temporaryExpiry, setTemporaryExpiry] = useState<(number | undefined)[]>([])
-  const [temporarySubscriptions, setTemporarySubscriptions] = useState<AppDeviceSubscriptionsConfig>({})
+  const [temporarySubscriptions, setTemporarySubscriptions] = useState<VenusMQTTTopic[][]>([])
   const [temporaryConfig, setTemporaryConfig] = useState<AppConfig>()
   const [entriesValidity, setEntriesValidity] = useState<boolean[]>([])
   useEffect(() => {
@@ -130,7 +130,7 @@ function Manual() {
   ) {
     const clone = { ...temporaryConfig!! }
     const value = Array.from(event.target.selectedOptions).map((option) => option.value as VenusMQTTTopic)
-    const newSubscriptions = { ...temporarySubscriptions!! }
+    const newSubscriptions = [...temporarySubscriptions]
     newSubscriptions[index] = value
     clone.manual.subscriptions = arraySubscriptionsToKeyed(newSubscriptions, clone.manual.hosts)
     setTemporarySubscriptions(newSubscriptions)

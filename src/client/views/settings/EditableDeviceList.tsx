@@ -14,6 +14,7 @@ import AppDeviceSubscriptionsConfig, {
   AppDataCollectionExpiryConfig,
   AppDeviceConfig,
   AppInstallationConfig,
+  VenusMQTTTopic,
 } from "../../../shared/types"
 import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 import { DiscoveredDevice } from "../../../shared/state"
@@ -30,7 +31,7 @@ interface EditableDeviceListProps {
   entriesValidity: boolean[]
   referenceTime: number
   expirySettings: (number | undefined)[]
-  mqttSubscriptionsSettings: AppDeviceSubscriptionsConfig
+  mqttSubscriptionsSettings: VenusMQTTTopic[][]
   onEntryValueChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableEntryChange: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
   onEnableAllEntriesChange: (_event: React.ChangeEvent<HTMLInputElement>) => void
@@ -153,7 +154,7 @@ export function keyedExpiryToArray(
 }
 
 export function arraySubscriptionsToKeyed(
-  subscriptions: AppDeviceSubscriptionsConfig,
+  subscriptions: VenusMQTTTopic[][],
   devices: AppDeviceConfig[] | AppInstallationConfig[],
   existingSubscriptions: AppDeviceSubscriptionsConfig = {},
   discoveredDevices: DiscoveredDevice[] = [],
@@ -168,8 +169,7 @@ export function arraySubscriptionsToKeyed(
 export function keyedSubscriptionsToArray(
   subscriptions: AppDeviceSubscriptionsConfig,
   devices: AppDeviceConfig[] | AppInstallationConfig[],
-): AppDeviceSubscriptionsConfig {
-  // @ts-expect-error TODO: returns an array where the keyed config type is declared
+): VenusMQTTTopic[][] {
   return devices.map((device) => subscriptions[deviceKey(device)])
 }
 
