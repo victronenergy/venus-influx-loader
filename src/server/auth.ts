@@ -1,5 +1,5 @@
 import express from "express"
-import auth from "basic-auth"
+import { parse } from "basic-auth"
 import compare from "tsscmp"
 import { AppSecrets } from "../shared/types.js"
 
@@ -10,7 +10,7 @@ export const defaultAdminPassword = "admin"
 // falling back to the default admin credentials when no login is configured
 export function createBasicAuthMiddleware(getLogin: () => AppSecrets["login"] | undefined): express.RequestHandler {
   return (req, res, next) => {
-    const credentials = auth(req)
+    const credentials = parse(req.headers.authorization ?? "")
     const login = getLogin()
     if (
       !credentials ||
