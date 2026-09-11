@@ -31,14 +31,16 @@ function InfluxDB() {
     setIsTemporaryConfigDirty(false)
   }, [config])
 
+  const version = temporaryConfig?.influxdb.version ?? "1"
+
   const isSaveEnabled = useFormValidation(() => {
+    if (temporaryConfig === undefined) {
+      return false
+    }
+    const { host, port, database, retention, org, token } = temporaryConfig.influxdb
+    const credentialsValid = version === "1" || (version === "2" ? !!org && !!token : !!token)
     return (
-      temporaryConfig !== undefined &&
-      temporaryConfig.influxdb.host !== "" &&
-      temporaryConfig.influxdb.port !== "" &&
-      temporaryConfig.influxdb.database !== "" &&
-      temporaryConfig.influxdb.retention !== "" &&
-      isTemporaryConfigDirty
+      host !== "" && port !== "" && database !== "" && retention !== "" && credentialsValid && isTemporaryConfigDirty
     )
   })
 
@@ -62,6 +64,21 @@ function InfluxDB() {
         <CCardBody>
           <CForm>
             <CRow>
+              <CCol sm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="version">Version</CFormLabel>
+                  <CFormSelect
+                    id="version"
+                    name="version"
+                    value={version}
+                    onChange={(event) => handleFormInputChange(event)}
+                  >
+                    <option value="1">InfluxDB 1.x</option>
+                    <option value="2">InfluxDB 2.x</option>
+                    <option value="3">InfluxDB 3</option>
+                  </CFormSelect>
+                </div>
+              </CCol>
               <CCol sm>
                 <div className="mb-3">
                   <CFormLabel htmlFor="protocol">Protocol</CFormLabel>
@@ -94,7 +111,7 @@ function InfluxDB() {
                   <CFormInput
                     type="text"
                     name="port"
-                    placeholder="8086"
+                    placeholder={version === "3" ? "8181" : "8086"}
                     value={temporaryConfig.influxdb.port}
                     onChange={(event) => handleFormInputChange(event)}
                   />
@@ -114,7 +131,7 @@ function InfluxDB() {
               </CCol>
             </CRow>
             <div className="mb-3">
-              <CFormLabel htmlFor="database">Database Name</CFormLabel>
+              <CFormLabel htmlFor="database">{version === "2" ? "Bucket Name" : "Database Name"}</CFormLabel>
               <CFormInput
                 type="text"
                 name="database"
@@ -133,26 +150,54 @@ function InfluxDB() {
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
-            <div className="mb-3">
-              <CFormLabel htmlFor="username">Username</CFormLabel>
-              <CFormInput
-                type="text"
-                name="username"
-                placeholder=""
-                value={temporaryConfig.influxdb.username}
-                onChange={(event) => handleFormInputChange(event)}
-              />
-            </div>
-            <div className="mb-3">
-              <CFormLabel htmlFor="password">Password</CFormLabel>
-              <CFormInput
-                type="password"
-                name="password"
-                placeholder=""
-                value={temporaryConfig.influxdb.password}
-                onChange={(event) => handleFormInputChange(event)}
-              />
-            </div>
+            {version === "1" && (
+              <>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="username">Username</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="username"
+                    placeholder=""
+                    value={temporaryConfig.influxdb.username ?? ""}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="password">Password</CFormLabel>
+                  <CFormInput
+                    type="password"
+                    name="password"
+                    placeholder=""
+                    value={temporaryConfig.influxdb.password ?? ""}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+              </>
+            )}
+            {version === "2" && (
+              <div className="mb-3">
+                <CFormLabel htmlFor="org">Organization</CFormLabel>
+                <CFormInput
+                  type="text"
+                  name="org"
+                  placeholder=""
+                  value={temporaryConfig.influxdb.org ?? ""}
+                  onChange={(event) => handleFormInputChange(event)}
+                />
+              </div>
+            )}
+            {version !== "1" && (
+              <div className="mb-3">
+                <CFormLabel htmlFor="token">Token</CFormLabel>
+                <CFormInput
+                  type="password"
+                  name="token"
+                  placeholder=""
+                  value={temporaryConfig.influxdb.token ?? ""}
+                  onChange={(event) => handleFormInputChange(event)}
+                />
+              </div>
+            )}
           </CForm>
         </CCardBody>
         <CCardFooter>

@@ -60,6 +60,34 @@ Options:
   -h, --help                       display help for command
   ```
 
+### InfluxDB
+
+Venus Influx Loader can store data into InfluxDB 1.x, InfluxDB 2.x, and InfluxDB 3. Select the version in Admin UI under Settings / InfluxDB, or pre-configure it via the environment variables below. Every version accepts the same measurements, and Grafana dashboards using InfluxQL work against all of them.
+
+| | InfluxDB 1.x (default) | InfluxDB 2.x | InfluxDB 3 Core / Enterprise |
+|---|---|---|---|
+| Credentials | Username, Password | Organization, Token | Token |
+| Database Name means | database | bucket | database |
+| Retention | `venus_default` retention policy, created and updated by the loader | bucket retention rule, created and updated by the loader | set only when the loader creates the database, can not be changed later on InfluxDB 3 Core |
+| Default port | 8086 | 8086 | 8181 |
+| Docker image | `influxdb:1.12` (`influxdb:1.8` on 32-bit ARM) | `influxdb:2.9` | `influxdb:3-core` |
+
+Notes:
+
+- InfluxDB 1.x remains the simplest to run, and `influxdb:1.8` is the only version with 32-bit ARM images (32-bit Raspberry Pi OS). The 1.x line is still maintained, use `influxdb:1.12` on 64-bit systems.
+- InfluxDB 2.x: the loader creates the bucket inside the given organization when it is missing. Grafana InfluxQL queries reach the bucket under its name via the automatic DBRP mapping. The token needs read/write access to buckets and read access to the organization.
+- InfluxDB 3 Core: the database is created with the configured retention on first connection. By default InfluxDB 3 Core answers queries spanning at most about 72 hours, longer dashboard ranges need InfluxDB 3 Enterprise or a higher `--query-file-limit`. Grafana connects via the InfluxQL `/query` endpoint using the token as password.
+- Never use the `influxdb:latest` Docker tag, it points to InfluxDB 3 Core since September 2026.
+- Retention `30d`, `12h`, `2w` style, `0` means keep forever, empty leaves the retention untouched.
+- Victoria Metrics accepts the InfluxDB 1.x write protocol, select InfluxDB 1.x to store into it.
+
+Environment variables used as defaults when no `config.json` exists yet:
+
+- `VIL_INFLUXDB_VERSION`: `1` (default), `2`, or `3`
+- `VIL_INFLUXDB_URL`: for example `http://influxdb:8086`
+- `VIL_INFLUXDB_USERNAME`, `VIL_INFLUXDB_PASSWORD`: InfluxDB 1.x
+- `VIL_INFLUXDB_ORG`, `VIL_INFLUXDB_TOKEN`: InfluxDB 2.x (`VIL_INFLUXDB_TOKEN` only for InfluxDB 3)
+
 #### Tip: Run Influx Loader headless
 
 For production use, once the system is configured `--disable-admin-api` can be used to run the `venus-influx-loader` headless.
@@ -115,7 +143,9 @@ $ (cd docker && ./build-dev-image.sh)
 ### Run InfluxDB docker image instance locally
 
 ```
-$ (cd docker && ./run-influxdb.sh)
+$ (cd docker && ./run-influxdb.sh)     # InfluxDB 1.x on :8086, s3cr4t/s3cr4t
+$ (cd docker && ./run-influxdb.sh 2)   # InfluxDB 2.x on :8086, org venus, token s3cr4t-token
+$ (cd docker && ./run-influxdb.sh 3)   # InfluxDB 3 Core on :8181, no authentication
 ```
 
 ### Run Venus Influx Loader docker image locally
@@ -170,6 +200,14 @@ $ npm run watch-client
 
 ```
 $ npm test
+```
+
+### Run integration tests against real InfluxDB containers
+
+Requires a running Docker daemon, starts InfluxDB 1.8, 1.12, 2.9, and 3 Core via [testcontainers](https://testcontainers.com), and verifies that the loader provisions, writes, and reads back data on each of them. Use `VIL_TEST_INFLUX=1.8,3-core` to run a subset.
+
+```
+$ npm run test:integration
 ```
 
 ## Internal API Documentation

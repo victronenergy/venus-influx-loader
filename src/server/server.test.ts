@@ -39,6 +39,7 @@ describe("Server config files", () => {
       expect(config.influxdb.host).toBe("custom")
       expect(config.influxdb.database).toBe("venus")
       expect(config.influxdb.retention).toBe("30d")
+      expect(config.influxdb.version).toBe("1")
       expect(config.upnp.enabled).toBe(false)
       expect(config.upnp.enabledPortalIds).toEqual([])
       expect(config.vrm.enabled).toBe(true)
