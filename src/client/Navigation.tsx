@@ -2,6 +2,7 @@ import React from "react"
 import CIcon from "@coreui/icons-react"
 import { cilChartLine, cilSettings, cilSpeedometer, cilHistory } from "@coreui/icons"
 import { CNavGroup, CNavItem } from "@coreui/react"
+import type { AppSidebarNavItem } from "./components/AppSidebarNav"
 
 interface NavigationProps {
   grafanaUrl: string
@@ -24,7 +25,7 @@ const Navigation = ({
   showEditManualSettings,
   showEditSecuritySettings,
   showEditInfluxDBSettings,
-}: NavigationProps) => [
+}: NavigationProps): AppSidebarNavItem[] => [
   {
     component: CNavItem,
     name: "Dashboard",
@@ -62,7 +63,7 @@ const Navigation = ({
         name: "Security",
         to: "/settings/security",
       },
-    ].filter(Boolean),
+    ].filter((item) => !!item),
   },
   {
     component: CNavItem,

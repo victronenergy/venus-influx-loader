@@ -183,12 +183,11 @@ const defaultAppConfigValues: AppConfig = {
   },
 }
 
-function createDefaultWithAllProps<T>(defaultValues: Required<T>) {
-  return (overrides: Partial<T> = {}): Required<T> => ({
+function createDefaultWithAllProps<T>(defaultValues: T) {
+  return (overrides: Partial<T> = {}): T => ({
     ...defaultValues,
     ...overrides,
   })
 }
-// @ts-expect-error, TODO: fix this
 export const createAppConfig = createDefaultWithAllProps(defaultAppConfigValues)
-export const createAppSecrets = createDefaultWithAllProps({})
+export const createAppSecrets = createDefaultWithAllProps<AppSecrets>({})

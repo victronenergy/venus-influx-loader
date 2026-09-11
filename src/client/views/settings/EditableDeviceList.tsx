@@ -19,6 +19,11 @@ import { AutoExpiryOptionList } from "./AutoExpiryOptionList"
 import { DiscoveredDevice } from "../../../shared/state"
 import { MQTTSubscriptionsOptionList } from "./MQTTSubscriptionsOptionList"
 
+// manual devices are keyed by hostName, discovered/VRM installations by portalId
+function deviceKey(device: AppDeviceConfig | AppInstallationConfig): string {
+  return "hostName" in device ? device.hostName : device.portalId
+}
+
 interface EditableDeviceListProps {
   hidden?: boolean
   entries: AppDeviceConfig[] | AppInstallationConfig[]
@@ -69,8 +74,7 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
         <CTableBody>
           {props.entries &&
             props.entries.map((element, index) => {
-              // @ts-expect-error
-              const key = element.hostName || element.portalId || ""
+              const key = deviceKey(element)
               return (
                 <CTableRow key={index}>
                   <CTableDataCell>
@@ -137,8 +141,7 @@ export function arrayExpiryToKeyed(
   discoveredDevices: DiscoveredDevice[] = [],
 ): AppDataCollectionExpiryConfig {
   const a = Object.fromEntries(discoveredDevices.map((device) => [device.portalId, existingExpiry[device.portalId]]))
-  // @ts-expect-error
-  const b = Object.fromEntries(devices.map((device, i) => [device.hostName ?? device.portalId, expiry[i]]))
+  const b = Object.fromEntries(devices.map((device, i) => [deviceKey(device), expiry[i]]))
   return { ...a, ...b }
 }
 
@@ -146,8 +149,7 @@ export function keyedExpiryToArray(
   expiry: AppDataCollectionExpiryConfig,
   devices: AppDeviceConfig[] | AppInstallationConfig[],
 ): (number | undefined)[] {
-  // @ts-expect-error
-  return devices.map((device) => expiry[device.hostName ?? device.portalId])
+  return devices.map((device) => expiry[deviceKey(device)])
 }
 
 export function arraySubscriptionsToKeyed(
@@ -159,8 +161,7 @@ export function arraySubscriptionsToKeyed(
   const a = Object.fromEntries(
     discoveredDevices.map((device) => [device.portalId, existingSubscriptions[device.portalId]]),
   )
-  // @ts-expect-error
-  const b = Object.fromEntries(devices.map((device, i) => [device.hostName ?? device.portalId, subscriptions[i]]))
+  const b = Object.fromEntries(devices.map((device, i) => [deviceKey(device), subscriptions[i]]))
   return { ...a, ...b }
 }
 
@@ -168,8 +169,8 @@ export function keyedSubscriptionsToArray(
   subscriptions: AppDeviceSubscriptionsConfig,
   devices: AppDeviceConfig[] | AppInstallationConfig[],
 ): AppDeviceSubscriptionsConfig {
-  // @ts-expect-error
-  return devices.map((device) => subscriptions[device.hostName ?? device.portalId])
+  // @ts-expect-error TODO: returns an array where the keyed config type is declared
+  return devices.map((device) => subscriptions[deviceKey(device)])
 }
 
 export function validateEntries(entries: string[]): boolean[] {

@@ -185,11 +185,7 @@ function VRM() {
     const clone = { ...temporaryConfig!! }
 
     if (event.target.checked) {
-      // TODO: fix this
-      // @ts-expect-error
-      clone.vrm.enabledPortalIds = vrmDiscovered.map((element) => {
-        return element.portalId ? element.portalId : element
-      })
+      clone.vrm.enabledPortalIds = vrmDiscovered.map((element) => element.portalId)
     } else {
       clone.vrm.enabledPortalIds = []
     }

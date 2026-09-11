@@ -1,5 +1,12 @@
 import React from "react"
 
+export interface AppRoute {
+  path: string
+  name: string
+  exact?: boolean
+  element?: React.ComponentType
+}
+
 const Dashboard = React.lazy(() => import("./views/dashboard/Dashboard"))
 const Discovery = React.lazy(() => import("./views/settings/Discovery"))
 const VRM = React.lazy(() => import("./views/settings/VRM"))
@@ -8,7 +15,7 @@ const InfluxDB = React.lazy(() => import("./views/settings/InfluxDB"))
 const Security = React.lazy(() => import("./views/settings/Security"))
 const Troubleshooting = React.lazy(() => import("./views/troubleshooting/Troubleshooting"))
 
-const routes = [
+const routes: AppRoute[] = [
   { path: "/", name: "Home", exact: true },
   { path: "/dashboard", name: "Dashboard", element: Dashboard },
   { path: "/settings/discovery", name: "Discovery", element: Discovery },

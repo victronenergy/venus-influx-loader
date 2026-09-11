@@ -27,8 +27,8 @@ function generateOptions(
   configuredExpiryTime?: number,
   defaultExpiryDuration?: number,
 ): AutoExpiryOptionListOptions {
-  const durations = ["0", "1d", "7d", "14d", "30d", "60d", "180d", "1y"].map((duration) => ms(duration))
-  var selected = durations[0]
+  const durations = (["0", "1d", "7d", "14d", "30d", "60d", "180d", "1y"] as const).map((duration) => ms(duration))
+  let selected = durations[0]
   if (defaultExpiryDuration && !durations.includes(defaultExpiryDuration)) {
     durations.push(defaultExpiryDuration)
     selected = defaultExpiryDuration
