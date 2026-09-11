@@ -3,7 +3,7 @@ import { useState } from "react"
 import { CCard, CCardBody, CCardFooter, CForm, CFormLabel, CFormInput, CButton } from "@coreui/react"
 
 import { usePostSecurity } from "../../hooks/useAdminApi"
-import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { WebSocketStatus } from "./WebsocketStatus"
 import { useSelector } from "react-redux"
 import { AppState } from "../../store"
@@ -14,10 +14,8 @@ interface SecurityState {
   password1: string
 }
 
-type SecurityStateKeys = keyof SecurityState
-
 function Security() {
-  const [state, setState] = useState({
+  const [state, setState] = useState<SecurityState>({
     username: "",
     password: "",
     password1: "",
@@ -31,12 +29,7 @@ function Security() {
   })
 
   function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const clone = { ...state }
-    const [name, value] = extractParameterNameAndValue<SecurityStateKeys>(event)
-    // TODO: fix this
-    // @ts-expect-error
-    clone[name] = value
-    setState(clone)
+    setState(updateFormField(state, event))
     setIsStateDirty(true)
   }
 

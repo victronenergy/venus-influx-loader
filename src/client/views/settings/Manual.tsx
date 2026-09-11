@@ -2,7 +2,7 @@ import React from "react"
 import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
-import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import {
   arrayExpiryToKeyed,
   arraySubscriptionsToKeyed,
@@ -66,10 +66,7 @@ function Manual() {
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
-    const [name, value] = extractParameterNameAndValue(event)
-    // TODO: fix this
-    // @ts-expect-error
-    clone.manual[name] = value
+    clone.manual = updateFormField(clone.manual, event)
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
   }

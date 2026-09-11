@@ -11,13 +11,23 @@ export function useFormValidation(validate: () => boolean) {
   return isValid
 }
 
-export function extractParameterNameAndValue<AppConfigNestedKey>(
-  event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-): [AppConfigNestedKey, string | number | boolean] {
-  let value: string | number | boolean = event.target.type === "checkbox" ? event.target.checked : event.target.value
-  // TODO: figure how to better handle this ???
-  if (event.target.name === "port") {
-    value = Number(value)
+export type FormControlChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+
+// Returns a copy of `target` with the field named by the changed form control updated from it.
+// The form control's `name` must match a key of `target`; the DOM only gives us that name as a
+// string, so this is the single place where a form value crosses into a typed object:
+// checkboxes become booleans, fields currently holding a number are parsed with Number(),
+// everything else keeps the control's string value.
+export function updateFormField<T extends object>(target: T, event: FormControlChangeEvent): T {
+  const control = event.target
+  const name = control.name as keyof T
+  let value: unknown
+  if (control.type === "checkbox") {
+    value = (control as HTMLInputElement).checked
+  } else if (typeof target[name] === "number") {
+    value = Number(control.value)
+  } else {
+    value = control.value
   }
-  return [event.target.name as AppConfigNestedKey, value]
+  return { ...target, [name]: value as T[keyof T] }
 }

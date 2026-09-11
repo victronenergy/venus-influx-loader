@@ -3,7 +3,7 @@ import { useSelector } from "react-redux"
 import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
-import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
 import { useEffect, useState } from "react"
 import { AppConfig, VenusMQTTTopic } from "../../../shared/types"
@@ -56,11 +56,8 @@ function Discovery() {
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
-    const [name, value] = extractParameterNameAndValue(event)
-    // TODO: fix this
-    // @ts-expect-error
-    clone.upnp[name] = value
-    if (!value) {
+    clone.upnp = updateFormField(clone.upnp, event)
+    if (!clone.upnp.enabled) {
       clone.upnp.enabledPortalIds = []
     }
     setTemporaryConfig(clone)
@@ -69,7 +66,7 @@ function Discovery() {
 
   function handleEnablePortalChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
-    const [_name, value] = extractParameterNameAndValue(event)
+    const value = event.target.checked
     const list = clone.upnp.enabledPortalIds
     if (!value) {
       const idx = list.indexOf(event.target.id)

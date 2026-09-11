@@ -24,14 +24,9 @@ import {
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig, useVRMLogin, useVRMLogout, useVRMRefresh } from "../../hooks/useAdminApi"
-import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
-import AppDeviceSubscriptionsConfig, {
-  AppConfig,
-  AppVRMConfig,
-  AppVRMConfigKey,
-  VenusMQTTTopic,
-} from "../../../shared/types"
+import AppDeviceSubscriptionsConfig, { AppConfig, AppVRMConfig, VenusMQTTTopic } from "../../../shared/types"
 import { AppState } from "../../store"
 import { VRMDeviceType, VRMLoginRequest } from "../../../shared/api"
 import { VRMStatus } from "../../../shared/state"
@@ -149,12 +144,8 @@ function VRM() {
 
   function handleEnableChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
-    const [name, value] = extractParameterNameAndValue<AppVRMConfigKey>(event)
-
-    // TODO: fix this
-    // @ts-expect-error
-    clone.vrm[name] = value
-    if (!value) {
+    clone.vrm = updateFormField(clone.vrm, event)
+    if (!clone.vrm.enabled) {
       clone.vrm.enabledPortalIds = []
     }
 
@@ -164,7 +155,7 @@ function VRM() {
 
   function handleEnableDiscoveredPortalChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
-    const [_name, value] = extractParameterNameAndValue<AppVRMConfigKey>(event)
+    const value = event.target.checked
 
     const list = clone.vrm.enabledPortalIds
     if (!value) {
@@ -507,8 +498,6 @@ interface VRMDetailsState {
   token: string
 }
 
-type VRMDetailsStateKeys = keyof VRMDetailsState
-
 function VRMLoginPane(props: VRMLoginPaneProps) {
   const [state, setState] = useState<VRMDetailsState>({
     token: "",
@@ -519,12 +508,7 @@ function VRMLoginPane(props: VRMLoginPaneProps) {
   })
 
   function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const clone = { ...state }
-    const [name, value] = extractParameterNameAndValue<VRMDetailsStateKeys>(event)
-    // TODO: fix this
-    // @ts-expect-error
-    clone[name] = value
-    setState(clone)
+    setState(updateFormField(state, event))
   }
 
   return (

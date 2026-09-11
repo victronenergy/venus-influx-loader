@@ -14,7 +14,7 @@ import {
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
-import { useFormValidation, extractParameterNameAndValue } from "../../hooks/useFormValidation"
+import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { AppConfig } from "../../../shared/types"
 import { useSelector } from "react-redux"
 import { WebSocketStatus } from "./WebsocketStatus"
@@ -44,10 +44,7 @@ function InfluxDB() {
 
   function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const clone = { ...temporaryConfig!!! }
-    const [name, value] = extractParameterNameAndValue(event)
-    // TODO: fix this
-    // @ts-expect-error
-    clone.influxdb[name] = value
+    clone.influxdb = updateFormField(clone.influxdb, event)
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
   }
