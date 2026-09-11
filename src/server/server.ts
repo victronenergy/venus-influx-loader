@@ -1,6 +1,7 @@
 import express from "express"
 import path from "node:path"
 import http from "node:http"
+import { EventEmitter } from "node:events"
 import fs from "node:fs/promises"
 import { createRootLogger, LogStorageTransport } from "./logger.js"
 import { InfluxDBBackend } from "./influxdb.js"
@@ -393,8 +394,8 @@ export class Server {
 
   // typed variant of EventEmitter.on
   on<K extends keyof ServerEvents>(event: K, listener: (_data: ServerEvents[K]) => void) {
-    // @ts-expect-error
-    return this.app.on(event, listener)
+    // bypass the express-specific on("mount") overload, we only use the plain EventEmitter behaviour
+    return (this.app as EventEmitter).on(event, listener as (..._args: unknown[]) => void)
   }
 
   // typed variant of EventEmitter.removeListener
