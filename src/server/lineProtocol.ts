@@ -4,7 +4,7 @@
 export interface Point {
   timestamp: Date
   measurement: string
-  tags: Record<string, string>
+  tags: Record<string, string | undefined>
   fields: Record<string, number | string>
 }
 
@@ -30,10 +30,11 @@ function formatFieldValue(value: number | string): string {
 }
 
 // Serializes one point with a millisecond timestamp (write requests must use `precision=ms`).
-// Tags with an empty value are skipped, InfluxDB rejects them.
+// Tags without a value are skipped: InfluxDB rejects empty tag values, and topics without an
+// instance segment (for example `N/<portalId>/full_publish_completed`) have no instance number.
 export function toLineProtocol(point: Point): string {
   const tags = Object.entries(point.tags)
-    .filter(([, value]) => value !== "")
+    .filter((entry): entry is [string, string] => entry[1] !== undefined && entry[1] !== null && entry[1] !== "")
     .map(([key, value]) => `,${escapeKey(key)}=${escapeKey(value)}`)
     .join("")
   const fields = Object.entries(point.fields)

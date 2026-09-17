@@ -46,6 +46,12 @@ describe("toLineProtocol", () => {
     )
   })
 
+  it("drops tags without a value instead of writing the literal undefined", () => {
+    expect(toLineProtocol(point({ tags: { portalId: "p", instanceNumber: undefined, name: "n" } }))).toBe(
+      "solarcharger/Dc/0/Voltage,portalId=p,name=n value=12.5 1767225600123",
+    )
+  })
+
   it("joins a batch with newlines", () => {
     expect(toLineProtocolBatch([point(), point({ fields: { value: 1 } })]).split("\n")).toHaveLength(2)
   })
