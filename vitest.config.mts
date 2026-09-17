@@ -12,5 +12,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // integration tests need Docker, run them with `npm run test:integration`
+    exclude: ["src/**/*.integration.test.ts", "node_modules/**"],
   },
 })

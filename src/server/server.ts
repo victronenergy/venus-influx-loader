@@ -12,6 +12,7 @@ import {
   AppConfig,
   AppConfigFiles,
   AppInfluxDBProtocol,
+  AppInfluxDBVersion,
   AppSecrets,
   AppUISettings,
   createAppConfig,
@@ -24,9 +25,12 @@ import { VRM } from "./vrm.js"
 import { AppStateActionType, DiscoveredDevice, VRMStatus } from "../shared/state.js"
 import { Loader } from "./loader.js"
 
+const defaultInfluxDBVersion = (process.env.VIL_INFLUXDB_VERSION || "1") as AppInfluxDBVersion
 const defaultInfluxDBURL = new URL(process.env.VIL_INFLUXDB_URL || "http://influxdb:8086")
 const defaultInfluxDBUsername = process.env.VIL_INFLUXDB_USERNAME || ""
 const defaultInfluxDBPassword = process.env.VIL_INFLUXDB_PASSWORD || ""
+const defaultInfluxDBOrg = process.env.VIL_INFLUXDB_ORG || ""
+const defaultInfluxDBToken = process.env.VIL_INFLUXDB_TOKEN || ""
 const defaultInfluxDBDatabase = "venus"
 const defaultInfluxDBRetention = "30d"
 
@@ -337,12 +341,15 @@ export class Server {
     const location = this.configFiles.configLocation
     const defaultConfig = createAppConfig({
       influxdb: {
+        version: defaultInfluxDBVersion,
         protocol: defaultInfluxDBURL.protocol.replace(":", "") as AppInfluxDBProtocol,
         host: defaultInfluxDBURL.hostname,
         port: defaultInfluxDBURL.port,
         path: defaultInfluxDBURL.pathname,
         username: defaultInfluxDBUsername,
         password: defaultInfluxDBPassword,
+        org: defaultInfluxDBOrg,
+        token: defaultInfluxDBToken,
         database: defaultInfluxDBDatabase,
         retention: defaultInfluxDBRetention,
       },
