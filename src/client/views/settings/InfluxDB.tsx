@@ -8,6 +8,7 @@ import {
   CFormLabel,
   CFormInput,
   CFormSelect,
+  CFormText,
   CButton,
   CCol,
   CRow,
@@ -16,6 +17,7 @@ import {
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { AppConfig } from "../../../shared/types"
+import { validateInfluxDBConfig } from "../../../shared/influxdbConfig"
 import { useSelector } from "react-redux"
 import { WebSocketStatus } from "./WebsocketStatus"
 import { AppState } from "../../store"
@@ -33,16 +35,9 @@ function InfluxDB() {
 
   const version = temporaryConfig?.influxdb.version ?? "1"
 
-  const isSaveEnabled = useFormValidation(() => {
-    if (temporaryConfig === undefined) {
-      return false
-    }
-    const { host, port, database, retention, org, token } = temporaryConfig.influxdb
-    const credentialsValid = version === "1" || (version === "2" ? !!org && !!token : !!token)
-    return (
-      host !== "" && port !== "" && database !== "" && retention !== "" && credentialsValid && isTemporaryConfigDirty
-    )
-  })
+  // same rules the server applies when saving, so the Save button never offers a rejected config
+  const problems = temporaryConfig ? validateInfluxDBConfig(temporaryConfig.influxdb) : []
+  const isSaveEnabled = useFormValidation(() => problems.length === 0 && isTemporaryConfigDirty)
 
   function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const clone = { ...temporaryConfig!!! }
@@ -196,6 +191,9 @@ function InfluxDB() {
                   value={temporaryConfig.influxdb.token ?? ""}
                   onChange={(event) => handleFormInputChange(event)}
                 />
+                {version === "3" && (
+                  <CFormText>Leave empty when InfluxDB 3 runs with authentication disabled</CFormText>
+                )}
               </div>
             )}
           </CForm>
@@ -204,6 +202,9 @@ function InfluxDB() {
           <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
             {isSaving ? "Saving..." : "Save"}
           </CButton>
+          {isTemporaryConfigDirty && problems.length > 0 && (
+            <CFormText className="text-danger ms-3">{problems[0]}</CFormText>
+          )}
         </CCardFooter>
       </CCard>
     )
