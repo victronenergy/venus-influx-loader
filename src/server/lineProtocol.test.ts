@@ -40,6 +40,26 @@ describe("toLineProtocol", () => {
     expect(toLineProtocol(point({ measurement: "a b,c" }))).toMatch(/^a\\ b\\,c,/)
   })
 
+  it("leaves non-breaking spaces and other unicode whitespace alone", () => {
+    expect(toLineProtocol(point({ tags: { name: "My\u00a0Boat\u2003" } }))).toContain(",name=My\u00a0Boat\u2003 ")
+  })
+
+  it("drops control characters from measurement, tag and field keys instead of escaping them", () => {
+    expect(toLineProtocol(point({ measurement: "a\tb\nc", tags: { "k\r": "v\t1\x00" }, fields: { "f\n": 1 } }))).toBe(
+      "abc,k=v1 f=1 1767225600123",
+    )
+  })
+
+  it("drops a tag whose value consists of control characters only", () => {
+    expect(toLineProtocol(point({ tags: { portalId: "p", name: "\n" } }))).toBe(
+      "solarcharger/Dc/0/Voltage,portalId=p value=12.5 1767225600123",
+    )
+  })
+
+  it("replaces newlines inside string field values with a space", () => {
+    expect(toLineProtocol(point({ fields: { stringValue: "a\r\nb\nc\rd" } }))).toContain(' stringValue="a b c d" ')
+  })
+
   it("drops tags with an empty value", () => {
     expect(toLineProtocol(point({ tags: { portalId: "p", name: "" } }))).toBe(
       "solarcharger/Dc/0/Voltage,portalId=p value=12.5 1767225600123",

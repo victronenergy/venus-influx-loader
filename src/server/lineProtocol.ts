@@ -8,19 +8,28 @@ export interface Point {
   fields: Record<string, number | string>
 }
 
+// Line protocol has no escape for control characters (newline would start a new line), and
+// they never belong in a measurement, tag or field key, so drop them. Other Unicode whitespace
+// such as a non-breaking space is legal and left alone.
+function stripControlCharacters(value: string): string {
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[\x00-\x1f\x7f]/g, "")
+}
+
 // measurement: escape comma and space
 function escapeMeasurement(value: string): string {
-  return value.replace(/[,\s]/g, (c) => `\\${c}`)
+  return stripControlCharacters(value).replace(/[, ]/g, (c) => `\\${c}`)
 }
 
 // tag keys, tag values, field keys: escape comma, equals sign and space
 function escapeKey(value: string): string {
-  return value.replace(/[,=\s]/g, (c) => `\\${c}`)
+  return stripControlCharacters(value).replace(/[,= ]/g, (c) => `\\${c}`)
 }
 
-// string field values: double quoted, escape backslash and double quote
+// string field values: double quoted, escape backslash and double quote; a newline can not be
+// represented inside the quotes either, so turn it into a space
 function escapeStringValue(value: string): string {
-  return `"${value.replace(/[\\"]/g, (c) => `\\${c}`)}"`
+  return `"${value.replace(/[\\"]/g, (c) => `\\${c}`).replace(/\r?\n|\r/g, " ")}"`
 }
 
 // Numbers are written without the integer `i` suffix so the field is always a float,
@@ -34,8 +43,9 @@ function formatFieldValue(value: number | string): string {
 // instance segment (for example `N/<portalId>/full_publish_completed`) have no instance number.
 export function toLineProtocol(point: Point): string {
   const tags = Object.entries(point.tags)
-    .filter((entry): entry is [string, string] => entry[1] !== undefined && entry[1] !== null && entry[1] !== "")
-    .map(([key, value]) => `,${escapeKey(key)}=${escapeKey(value)}`)
+    .map(([key, value]): [string, string] => [escapeKey(key), escapeKey(value ?? "")])
+    .filter(([, value]) => value !== "")
+    .map(([key, value]) => `,${key}=${value}`)
     .join("")
   const fields = Object.entries(point.fields)
     .map(([key, value]) => `${escapeKey(key)}=${formatFieldValue(value)}`)
