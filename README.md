@@ -78,13 +78,13 @@ Notes:
 - InfluxDB 2.x: the loader creates the bucket inside the given organization when it is missing. Grafana InfluxQL queries reach the bucket under its name via the automatic DBRP mapping. The token needs read/write access to buckets and read access to the organization.
 - InfluxDB 3 Core: the database is created with the configured retention on first connection. By default InfluxDB 3 Core answers queries spanning at most about 72 hours, longer dashboard ranges need InfluxDB 3 Enterprise or a higher `--query-file-limit`. Grafana connects via the InfluxQL `/query` endpoint using the token as password.
 - Never use the `influxdb:latest` Docker tag, it points to InfluxDB 3 Core since September 2026.
-- Retention takes a single unit, `30d`, `12h`, `2w` style, `0` means keep forever, empty leaves the retention untouched. Anything else (for example `1h30m` or a bare `30`) is rejected when saving.
+- Retention takes a single unit, `30d`, `12h`, `2w` style, at least `1h`, `0` means keep forever, empty leaves the retention untouched. Anything else (for example `1h30m` or a bare `30`) is rejected when saving. Values stored by older versions such as `INF` or `720h0m0s` are converted on startup.
 - Victoria Metrics accepts the InfluxDB 1.x write protocol, select InfluxDB 1.x to store into it.
 
 Environment variables used as defaults when no `config.json` exists yet:
 
 - `VIL_INFLUXDB_VERSION`: `1` (default), `2`, or `3`
-- `VIL_INFLUXDB_URL`: for example `http://influxdb:8086`
+- `VIL_INFLUXDB_URL`: for example `http://influxdb:8086`, defaults to `http://influxdb:8086` (`http://influxdb:8181` for InfluxDB 3)
 - `VIL_INFLUXDB_USERNAME`, `VIL_INFLUXDB_PASSWORD`: InfluxDB 1.x
 - `VIL_INFLUXDB_ORG`, `VIL_INFLUXDB_TOKEN`: InfluxDB 2.x (`VIL_INFLUXDB_TOKEN` only for InfluxDB 3)
 

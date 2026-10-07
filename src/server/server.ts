@@ -19,7 +19,7 @@ import {
   createAppSecrets,
   LogLevel,
 } from "../shared/types.js"
-import { parseInfluxDBVersion, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
+import { migrateLegacyRetention, parseInfluxDBVersion, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
 import { LogEntry, Logger } from "winston"
 import { UPNP } from "./upnp.js"
 import { VRM } from "./vrm.js"
@@ -335,16 +335,17 @@ export class Server {
   // InfluxDB settings taken from the VIL_INFLUXDB_* environment, used only when no config.json exists yet
   private influxDBConfigFromEnvironment(): AppInfluxDBConfig {
     const env = process.env
-    const url = new URL(env.VIL_INFLUXDB_URL || "http://influxdb:8086")
     const version = parseInfluxDBVersion(env.VIL_INFLUXDB_VERSION || "1")
     if (version === undefined) {
       this.logger.error(`Ignoring VIL_INFLUXDB_VERSION=${env.VIL_INFLUXDB_VERSION}, it must be 1, 2 or 3`)
     }
+    const url = new URL(env.VIL_INFLUXDB_URL || (version === "3" ? "http://influxdb:8181" : "http://influxdb:8086"))
     return {
       version: version ?? "1",
       protocol: url.protocol.replace(":", "") as AppInfluxDBProtocol,
       host: url.hostname,
-      port: url.port,
+      // the URL parser drops the default port of the scheme
+      port: url.port || (url.protocol === "https:" ? "443" : "80"),
       path: url.pathname,
       username: env.VIL_INFLUXDB_USERNAME || "",
       password: env.VIL_INFLUXDB_PASSWORD || "",
@@ -371,18 +372,40 @@ export class Server {
         manual: { ...defaultConfig.manual, ...stored.manual },
         influxdb: { ...defaultConfig.influxdb, ...stored.influxdb },
       }
-      // a hand edited file may carry the version as a number
-      config.influxdb.version = parseInfluxDBVersion(config.influxdb.version) ?? config.influxdb.version
+      this.migrateInfluxDBConfig(config.influxdb)
     } catch (error) {
       this.logger.error(`Failed loading config from: ${location}, error: ${error}.`)
       config = createAppConfig({ influxdb: this.influxDBConfigFromEnvironment() })
     }
-    // keep an invalid configuration so that the Admin UI shows what needs fixing, the InfluxDB
-    // backend refuses to connect until it is valid
+    // keep any remaining invalid configuration so that the Admin UI shows what needs fixing, the
+    // InfluxDB backend refuses to connect until it is valid
     for (const problem of validateInfluxDBConfig(config.influxdb)) {
       this.logger.error(`Invalid InfluxDB configuration: ${problem}`)
     }
     return config
+  }
+
+  // Repairs values written by older versions or by hand so that an upgrade never leaves the
+  // loader unable to connect: the version may be a number or garbage, the retention may be any
+  // InfluxQL duration. The repaired config is persisted on the next save.
+  private migrateInfluxDBConfig(influxdb: AppInfluxDBConfig) {
+    const version = parseInfluxDBVersion(influxdb.version)
+    if (version === undefined) {
+      this.logger.error(`Unsupported InfluxDB version ${JSON.stringify(influxdb.version)} in config, using 1`)
+    }
+    influxdb.version = version ?? "1"
+
+    const retention = influxdb.retention ?? ""
+    const migrated = migrateLegacyRetention(retention)
+    if (migrated === undefined) {
+      this.logger.error(
+        `Invalid InfluxDB retention ${JSON.stringify(retention)} in config, leaving retention unmanaged`,
+      )
+      influxdb.retention = ""
+    } else if (migrated !== retention) {
+      this.logger.warn(`Migrated InfluxDB retention ${JSON.stringify(retention)} to ${JSON.stringify(migrated)}`)
+      influxdb.retention = migrated
+    }
   }
 
   async saveConfig() {

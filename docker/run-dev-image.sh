@@ -11,7 +11,11 @@ NETWORK="vil"
 
 # InfluxDB 1.x defaults matching ./run-influxdb.sh, override via environment for 2.x or 3
 VIL_INFLUXDB_VERSION=${VIL_INFLUXDB_VERSION:-1}
-VIL_INFLUXDB_URL=${VIL_INFLUXDB_URL:-http://host.docker.internal:8086}
+if [ "$VIL_INFLUXDB_VERSION" = "3" ]; then
+  VIL_INFLUXDB_URL=${VIL_INFLUXDB_URL:-http://host.docker.internal:8181}
+else
+  VIL_INFLUXDB_URL=${VIL_INFLUXDB_URL:-http://host.docker.internal:8086}
+fi
 VIL_INFLUXDB_USERNAME=${VIL_INFLUXDB_USERNAME:-s3cr4t}
 VIL_INFLUXDB_PASSWORD=${VIL_INFLUXDB_PASSWORD:-s3cr4t}
 VIL_INFLUXDB_ORG=${VIL_INFLUXDB_ORG:-}
