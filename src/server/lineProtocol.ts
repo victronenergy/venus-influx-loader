@@ -10,20 +10,21 @@ export interface Point {
 
 // Line protocol has no escape for control characters (newline would start a new line), and
 // they never belong in a measurement, tag or field key, so drop them. Other Unicode whitespace
-// such as a non-breaking space is legal and left alone.
-function stripControlCharacters(value: string): string {
+// such as a non-breaking space is legal and left alone. A trailing backslash would escape the
+// separator that follows and InfluxDB 1.x does not unescape a doubled backslash, so drop it too.
+function sanitizeIdentifier(value: string): string {
   // eslint-disable-next-line no-control-regex
-  return value.replace(/[\x00-\x1f\x7f]/g, "")
+  return value.replace(/[\x00-\x1f\x7f]/g, "").replace(/\\+$/, "")
 }
 
 // measurement: escape comma and space
 function escapeMeasurement(value: string): string {
-  return stripControlCharacters(value).replace(/[, ]/g, (c) => `\\${c}`)
+  return sanitizeIdentifier(value).replace(/[, ]/g, (c) => `\\${c}`)
 }
 
 // tag keys, tag values, field keys: escape comma, equals sign and space
 function escapeKey(value: string): string {
-  return stripControlCharacters(value).replace(/[,= ]/g, (c) => `\\${c}`)
+  return sanitizeIdentifier(value).replace(/[,= ]/g, (c) => `\\${c}`)
 }
 
 // string field values: double quoted, escape backslash and double quote; a newline can not be

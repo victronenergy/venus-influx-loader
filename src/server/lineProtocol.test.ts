@@ -56,6 +56,19 @@ describe("toLineProtocol", () => {
     )
   })
 
+  it("drops a trailing backslash that would escape the following separator", () => {
+    expect(toLineProtocol(point({ measurement: "m\\", tags: { name: "Garage\\\\" }, fields: { value: 1 } }))).toBe(
+      "m,name=Garage value=1 1767225600123",
+    )
+    expect(toLineProtocol(point({ tags: { portalId: "p", name: "\\" } }))).toBe(
+      "solarcharger/Dc/0/Voltage,portalId=p value=12.5 1767225600123",
+    )
+  })
+
+  it("keeps a backslash inside a tag value", () => {
+    expect(toLineProtocol(point({ tags: { name: "a\\b" } }))).toContain(",name=a\\b ")
+  })
+
   it("replaces newlines inside string field values with a space", () => {
     expect(toLineProtocol(point({ fields: { stringValue: "a\r\nb\nc\rd" } }))).toContain(' stringValue="a b c d" ')
   })
