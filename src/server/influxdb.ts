@@ -1,25 +1,20 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios"
-import ms, { StringValue } from "ms"
 import { Server } from "./server.js"
 import { Logger } from "winston"
 import { AppInfluxDBProtocol, AppInfluxDBVersion } from "../shared/types.js"
+import { retentionSeconds, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
 import { posix } from "node:path"
 import { Point, toLineProtocolBatch } from "./lineProtocol.js"
 
 const retentionPolicyName = "venus_default"
 const requestTimeout = 30_000
 
-// "30d" -> 2592000, "" / "0" / unparsable -> undefined (infinite)
-export function retentionSeconds(retention: string): number | undefined {
-  if (!retention) {
-    return undefined
-  }
-  try {
-    const millis = ms(retention as StringValue)
-    return millis && millis > 0 ? Math.round(millis / 1000) : undefined
-  } catch {
-    return undefined
-  }
+// Thrown by _connect when the configuration can not possibly work, retrying is pointless until
+// the settings change
+export class InvalidConfigError extends Error {}
+
+function unsupportedVersion(version: never): Error {
+  return new Error(`Unsupported InfluxDB version: ${version}`)
 }
 
 function describeError(error: unknown): string {
@@ -102,7 +97,10 @@ export class InfluxDBBackend {
     this.isConnected = false
     try {
       await this._connect()
-    } catch {
+    } catch (error) {
+      if (error instanceof InvalidConfigError) {
+        return
+      }
       setTimeout(async () => {
         this.start()
       }, 5000)
@@ -176,6 +174,8 @@ export class InfluxDBBackend {
       case "3":
         // InfluxDB 3 accepts the v2 write endpoint, `bucket` is simply the database name, `org` is ignored
         return { url: `${this.base}api/v2/write`, params: { bucket: this.database, precision: "ms" } }
+      default:
+        throw unsupportedVersion(this.version)
     }
   }
 
@@ -188,6 +188,8 @@ export class InfluxDBBackend {
       case "3":
         // no header when running against a server started with --without-auth
         return this.token ? { Authorization: `Bearer ${this.token}` } : {}
+      default:
+        throw unsupportedVersion(this.version)
     }
   }
 
@@ -201,6 +203,12 @@ export class InfluxDBBackend {
   }
 
   private async _connect() {
+    const problems = validateInfluxDBConfig(this.server.config.influxdb)
+    if (problems.length > 0) {
+      this.logger.error(`Invalid InfluxDB configuration, not connecting: ${problems.join(", ")}`)
+      throw new InvalidConfigError(problems.join(", "))
+    }
+
     const { version, host, port, protocol, path, username, password, org, token, database, retention } =
       this.server.config.influxdb
 
@@ -245,6 +253,8 @@ export class InfluxDBBackend {
         case "3":
           await this._connectV3()
           break
+        default:
+          throw unsupportedVersion(this.version)
       }
       this.logger.info(`Connected to ${this.host}:${this.port}/${this.database}`)
       this.isConnected = true
@@ -275,6 +285,9 @@ export class InfluxDBBackend {
   }
 
   private async _connectV2() {
+    if (!this.org) {
+      throw new Error("Organization is required for InfluxDB 2.x")
+    }
     const orgs = (await axios.get(`${this.base}api/v2/orgs`, this._requestConfig({ org: this.org }))).data?.orgs
     if (!orgs?.length) {
       throw new Error(`Organization not found: ${this.org}`)
@@ -337,7 +350,7 @@ export class InfluxDBBackend {
   // InfluxDB 3 accepts hours/days/weeks, and treats "0d" as delete everything, so never send it
   private _v3RetentionPeriod(retention: string): string {
     const seconds = retentionSeconds(retention)
-    return seconds === undefined ? "none" : `${Math.max(1, Math.round(seconds / 3600))}h`
+    return !seconds ? "none" : `${Math.max(1, Math.round(seconds / 3600))}h`
   }
 
   private async _setRetentionPolicy(retention: string) {
@@ -366,6 +379,8 @@ export class InfluxDBBackend {
             )
           }
           break
+        default:
+          throw unsupportedVersion(this.version)
       }
       this.logger.debug(`Retention policy set: ${retention}`)
       this.retention = retention
@@ -376,7 +391,7 @@ export class InfluxDBBackend {
 
   private async _setRetentionPolicyV1(retention: string) {
     const seconds = retentionSeconds(retention)
-    const duration = seconds === undefined ? "INF" : `${seconds}s`
+    const duration = !seconds ? "INF" : `${seconds}s`
     const policy = `RETENTION POLICY "${retentionPolicyName}" ON "${this.database}" DURATION ${duration} REPLICATION 1 DEFAULT`
     try {
       await this._query(`CREATE ${policy}`)

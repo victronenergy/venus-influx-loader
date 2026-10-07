@@ -1,6 +1,6 @@
 import axios from "axios"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { InfluxDBBackend, retentionSeconds } from "./influxdb.js"
+import { InfluxDBBackend } from "./influxdb.js"
 import { Server } from "./server.js"
 import { AppInfluxDBConfig } from "../shared/types.js"
 
@@ -40,19 +40,6 @@ function axiosResponse(data: unknown, status = 200) {
 function axiosError(status: number, data: unknown = {}) {
   return new axios.AxiosError("request failed", undefined, undefined, undefined, axiosResponse(data, status) as any)
 }
-
-describe("retentionSeconds", () => {
-  it.each([
-    ["30d", 2592000],
-    ["2w", 1209600],
-    ["12h", 43200],
-    ["0", undefined],
-    ["", undefined],
-    ["garbage", undefined],
-  ])("converts %j to %j", (input, expected) => {
-    expect(retentionSeconds(input)).toBe(expected)
-  })
-})
 
 describe("InfluxDBBackend.store", () => {
   describe("with immediate writes", () => {
@@ -220,6 +207,33 @@ describe("InfluxDBBackend.start", () => {
   function calls(spy: { mock: { calls: any[][] } }) {
     return spy.mock.calls.map((call) => call[0])
   }
+
+  describe("invalid configuration", () => {
+    it.each<[Partial<AppInfluxDBConfig>, string]>([
+      [{ version: "1.8" as any }, "Version must be one of 1, 2, 3"],
+      [{ version: "2", org: "", token: "t" }, "Organization is required"],
+      [{ retention: "30dd" }, "Invalid retention"],
+    ])("refuses to connect with %j and does not retry", async (influxdb, message) => {
+      vi.useFakeTimers()
+      const get = vi.spyOn(axios, "get")
+      const post = vi.spyOn(axios, "post")
+      const { backend, logger } = createDisconnectedBackend(influxdb)
+      await backend.start()
+
+      expect(backend.isConnected).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining(message))
+      expect(get).not.toHaveBeenCalled()
+      expect(post).not.toHaveBeenCalled()
+      expect(vi.getTimerCount()).toBe(0)
+      vi.useRealTimers()
+    })
+
+    it("throws instead of writing when the version is not supported", () => {
+      const { backend } = createDisconnectedBackend({})
+      backend.version = "4" as any
+      expect(() => backend._writeRequest()).toThrow("Unsupported InfluxDB version: 4")
+    })
+  })
 
   describe("v1", () => {
     const showDatabases = (names: string[]) =>

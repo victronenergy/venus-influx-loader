@@ -2,6 +2,7 @@ import express from "express"
 import { Server } from "./server.js"
 import { AppConfig, AppSecrets } from "../shared/types.js"
 import { API_CONFIG, API_DEBUG, API_LOG, API_SECURITY } from "../shared/api.js"
+import { parseInfluxDBVersion, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
 
 // TODO: add TS API request/response interfaces
 // TODO: refactor out hardcoded API endpoints
@@ -15,8 +16,19 @@ export default (server: Server) => {
 
   // TODO: annotate req/res
   router.put(`/${API_CONFIG}`, async (req: express.Request<AppConfig>, res, _next) => {
-    // TODO: validate JSON payload
-    server.config = req.body as AppConfig
+    // TODO: validate the rest of the JSON payload
+    const config = req.body as AppConfig
+    if (typeof config?.influxdb !== "object" || config.influxdb === null) {
+      res.status(400).send("Missing InfluxDB configuration")
+      return
+    }
+    const problems = validateInfluxDBConfig(config.influxdb)
+    if (problems.length > 0) {
+      res.status(400).send(problems.join("\n"))
+      return
+    }
+    config.influxdb.version = parseInfluxDBVersion(config.influxdb.version)!!
+    server.config = config
     try {
       await server.saveConfig()
       res.status(200).send("Configuration Saved")
