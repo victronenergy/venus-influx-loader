@@ -3,6 +3,7 @@ import { useSelector } from "react-redux"
 import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
+import { SaveError } from "./SaveError"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
 import { useEffect, useState } from "react"
@@ -169,6 +170,7 @@ function Discovery() {
           >
             {isSaving ? "Saving..." : "Save"}
           </CButton>
+          <SaveError error={_saveError} />
         </CCardFooter>
       </CCard>
     )

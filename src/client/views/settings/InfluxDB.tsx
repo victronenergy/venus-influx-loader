@@ -15,6 +15,7 @@ import {
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
+import { SaveError } from "./SaveError"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { AppConfig } from "../../../shared/types"
 import { validateInfluxDBConfig } from "../../../shared/influxdbConfig"
@@ -205,6 +206,7 @@ function InfluxDB() {
           {isTemporaryConfigDirty && problems.length > 0 && (
             <CFormText className="text-danger ms-3">{problems[0]}</CFormText>
           )}
+          <SaveError error={_saveError} />
         </CCardFooter>
       </CCard>
     )
