@@ -113,6 +113,7 @@ export class InfluxDBBackend {
   private reconnectTimer?: ReturnType<typeof setTimeout>
   private connecting?: Promise<void>
   private restartPending: boolean = false
+  private attemptedSettings: string = "" // JSON of the settings the last connection attempt used
 
   constructor(server: Server) {
     this.server = server
@@ -126,7 +127,7 @@ export class InfluxDBBackend {
   }
 
   private updateBatchWriteInterval() {
-    this.batchWriteInterval = (this.server.config.influxdb.batchWriteInterval || 10) * 1000
+    this.batchWriteInterval = (this.server.config.influxdb.batchWriteInterval ?? 10) * 1000
   }
 
   settingsChanged() {
@@ -138,8 +139,11 @@ export class InfluxDBBackend {
       return
     }
     if (!this.isConnected) {
-      // reconnect right away with the new settings instead of waiting for the retry timer
-      this.start()
+      // reconnect right away with new settings instead of waiting for the retry timer, but let
+      // the backoff run when nothing relevant changed (for example a save of unrelated settings)
+      if (JSON.stringify(this.server.config.influxdb) !== this.attemptedSettings) {
+        this.start()
+      }
       return
     }
 
@@ -221,10 +225,10 @@ export class InfluxDBBackend {
         await this._write(this.accumulatedPoints)
         this.accumulatedPoints = []
       } catch (error) {
+        // the caller does not await us, rethrowing would be an unhandled rejection
         this.accumulatedPoints = []
-        this.logger.debug(describeError(error))
+        this.logger.error(`Write failed, reconnecting: ${describeError(error)}`)
         this.start()
-        throw error
       }
     }
   }
@@ -276,6 +280,7 @@ export class InfluxDBBackend {
   }
 
   private async _connect() {
+    this.attemptedSettings = JSON.stringify(this.server.config.influxdb)
     const problems = validateInfluxDBConfig(this.server.config.influxdb)
     if (problems.length > 0) {
       this.logger.error(`Invalid InfluxDB configuration, not connecting: ${problems.join(", ")}`)

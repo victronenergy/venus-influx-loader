@@ -45,9 +45,10 @@ describe("InfluxDBBackend.store", () => {
   describe("with immediate writes", () => {
     let backend: InfluxDBBackend
     let write: ReturnType<typeof vi.fn>
+    let logger: ReturnType<typeof createLogger>
 
     beforeEach(() => {
-      ;({ backend, write } = createBackend())
+      ;({ backend, write, logger } = createBackend())
       backend.batchWriteInterval = 0
     })
 
@@ -90,12 +91,18 @@ describe("InfluxDBBackend.store", () => {
       expect(write).not.toHaveBeenCalled()
     })
 
-    it("drops the batch, reconnects and rethrows when the write fails", async () => {
+    it("drops the batch, logs and reconnects without rethrowing when the write fails", async () => {
       write.mockRejectedValueOnce(new Error("boom"))
       backend.start = vi.fn().mockResolvedValue(undefined)
-      await expect(backend.store("portal", "name", "0", "system/Serial", 1)).rejects.toThrow("boom")
+      await expect(backend.store("portal", "name", "0", "system/Serial", 1)).resolves.toBeUndefined()
       expect(backend.accumulatedPoints).toEqual([])
       expect(backend.start).toHaveBeenCalledOnce()
+      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining("boom"))
+    })
+
+    it("writes immediately when the configured batch interval is 0", () => {
+      const { backend } = createBackend({ batchWriteInterval: 0 })
+      expect(backend.batchWriteInterval).toBe(0)
     })
   })
 
@@ -455,6 +462,27 @@ describe("InfluxDBBackend.settingsChanged", () => {
     backend.settingsChanged()
     expect(backend.start).toHaveBeenCalledOnce()
   })
+
+  it("leaves the retry backoff alone while disconnected when the settings did not change", async () => {
+    vi.useFakeTimers()
+    const { backend } = createBackend(baseConfig)
+    backend.isConnected = false
+    delete (backend as any)._write
+    // the real _connect records the settings it used, the mock has to do the same
+    const connect = vi.spyOn(backend as any, "_connect").mockImplementation(() => {
+      ;(backend as any).attemptedSettings = JSON.stringify(backend.server.config.influxdb)
+      return Promise.reject(new Error("down"))
+    })
+    await backend.start()
+    expect(connect).toHaveBeenCalledOnce()
+    backend.settingsChanged()
+    expect(connect).toHaveBeenCalledOnce()
+    expect(vi.getTimerCount()).toBe(1)
+    backend.server.config.influxdb = { ...backend.server.config.influxdb, host: "elsewhere" }
+    backend.settingsChanged()
+    expect(connect).toHaveBeenCalledTimes(2)
+    vi.useRealTimers()
+  })
 })
 
 describe("InfluxDBBackend reconnect loop", () => {
@@ -485,8 +513,7 @@ describe("InfluxDBBackend reconnect loop", () => {
     backend.isConnected = true
     backend.batchWriteInterval = 0
     backend._write = vi.fn().mockRejectedValue(new Error("boom"))
-    const writes = [1, 2, 3].map((v) => backend.store("portal", "name", "0", "m", v).catch(() => undefined))
-    await Promise.all(writes)
+    await Promise.all([1, 2, 3].map((v) => backend.store("portal", "name", "0", "m", v)))
     await vi.runOnlyPendingTimersAsync()
     // one attempt from the failed writes, one from the single retry timer
     expect(connect).toHaveBeenCalledTimes(2)
@@ -508,12 +535,28 @@ describe("InfluxDBBackend reconnect loop", () => {
     let resolveConnect!: () => void
     connect.mockImplementationOnce(() => new Promise<void>((resolve) => (resolveConnect = resolve)))
     const started = backend.start()
+    backend.server.config.influxdb = { ...backend.server.config.influxdb, host: "elsewhere" }
     backend.settingsChanged()
     expect(connect).toHaveBeenCalledOnce()
     resolveConnect()
     await started
     // the connect mock did not set isConnected, so settingsChanged starts over with the new settings
     expect(connect).toHaveBeenCalledTimes(2)
+  })
+
+  it("does not start over when settings emitted during the attempt are unchanged", async () => {
+    vi.useFakeTimers()
+    const { backend, connect } = createFailingBackend()
+    // the real _connect records the settings it used, the mock has to do the same
+    connect.mockImplementationOnce(() => {
+      ;(backend as any).attemptedSettings = JSON.stringify(backend.server.config.influxdb)
+      return Promise.reject(new Error("down"))
+    })
+    const started = backend.start()
+    backend.settingsChanged() // Server.start emits settingsChanged right after the first start()
+    await started
+    expect(connect).toHaveBeenCalledOnce()
+    expect(vi.getTimerCount()).toBe(1)
   })
 })
 
