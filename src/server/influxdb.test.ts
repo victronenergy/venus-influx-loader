@@ -419,12 +419,71 @@ describe("InfluxDBBackend.settingsChanged", () => {
     expect(setRetentionPolicy).toHaveBeenCalledWith("7d")
   })
 
-  it("ignores settings while disconnected", () => {
+  it("reconnects immediately while disconnected", () => {
     const { backend } = createConnectedBackend({})
     backend.isConnected = false
-    backend.server.config.influxdb.host = "elsewhere"
     backend.settingsChanged()
-    expect(backend.start).not.toHaveBeenCalled()
+    expect(backend.start).toHaveBeenCalledOnce()
+  })
+})
+
+describe("InfluxDBBackend reconnect loop", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+  })
+
+  function createFailingBackend() {
+    const { backend, logger } = createBackend(baseConfig)
+    backend.isConnected = false
+    delete (backend as any)._write
+    const connect = vi.spyOn(backend as any, "_connect").mockRejectedValue(new Error("down"))
+    return { backend, logger, connect }
+  }
+
+  it("shares one connection attempt between concurrent start() calls", async () => {
+    vi.useFakeTimers()
+    const { backend, connect } = createFailingBackend()
+    await Promise.all([backend.start(), backend.start(), backend.start()])
+    expect(connect).toHaveBeenCalledOnce()
+    expect(vi.getTimerCount()).toBe(1)
+  })
+
+  it("schedules a single retry when several writes fail at once", async () => {
+    vi.useFakeTimers()
+    const { backend, connect } = createFailingBackend()
+    backend.isConnected = true
+    backend.batchWriteInterval = 0
+    backend._write = vi.fn().mockRejectedValue(new Error("boom"))
+    const writes = [1, 2, 3].map((v) => backend.store("portal", "name", "0", "m", v).catch(() => undefined))
+    await Promise.all(writes)
+    await vi.runOnlyPendingTimersAsync()
+    // one attempt from the failed writes, one from the single retry timer
+    expect(connect).toHaveBeenCalledTimes(2)
+    expect(vi.getTimerCount()).toBe(1)
+  })
+
+  it("cancels the pending retry when start() is called explicitly", async () => {
+    vi.useFakeTimers()
+    const { backend, connect } = createFailingBackend()
+    await backend.start()
+    expect(vi.getTimerCount()).toBe(1)
+    connect.mockResolvedValueOnce(undefined)
+    await backend.start()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("re-evaluates settings that changed during a connection attempt", async () => {
+    const { backend, connect } = createFailingBackend()
+    let resolveConnect!: () => void
+    connect.mockImplementationOnce(() => new Promise<void>((resolve) => (resolveConnect = resolve)))
+    const started = backend.start()
+    backend.settingsChanged()
+    expect(connect).toHaveBeenCalledOnce()
+    resolveConnect()
+    await started
+    // the connect mock did not set isConnected, so settingsChanged starts over with the new settings
+    expect(connect).toHaveBeenCalledTimes(2)
   })
 })
 

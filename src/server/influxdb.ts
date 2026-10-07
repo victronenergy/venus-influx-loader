@@ -105,6 +105,10 @@ export class InfluxDBBackend {
   batchWriteInterval: number = 10
   accumulatedPoints: Point[] = []
 
+  private reconnectTimer?: ReturnType<typeof setTimeout>
+  private connecting?: Promise<void>
+  private restartPending: boolean = false
+
   constructor(server: Server) {
     this.server = server
     this.logger = server.getLogger("influxdb")
@@ -123,7 +127,14 @@ export class InfluxDBBackend {
   settingsChanged() {
     this.logger.debug("settingsChanged")
     this.updateBatchWriteInterval()
+    if (this.connecting) {
+      // the connection attempt in flight read the previous settings, re-evaluate once it is done
+      this.restartPending = true
+      return
+    }
     if (!this.isConnected) {
+      // reconnect right away with the new settings instead of waiting for the retry timer
+      this.start()
       return
     }
 
@@ -136,17 +147,31 @@ export class InfluxDBBackend {
     }
   }
 
-  async start() {
+  // (Re)connects using the current settings. Concurrent callers (for example several failing
+  // writes) share the attempt in flight, so there is never more than one reconnect loop.
+  async start(): Promise<void> {
+    clearTimeout(this.reconnectTimer)
+    this.reconnectTimer = undefined
+    if (this.connecting) {
+      // the attempt in flight logs and handles its own failure
+      await this.connecting.catch(() => undefined)
+      return
+    }
+
     this.isConnected = false
+    this.connecting = this._connect()
     try {
-      await this._connect()
+      await this.connecting
     } catch (error) {
-      if (error instanceof InvalidConfigError) {
-        return
+      if (!(error instanceof InvalidConfigError)) {
+        this.reconnectTimer = setTimeout(() => this.start(), 5000)
       }
-      setTimeout(async () => {
-        this.start()
-      }, 5000)
+    } finally {
+      this.connecting = undefined
+      if (this.restartPending) {
+        this.restartPending = false
+        this.settingsChanged()
+      }
     }
   }
 
