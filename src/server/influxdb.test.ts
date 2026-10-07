@@ -312,21 +312,25 @@ describe("InfluxDBBackend.start", () => {
         name: "venus",
         retentionRules: [{ type: "expire", everySeconds: 2592000 }],
       })
-      expect(patch.mock.calls[0][0]).toBe("http://influx:8086/api/v2/buckets/bucket1")
-      expect(patch.mock.calls[0][1]).toEqual({ retentionRules: [{ type: "expire", everySeconds: 2592000 }] })
+      // the bucket was created with the retention rule, no need to patch it again
+      expect(patch).not.toHaveBeenCalled()
+      expect(backend.retention).toBe("30d")
     })
 
-    it("reuses an existing bucket", async () => {
+    it("reuses an existing bucket and applies the retention to it", async () => {
       vi.spyOn(axios, "get")
         .mockResolvedValueOnce(axiosResponse({ orgs: [{ id: "org1" }] }))
         .mockResolvedValueOnce(axiosResponse({ buckets: [{ id: "existing" }] }))
       const post = vi.spyOn(axios, "post")
-      vi.spyOn(axios, "patch").mockResolvedValue(axiosResponse({}))
+      const patch = vi.spyOn(axios, "patch").mockResolvedValue(axiosResponse({}))
       const { backend } = createDisconnectedBackend({ version: "2", org: "venus", token: "t" })
       await backend.start()
 
       expect(backend.bucketId).toBe("existing")
       expect(post).not.toHaveBeenCalled()
+      expect(patch.mock.calls[0][0]).toBe("http://influx:8086/api/v2/buckets/existing")
+      expect(patch.mock.calls[0][1]).toEqual({ retentionRules: [{ type: "expire", everySeconds: 2592000 }] })
+      expect(backend.retention).toBe("30d")
     })
 
     it("fails when the org does not exist", async () => {
@@ -345,7 +349,7 @@ describe("InfluxDBBackend.start", () => {
     it("checks health and creates the database with a retention period", async () => {
       const get = vi.spyOn(axios, "get").mockResolvedValue(axiosResponse({ status: "pass" }))
       const post = vi.spyOn(axios, "post").mockResolvedValue(axiosResponse({}, 200))
-      const { backend } = createDisconnectedBackend({ version: "3", token: "t", port: "8181" })
+      const { backend, logger } = createDisconnectedBackend({ version: "3", token: "t", port: "8181" })
       await backend.start()
 
       expect(backend.isConnected).toBe(true)
@@ -353,9 +357,11 @@ describe("InfluxDBBackend.start", () => {
       expect((get.mock.calls[0][1] as any).headers).toEqual({ Authorization: "Bearer t" })
       expect(post.mock.calls[0][0]).toBe("http://influx:8181/api/v3/configure/database")
       expect(post.mock.calls[0][1]).toEqual({ db: "venus", retention_period: "720h" })
+      expect(backend.retention).toBe("30d")
+      expect(logger.warn).not.toHaveBeenCalled()
     })
 
-    it("maps infinite retention to none and tolerates an existing database", async () => {
+    it("maps infinite retention to none and warns when the database already exists", async () => {
       vi.spyOn(axios, "get").mockResolvedValue(axiosResponse({ status: "pass" }))
       const post = vi.spyOn(axios, "post").mockRejectedValue(axiosError(409))
       const { backend, logger } = createDisconnectedBackend({ version: "3", token: "t", retention: "0" })
@@ -364,6 +370,18 @@ describe("InfluxDBBackend.start", () => {
       expect(backend.isConnected).toBe(true)
       expect(post.mock.calls[0][1]).toEqual({ db: "venus", retention_period: "none" })
       expect(logger.error).not.toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("keeps its current retention (configured: 0)"))
+      expect(backend.retention).toBe("0")
+    })
+
+    it("does not warn about an existing database when the retention is left unmanaged", async () => {
+      vi.spyOn(axios, "get").mockResolvedValue(axiosResponse({ status: "pass" }))
+      vi.spyOn(axios, "post").mockRejectedValue(axiosError(409))
+      const { backend, logger } = createDisconnectedBackend({ version: "3", token: "t", retention: "" })
+      await backend.start()
+
+      expect(backend.isConnected).toBe(true)
+      expect(logger.warn).not.toHaveBeenCalled()
     })
 
     it("fails on an authorization error", async () => {

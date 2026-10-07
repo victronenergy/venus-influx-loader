@@ -293,22 +293,29 @@ export class InfluxDBBackend {
     )
 
     try {
+      // v2 and v3 create the bucket/database with the retention already applied, so only an
+      // existing one needs the retention (re)applied below; v1 always manages its policy separately
+      let created = false
       switch (this.version) {
         case "1":
           await this._connectV1()
           break
         case "2":
-          await this._connectV2()
+          created = await this._connectV2()
           break
         case "3":
-          await this._connectV3()
+          created = await this._connectV3()
           break
         default:
           throw unsupportedVersion(this.version)
       }
       this.logger.info(`Connected to ${this.host}:${this.port}/${this.database}`)
       this.isConnected = true
-      await this._setRetentionPolicy(retention)
+      if (created) {
+        this.retention = retention
+      } else {
+        await this._setRetentionPolicy(retention)
+      }
     } catch (error) {
       this.logger.error(`Unable to connect: ${describeError(error)}`)
       throw error
@@ -334,7 +341,8 @@ export class InfluxDBBackend {
     }
   }
 
-  private async _connectV2() {
+  // Resolves to true when the bucket was created by this call
+  private async _connectV2(): Promise<boolean> {
     if (!this.org) {
       throw new Error("Organization is required for InfluxDB 2.x")
     }
@@ -359,22 +367,24 @@ export class InfluxDBBackend {
 
     if (buckets.length > 0) {
       this.bucketId = buckets[0].id
-    } else {
-      this.logger.info(`Creating bucket: ${this.database}`)
-      const response = await axios.post(
-        `${this.base}api/v2/buckets`,
-        { orgID, name: this.database, retentionRules: this._v2RetentionRules(this.server.config.influxdb.retention) },
-        this._requestConfig(),
-      )
-      this.bucketId = response.data.id
+      return false
     }
+    this.logger.info(`Creating bucket: ${this.database}`)
+    const response = await axios.post(
+      `${this.base}api/v2/buckets`,
+      { orgID, name: this.database, retentionRules: this._v2RetentionRules(this.server.config.influxdb.retention) },
+      this._requestConfig(),
+    )
+    this.bucketId = response.data.id
+    return true
   }
 
   private _v2RetentionRules(retention: string) {
     return [{ type: "expire", everySeconds: retentionSeconds(retention) ?? 0 }]
   }
 
-  private async _connectV3() {
+  // Resolves to true when the database was created by this call
+  private async _connectV3(): Promise<boolean> {
     await axios.get(`${this.base}health`, this._requestConfig())
     // The database is created on first write anyway, but creating it explicitly is the only
     // way to set its retention period on InfluxDB 3 Core.
@@ -386,6 +396,7 @@ export class InfluxDBBackend {
     try {
       await axios.post(`${this.base}api/v3/configure/database`, body, this._requestConfig())
       this.logger.info(`Created database: ${this.database}`)
+      return true
     } catch (error) {
       if (isStatus(error, 409)) {
         this.logger.debug(`Database exists: ${this.database}`)
@@ -394,6 +405,7 @@ export class InfluxDBBackend {
       } else {
         this.logger.warn(`Unable to create database ${this.database}: ${describeError(error)}`)
       }
+      return false
     }
   }
 
@@ -423,11 +435,11 @@ export class InfluxDBBackend {
           )
           break
         case "3":
-          if (this.retention && this.retention !== retention) {
-            this.logger.warn(
-              `InfluxDB 3 applies the retention period only when the database is created, ${this.database} keeps its current retention`,
-            )
-          }
+          // only reached when the database already existed, or when the retention changed later;
+          // InfluxDB 3 Core offers no way to read the current retention back, so always warn
+          this.logger.warn(
+            `InfluxDB 3 applies the retention period only when the database is created, ${this.database} keeps its current retention (configured: ${retention})`,
+          )
           break
         default:
           throw unsupportedVersion(this.version)
