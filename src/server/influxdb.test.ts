@@ -276,6 +276,18 @@ describe("InfluxDBBackend.start", () => {
       expect((post.mock.calls[0][2] as any).auth).toEqual({ username: "root", password: "root" })
     })
 
+    it("escapes quotes and backslashes in the database name", async () => {
+      const post = vi.spyOn(axios, "post").mockResolvedValueOnce(showDatabases([])).mockResolvedValue(ok)
+      const { backend } = createDisconnectedBackend({ version: "1", database: 'a"b\\' })
+      await backend.start()
+
+      expect(post.mock.calls.map((call) => (call[2] as any).params.q)).toEqual([
+        "SHOW DATABASES",
+        'CREATE DATABASE "a\\"b\\\\"',
+        'CREATE RETENTION POLICY "venus_default" ON "a\\"b\\\\" DURATION 2592000s REPLICATION 1 DEFAULT',
+      ])
+    })
+
     it("treats an InfluxQL error inside a 200 response as a failed connection", async () => {
       vi.useFakeTimers()
       vi.spyOn(axios, "post").mockResolvedValue(axiosResponse({ error: "authorization failed" }))

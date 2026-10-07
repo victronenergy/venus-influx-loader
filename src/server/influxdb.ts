@@ -17,6 +17,11 @@ function unsupportedVersion(version: never): Error {
   return new Error(`Unsupported InfluxDB version: ${version}`)
 }
 
+// double quoted InfluxQL identifier, escapes backslash and double quote
+function quoteIdentifier(name: string): string {
+  return `"${name.replace(/[\\"]/g, "\\$&")}"`
+}
+
 // Everything that identifies the server we talk to, as derived from the settings. A change in
 // any of these needs a reconnect, a change of the retention alone does not.
 interface Connection {
@@ -337,7 +342,7 @@ export class InfluxDBBackend {
     const databaseNames: string[] = (data?.results?.[0]?.series?.[0]?.values ?? []).flat()
     if (!databaseNames.includes(this.database)) {
       this.logger.info(`Creating database: ${this.database}`)
-      await this._query(`CREATE DATABASE "${this.database}"`)
+      await this._query(`CREATE DATABASE ${quoteIdentifier(this.database)}`)
     }
   }
 
@@ -454,7 +459,7 @@ export class InfluxDBBackend {
   private async _setRetentionPolicyV1(retention: string) {
     const seconds = retentionSeconds(retention)
     const duration = !seconds ? "INF" : `${seconds}s`
-    const policy = `RETENTION POLICY "${retentionPolicyName}" ON "${this.database}" DURATION ${duration} REPLICATION 1 DEFAULT`
+    const policy = `RETENTION POLICY ${quoteIdentifier(retentionPolicyName)} ON ${quoteIdentifier(this.database)} DURATION ${duration} REPLICATION 1 DEFAULT`
     try {
       await this._query(`CREATE ${policy}`)
     } catch {
