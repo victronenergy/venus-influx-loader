@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios"
 import { Server } from "./server.js"
 import { Logger } from "winston"
-import { AppInfluxDBProtocol, AppInfluxDBVersion } from "../shared/types.js"
+import { AppInfluxDBConfig, AppInfluxDBProtocol, AppInfluxDBVersion } from "../shared/types.js"
 import { retentionSeconds, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
 import { posix } from "node:path"
 import { Point, toLineProtocolBatch } from "./lineProtocol.js"
@@ -15,6 +15,57 @@ export class InvalidConfigError extends Error {}
 
 function unsupportedVersion(version: never): Error {
   return new Error(`Unsupported InfluxDB version: ${version}`)
+}
+
+// Everything that identifies the server we talk to, as derived from the settings. A change in
+// any of these needs a reconnect, a change of the retention alone does not.
+interface Connection {
+  version: AppInfluxDBVersion
+  protocol: AppInfluxDBProtocol
+  host: string
+  port: string
+  path: string
+  database: string
+  username: string
+  password: string
+  org: string
+  token: string
+}
+
+const connectionKeys: (keyof Connection)[] = [
+  "version",
+  "protocol",
+  "host",
+  "port",
+  "path",
+  "database",
+  "username",
+  "password",
+  "org",
+  "token",
+]
+
+export function normalizeConnection(config: AppInfluxDBConfig): Connection {
+  let path = posix.normalize(config.path || "/")
+  // ensure path starts, and ends with "/" when set
+  if (!path.startsWith("/")) {
+    path = "/" + path
+  }
+  if (!path.endsWith("/")) {
+    path = path + "/"
+  }
+  return {
+    version: config.version || "1",
+    protocol: config.protocol,
+    host: config.host,
+    port: config.port,
+    path,
+    database: config.database,
+    username: config.username || "root",
+    password: config.password || "root",
+    org: config.org || "",
+    token: config.token || "",
+  }
 }
 
 function describeError(error: unknown): string {
@@ -41,8 +92,8 @@ export class InfluxDBBackend {
   path: string = ""
   protocol: AppInfluxDBProtocol = "http"
   database: string = ""
-  username?: string
-  password?: string
+  username: string = ""
+  password: string = ""
   org: string = ""
   token: string = ""
   retention: string = ""
@@ -62,34 +113,26 @@ export class InfluxDBBackend {
       this.settingsChanged()
     })
 
-    this.settingsChanged()
+    this.updateBatchWriteInterval()
+  }
+
+  private updateBatchWriteInterval() {
+    this.batchWriteInterval = (this.server.config.influxdb.batchWriteInterval || 10) * 1000
   }
 
   settingsChanged() {
     this.logger.debug("settingsChanged")
-    this.batchWriteInterval = (this.server.config.influxdb.batchWriteInterval || 10) * 1000
+    this.updateBatchWriteInterval()
     if (!this.isConnected) {
       return
     }
 
-    const { version, host, port, protocol, path, username, password, org, token, database, retention } =
-      this.server.config.influxdb
-
-    if (
-      (version || "1") !== this.version ||
-      this.host !== host ||
-      this.port !== port ||
-      this.path !== path ||
-      this.protocol !== protocol ||
-      this.database !== database ||
-      this.username !== username ||
-      this.password !== password ||
-      this.org !== (org || "") ||
-      this.token !== (token || "")
-    ) {
+    // compare against the normalised values _connect stored, not the raw settings
+    const next = normalizeConnection(this.server.config.influxdb)
+    if (connectionKeys.some((key) => next[key] !== this[key])) {
       this.start()
-    } else if (this.retention !== undefined && retention !== this.retention) {
-      this._setRetentionPolicy(retention)
+    } else if (this.server.config.influxdb.retention !== this.retention) {
+      this._setRetentionPolicy(this.server.config.influxdb.retention)
     }
   }
 
@@ -198,7 +241,7 @@ export class InfluxDBBackend {
       timeout: requestTimeout,
       params,
       headers: this._authHeaders(),
-      auth: this.version === "1" ? { username: this.username!!, password: this.password!! } : undefined,
+      auth: this.version === "1" ? { username: this.username, password: this.password } : undefined,
     }
   }
 
@@ -209,27 +252,9 @@ export class InfluxDBBackend {
       throw new InvalidConfigError(problems.join(", "))
     }
 
-    const { version, host, port, protocol, path, username, password, org, token, database, retention } =
-      this.server.config.influxdb
-
-    this.version = version || "1"
-    this.protocol = protocol
-    this.host = host
-    this.port = port
-    this.database = database
-    this.username = username || "root"
-    this.password = password || "root"
-    this.org = org || ""
-    this.token = token || ""
+    const retention = this.server.config.influxdb.retention
+    Object.assign(this, normalizeConnection(this.server.config.influxdb))
     this.bucketId = undefined
-    this.path = posix.normalize(path || "/")
-    // ensure path starts, and ends with "/" when set
-    if (!this.path.startsWith("/")) {
-      this.path = "/" + this.path
-    }
-    if (!this.path.endsWith("/")) {
-      this.path = this.path + "/"
-    }
     this.base = `${this.protocol}://${this.host}:${this.port}${this.path}`
 
     const credentials =

@@ -1,6 +1,6 @@
 import axios from "axios"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { InfluxDBBackend } from "./influxdb.js"
+import { InfluxDBBackend, normalizeConnection } from "./influxdb.js"
 import { Server } from "./server.js"
 import { AppInfluxDBConfig } from "../shared/types.js"
 
@@ -381,22 +381,63 @@ describe("InfluxDBBackend.start", () => {
 })
 
 describe("InfluxDBBackend.settingsChanged", () => {
-  it("reconnects when version, org or token change", () => {
-    const { backend } = createBackend({ ...baseConfig, version: "2", org: "a", token: "t" })
-    Object.assign(backend, {
-      version: "2",
-      host: "influx",
-      port: "8086",
-      path: "",
-      protocol: "http",
-      database: "venus",
-      org: "a",
-      token: "t",
-    })
+  // a connected backend whose fields hold the normalised form of `influxdb`, the way _connect leaves them
+  function createConnectedBackend(influxdb: Partial<AppInfluxDBConfig>) {
+    const { backend } = createBackend({ ...baseConfig, ...influxdb })
+    Object.assign(backend, normalizeConnection(backend.server.config.influxdb))
+    backend.retention = backend.server.config.influxdb.retention
     backend.start = vi.fn().mockResolvedValue(undefined)
+    const setRetentionPolicy = vi.spyOn(backend as any, "_setRetentionPolicy").mockResolvedValue(undefined)
+    return { backend, setRetentionPolicy }
+  }
 
+  it("reconnects when version, org or token change", () => {
+    const { backend } = createConnectedBackend({ version: "2", org: "a", token: "t" })
     backend.server.config.influxdb.token = "other"
     backend.settingsChanged()
     expect(backend.start).toHaveBeenCalledOnce()
+  })
+
+  it.each<Partial<AppInfluxDBConfig>>([
+    { version: "2", org: "a", token: "t" },
+    { version: "3", token: "" },
+    { version: "1", path: undefined, username: undefined, password: undefined },
+    { version: "1", path: "/influx", username: "u", password: "p" },
+  ])("does not reconnect when nothing changed for %j", (influxdb) => {
+    const { backend, setRetentionPolicy } = createConnectedBackend(influxdb)
+    backend.server.config.influxdb = { ...backend.server.config.influxdb }
+    backend.settingsChanged()
+    expect(backend.start).not.toHaveBeenCalled()
+    expect(setRetentionPolicy).not.toHaveBeenCalled()
+  })
+
+  it("only updates the retention policy when just the retention changed", () => {
+    const { backend, setRetentionPolicy } = createConnectedBackend({ version: "2", org: "a", token: "t" })
+    backend.server.config.influxdb.retention = "7d"
+    backend.settingsChanged()
+    expect(backend.start).not.toHaveBeenCalled()
+    expect(setRetentionPolicy).toHaveBeenCalledWith("7d")
+  })
+
+  it("ignores settings while disconnected", () => {
+    const { backend } = createConnectedBackend({})
+    backend.isConnected = false
+    backend.server.config.influxdb.host = "elsewhere"
+    backend.settingsChanged()
+    expect(backend.start).not.toHaveBeenCalled()
+  })
+})
+
+describe("normalizeConnection", () => {
+  it("fills in defaults and normalises the path", () => {
+    expect(normalizeConnection({ ...baseConfig, path: undefined, version: undefined as any })).toMatchObject({
+      version: "1",
+      path: "/",
+      username: "root",
+      password: "root",
+      org: "",
+      token: "",
+    })
+    expect(normalizeConnection({ ...baseConfig, path: "influx//db" }).path).toBe("/influx/db/")
   })
 })
