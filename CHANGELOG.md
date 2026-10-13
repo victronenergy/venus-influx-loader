@@ -1,3 +1,21 @@
+# [1.9.0](https://github.com/victronenergy/venus-influx-loader/compare/1.8.1...1.9.0) (2026-10-13)
+
+
+### Bug Fixes
+
+* drop stray -- from node --watch script args, commander treated options as positionals ([dbd8661](https://github.com/victronenergy/venus-influx-loader/commit/dbd8661e9f2bcb905c8627a9ba6f7c17780edc8d))
+* generateBuildInfo.sh overwrite buildInfo.cjs instead of appending ([3f82370](https://github.com/victronenergy/venus-influx-loader/commit/3f823705c8f144f6f028ec2c1fae1737fadc78c2))
+* grafana-api serve /metrics and /query for simpod-json-datasource 0.6.x ([19706eb](https://github.com/victronenergy/venus-influx-loader/commit/19706eb57a4c2c3d5a04f04ef65130b9bcee2eb2))
+* honour --hide-settings-venus-vrm, commander camelCases it to hideSettingsVenusVrm ([4de2bac](https://github.com/victronenergy/venus-influx-loader/commit/4de2bac57890555e827b0e52b12d3e2ebd33a532))
+* infer the docker image tag from git, SemVer and major.minor on a tag, develop otherwise, closes [#392](https://github.com/victronenergy/venus-influx-loader/issues/392) ([0fe68b0](https://github.com/victronenergy/venus-influx-loader/commit/0fe68b01e93bca9ddde43d8e93403002bcf1f985))
+* make tsc --noEmit clean, type nav/routes/breadcrumbs and drop easy ts-expect-errors ([8cc89bc](https://github.com/victronenergy/venus-influx-loader/commit/8cc89bcf9ac5a772d1060247b140819450ef3b31))
+* type per-row MQTT subscriptions as arrays instead of the keyed config map ([6c55b40](https://github.com/victronenergy/venus-influx-loader/commit/6c55b40e6390aa1e50cc52d050fe35ae8f236afb))
+
+
+### Features
+
+* support InfluxDB 2.x and 3 alongside 1.x ([83a83c0](https://github.com/victronenergy/venus-influx-loader/commit/83a83c0d77baaec4975581372c484b22190fa90c)), closes [#33](https://github.com/victronenergy/venus-influx-loader/issues/33) [#34](https://github.com/victronenergy/venus-influx-loader/issues/34)
+
 ## [1.8.1](https://github.com/victronenergy/venus-influx-loader/compare/1.8.0...1.8.1) (2026-08-21)
 
 
