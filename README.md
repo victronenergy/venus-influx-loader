@@ -76,7 +76,7 @@ Notes:
 
 - InfluxDB 1.x remains the simplest to run, and `influxdb:1.8` is the only version with 32-bit ARM images (32-bit Raspberry Pi OS). The 1.x line is still maintained, use `influxdb:1.12` on 64-bit systems.
 - InfluxDB 2.x: the loader creates the bucket inside the given organization when it is missing. Grafana InfluxQL queries reach the bucket under its name via the automatic DBRP mapping. The token needs read/write access to buckets and read access to the organization.
-- InfluxDB 3 Core: the database is created with the configured retention on first connection. By default InfluxDB 3 Core answers queries spanning at most about 72 hours, longer dashboard ranges need InfluxDB 3 Enterprise or a higher `--query-file-limit`. Grafana connects via the InfluxQL `/query` endpoint using the token as password.
+- InfluxDB 3: the database is created with the configured retention on first connection. Grafana connects via the InfluxQL `/query` endpoint using the token as password. Read [InfluxDB 3 limits and durability](#influxdb-3-limits-and-durability) before choosing it, the free Core edition is too small for most Venus installations and neither edition tolerates power loss on local disk storage.
 - Never use the `influxdb:latest` Docker tag, it points to InfluxDB 3 Core since September 2026.
 - Retention takes a single unit, `30d`, `12h`, `2w` style, at least `1h`, `0` means keep forever, empty leaves the retention untouched. Anything else (for example `1h30m` or a bare `30`) is rejected when saving. Values stored by older versions such as `INF` or `720h0m0s` are converted on startup.
 - Victoria Metrics accepts the InfluxDB 1.x write protocol, select InfluxDB 1.x to store into it.
@@ -87,6 +87,23 @@ Environment variables used as defaults when no `config.json` exists yet:
 - `VIL_INFLUXDB_URL`: for example `http://influxdb:8086`, defaults to `http://influxdb:8086` (`http://influxdb:8181` for InfluxDB 3)
 - `VIL_INFLUXDB_USERNAME`, `VIL_INFLUXDB_PASSWORD`: InfluxDB 1.x
 - `VIL_INFLUXDB_ORG`, `VIL_INFLUXDB_TOKEN`: InfluxDB 2.x (`VIL_INFLUXDB_TOKEN` only for InfluxDB 3)
+
+#### InfluxDB 3 limits and durability
+
+InfluxDB 3 Core is free but has hard limits that can not be raised, see [Manage databases in InfluxDB 3 Core](https://docs.influxdata.com/influxdb3/core/admin/databases/):
+
+- At most 2000 tables across all databases, 5 databases, and 500 columns per table. The loader stores every Venus path such as `system/Dc/Battery/Voltage` as its own measurement, and InfluxDB 3 maps each measurement to a table. A single GX device with a few connected devices produces more than 2000 distinct paths. Once the limit is reached, every write batch that contains a new path is rejected and that data is lost. The loader logs these rejections but can not work around them.
+- Queries spanning more than about 72 hours of data (432 parquet files) are refused unless `--query-file-limit` is raised, at the cost of memory.
+- The retention period is applied when the database is created and can not be changed afterwards.
+
+InfluxDB 3 Enterprise raises the table limit to 10000 by default and makes all three limits configurable via `--num-table-limit`, `--num-database-limit`, and `--num-total-columns-per-table-limit`, see [Manage databases in InfluxDB 3 Enterprise](https://docs.influxdata.com/influxdb3/enterprise/admin/databases/). It needs a license, InfluxData offers a free one for non-commercial home use.
+
+Both editions write their data files without fsync when using the `file` object store, that is data on a local SSD, hard drive, SD card, or USB disk. After a power loss or any other unclean shutdown the data directory typically contains empty WAL, snapshot, and parquet files, and InfluxDB 3 refuses to start until the whole data directory is deleted. There is no repair tool. See influxdata/influxdb issues [#26970](https://github.com/influxdata/influxdb/issues/26970), [#27624](https://github.com/influxdata/influxdb/issues/27624), and [#27654](https://github.com/influxdata/influxdb/issues/27654). InfluxDB 1.x and 2.x recover from the same event on the same disk.
+
+Recommendation:
+
+- Raspberry Pi and other installations without a UPS: use InfluxDB 1.x.
+- If you want InfluxDB 3, use InfluxDB 3 Enterprise and store the data in an S3 compatible object store such as MinIO or a cloud bucket, where writes are atomic. With local disk storage, protect the host with a UPS and always shut it down cleanly, and keep backups of the data directory.
 
 #### Tip: Run Influx Loader headless
 
