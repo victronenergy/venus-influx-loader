@@ -1,0 +1,32 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run type-check
+
+      - run: npm run lint
+
+      - run: npm run build
+
+      - run: npm test
+
+      # starts InfluxDB 1.8, 1.12, 2.9 and 3 Core containers via testcontainers
+      - run: npm run test:integration

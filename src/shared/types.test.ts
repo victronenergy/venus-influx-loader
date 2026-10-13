@@ -15,6 +15,7 @@ describe("createAppConfig", () => {
       subscriptions: {},
     })
     expect(config.influxdb).toEqual({
+      version: "1",
       protocol: "http",
       host: "localhost",
       port: "8086",

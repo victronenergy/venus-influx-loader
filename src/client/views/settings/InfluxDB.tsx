@@ -8,14 +8,17 @@ import {
   CFormLabel,
   CFormInput,
   CFormSelect,
+  CFormText,
   CButton,
   CCol,
   CRow,
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
+import { SaveError } from "./SaveError"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { AppConfig } from "../../../shared/types"
+import { validateInfluxDBConfig } from "../../../shared/influxdbConfig"
 import { useSelector } from "react-redux"
 import { WebSocketStatus } from "./WebsocketStatus"
 import { AppState } from "../../store"
@@ -31,16 +34,11 @@ function InfluxDB() {
     setIsTemporaryConfigDirty(false)
   }, [config])
 
-  const isSaveEnabled = useFormValidation(() => {
-    return (
-      temporaryConfig !== undefined &&
-      temporaryConfig.influxdb.host !== "" &&
-      temporaryConfig.influxdb.port !== "" &&
-      temporaryConfig.influxdb.database !== "" &&
-      temporaryConfig.influxdb.retention !== "" &&
-      isTemporaryConfigDirty
-    )
-  })
+  const version = temporaryConfig?.influxdb.version ?? "1"
+
+  // same rules the server applies when saving, so the Save button never offers a rejected config
+  const problems = temporaryConfig ? validateInfluxDBConfig(temporaryConfig.influxdb) : []
+  const isSaveEnabled = useFormValidation(() => problems.length === 0 && isTemporaryConfigDirty)
 
   function handleFormInputChange(event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const clone = { ...temporaryConfig!!! }
@@ -62,6 +60,21 @@ function InfluxDB() {
         <CCardBody>
           <CForm>
             <CRow>
+              <CCol sm>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="version">Version</CFormLabel>
+                  <CFormSelect
+                    id="version"
+                    name="version"
+                    value={version}
+                    onChange={(event) => handleFormInputChange(event)}
+                  >
+                    <option value="1">InfluxDB 1.x</option>
+                    <option value="2">InfluxDB 2.x</option>
+                    <option value="3">InfluxDB 3</option>
+                  </CFormSelect>
+                </div>
+              </CCol>
               <CCol sm>
                 <div className="mb-3">
                   <CFormLabel htmlFor="protocol">Protocol</CFormLabel>
@@ -94,7 +107,7 @@ function InfluxDB() {
                   <CFormInput
                     type="text"
                     name="port"
-                    placeholder="8086"
+                    placeholder={version === "3" ? "8181" : "8086"}
                     value={temporaryConfig.influxdb.port}
                     onChange={(event) => handleFormInputChange(event)}
                   />
@@ -114,7 +127,7 @@ function InfluxDB() {
               </CCol>
             </CRow>
             <div className="mb-3">
-              <CFormLabel htmlFor="database">Database Name</CFormLabel>
+              <CFormLabel htmlFor="database">{version === "2" ? "Bucket Name" : "Database Name"}</CFormLabel>
               <CFormInput
                 type="text"
                 name="database"
@@ -133,32 +146,67 @@ function InfluxDB() {
                 onChange={(event) => handleFormInputChange(event)}
               />
             </div>
-            <div className="mb-3">
-              <CFormLabel htmlFor="username">Username</CFormLabel>
-              <CFormInput
-                type="text"
-                name="username"
-                placeholder=""
-                value={temporaryConfig.influxdb.username}
-                onChange={(event) => handleFormInputChange(event)}
-              />
-            </div>
-            <div className="mb-3">
-              <CFormLabel htmlFor="password">Password</CFormLabel>
-              <CFormInput
-                type="password"
-                name="password"
-                placeholder=""
-                value={temporaryConfig.influxdb.password}
-                onChange={(event) => handleFormInputChange(event)}
-              />
-            </div>
+            {version === "1" && (
+              <>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="username">Username</CFormLabel>
+                  <CFormInput
+                    type="text"
+                    name="username"
+                    placeholder=""
+                    value={temporaryConfig.influxdb.username ?? ""}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <CFormLabel htmlFor="password">Password</CFormLabel>
+                  <CFormInput
+                    type="password"
+                    name="password"
+                    placeholder=""
+                    value={temporaryConfig.influxdb.password ?? ""}
+                    onChange={(event) => handleFormInputChange(event)}
+                  />
+                </div>
+              </>
+            )}
+            {version === "2" && (
+              <div className="mb-3">
+                <CFormLabel htmlFor="org">Organization</CFormLabel>
+                <CFormInput
+                  type="text"
+                  name="org"
+                  placeholder=""
+                  value={temporaryConfig.influxdb.org ?? ""}
+                  onChange={(event) => handleFormInputChange(event)}
+                />
+              </div>
+            )}
+            {version !== "1" && (
+              <div className="mb-3">
+                <CFormLabel htmlFor="token">Token</CFormLabel>
+                <CFormInput
+                  type="password"
+                  name="token"
+                  placeholder=""
+                  value={temporaryConfig.influxdb.token ?? ""}
+                  onChange={(event) => handleFormInputChange(event)}
+                />
+                {version === "3" && (
+                  <CFormText>Leave empty when InfluxDB 3 runs with authentication disabled</CFormText>
+                )}
+              </div>
+            )}
           </CForm>
         </CCardBody>
         <CCardFooter>
           <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
             {isSaving ? "Saving..." : "Save"}
           </CButton>
+          {isTemporaryConfigDirty && problems.length > 0 && (
+            <CFormText className="text-danger ms-3">{problems[0]}</CFormText>
+          )}
+          <SaveError error={_saveError} />
         </CCardFooter>
       </CCard>
     )

@@ -24,6 +24,7 @@ import {
 } from "@coreui/react"
 
 import { useGetConfig, usePutConfig, useVRMLogin, useVRMLogout, useVRMRefresh } from "../../hooks/useAdminApi"
+import { SaveError } from "./SaveError"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
 import { AppConfig, AppVRMConfig, VenusMQTTTopic } from "../../../shared/types"
@@ -465,6 +466,7 @@ function VRM() {
               >
                 {isSaving ? "Saving..." : "Save"}
               </CButton>
+              <SaveError error={_saveError} />
             </CCol>
             <CCol xs="auto">
               <CButton

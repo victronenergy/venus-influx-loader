@@ -2,6 +2,7 @@ import React from "react"
 import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck } from "@coreui/react"
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
+import { SaveError } from "./SaveError"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import {
   arrayExpiryToKeyed,
@@ -199,6 +200,7 @@ function Manual() {
           <CButton color="primary" onClick={() => save({ data: temporaryConfig })} disabled={!isSaveEnabled}>
             {isSaving ? "Saving..." : "Save"}
           </CButton>
+          <SaveError error={_saveError} />
         </CCardFooter>
       </CCard>
     )

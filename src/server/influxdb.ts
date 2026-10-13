@@ -1,28 +1,119 @@
-import { InfluxDB } from "influx"
+import axios, { AxiosError, AxiosRequestConfig } from "axios"
 import { Server } from "./server.js"
 import { Logger } from "winston"
-import { AppInfluxDBProtocol } from "../shared/types.js"
+import { AppInfluxDBConfig, AppInfluxDBProtocol, AppInfluxDBVersion } from "../shared/types.js"
+import { retentionSeconds, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
 import { posix } from "node:path"
+import { Point, toLineProtocolBatch } from "./lineProtocol.js"
 
+const retentionPolicyName = "venus_default"
+const requestTimeout = 30_000
+
+// Thrown by _connect when the configuration can not possibly work, retrying is pointless until
+// the settings change
+export class InvalidConfigError extends Error {}
+
+function unsupportedVersion(version: never): Error {
+  return new Error(`Unsupported InfluxDB version: ${version}`)
+}
+
+// double quoted InfluxQL identifier, escapes backslash and double quote
+function quoteIdentifier(name: string): string {
+  return `"${name.replace(/[\\"]/g, "\\$&")}"`
+}
+
+// Everything that identifies the server we talk to, as derived from the settings. A change in
+// any of these needs a reconnect, a change of the retention alone does not.
+interface Connection {
+  version: AppInfluxDBVersion
+  protocol: AppInfluxDBProtocol
+  host: string
+  port: string
+  path: string
+  database: string
+  username: string
+  password: string
+  org: string
+  token: string
+}
+
+const connectionKeys: (keyof Connection)[] = [
+  "version",
+  "protocol",
+  "host",
+  "port",
+  "path",
+  "database",
+  "username",
+  "password",
+  "org",
+  "token",
+]
+
+export function normalizeConnection(config: AppInfluxDBConfig): Connection {
+  let path = posix.normalize(config.path || "/")
+  // ensure path starts, and ends with "/" when set
+  if (!path.startsWith("/")) {
+    path = "/" + path
+  }
+  if (!path.endsWith("/")) {
+    path = path + "/"
+  }
+  return {
+    version: config.version || "1",
+    protocol: config.protocol,
+    host: config.host,
+    port: config.port,
+    path,
+    database: config.database,
+    username: config.username || "root",
+    password: config.password || "root",
+    org: config.org || "",
+    token: config.token || "",
+  }
+}
+
+function describeError(error: unknown): string {
+  if (error instanceof AxiosError && error.response) {
+    return `${error.response.status} ${JSON.stringify(error.response.data)}`
+  }
+  return `${error}`
+}
+
+function isStatus(error: unknown, ...statuses: number[]): boolean {
+  return error instanceof AxiosError && error.response !== undefined && statuses.includes(error.response.status)
+}
+
+// Stores points into InfluxDB 1.x, 2.x or 3 over plain HTTP. All versions accept the same
+// line protocol write; only authentication and database/bucket provisioning differ.
 export class InfluxDBBackend {
   server: Server
   logger: Logger
   isConnected: boolean = false
 
+  version: AppInfluxDBVersion = "1"
   host: string = ""
   port: string = ""
   path: string = ""
   protocol: AppInfluxDBProtocol = "http"
   database: string = ""
-  username?: string
-  password?: string
+  username: string = ""
+  password: string = ""
+  org: string = ""
+  token: string = ""
   retention: string = ""
 
-  influxClient?: InfluxDB
+  base: string = ""
+  bucketId?: string // v2 only
 
   lastWriteTime: number
   batchWriteInterval: number = 10
-  accumulatedPoints: any[] = []
+  accumulatedPoints: Point[] = []
+
+  private reconnectTimer?: ReturnType<typeof setTimeout>
+  private connecting?: Promise<void>
+  private restartPending: boolean = false
+  private attemptedSettings: string = "" // JSON of the settings the last connection attempt used
 
   constructor(server: Server) {
     this.server = server
@@ -32,42 +123,64 @@ export class InfluxDBBackend {
       this.settingsChanged()
     })
 
-    this.settingsChanged()
+    this.updateBatchWriteInterval()
+  }
+
+  private updateBatchWriteInterval() {
+    this.batchWriteInterval = (this.server.config.influxdb.batchWriteInterval ?? 10) * 1000
   }
 
   settingsChanged() {
     this.logger.debug("settingsChanged")
-    this.batchWriteInterval = (this.server.config.influxdb.batchWriteInterval || 10) * 1000
+    this.updateBatchWriteInterval()
+    if (this.connecting) {
+      // the connection attempt in flight read the previous settings, re-evaluate once it is done
+      this.restartPending = true
+      return
+    }
     if (!this.isConnected) {
+      // reconnect right away with new settings instead of waiting for the retry timer, but let
+      // the backoff run when nothing relevant changed (for example a save of unrelated settings)
+      if (JSON.stringify(this.server.config.influxdb) !== this.attemptedSettings) {
+        this.start()
+      }
       return
     }
 
-    const { host, port, protocol, path, username, password, database, retention } = this.server.config.influxdb
-
-    if (
-      this.host !== host ||
-      this.port !== port ||
-      this.path !== path ||
-      this.protocol !== protocol ||
-      this.database !== database ||
-      this.username !== username ||
-      this.password !== password
-    ) {
+    // compare against the normalised values _connect stored, not the raw settings
+    const next = normalizeConnection(this.server.config.influxdb)
+    if (connectionKeys.some((key) => next[key] !== this[key])) {
       this.start()
-    } else if (this.retention !== undefined && retention !== this.retention) {
-      this._setRetentionPolicy(retention)
+    } else if (this.server.config.influxdb.retention !== this.retention) {
+      this._setRetentionPolicy(this.server.config.influxdb.retention)
     }
   }
 
-  async start() {
+  // (Re)connects using the current settings. Concurrent callers (for example several failing
+  // writes) share the attempt in flight, so there is never more than one reconnect loop.
+  async start(): Promise<void> {
+    clearTimeout(this.reconnectTimer)
+    this.reconnectTimer = undefined
+    if (this.connecting) {
+      // the attempt in flight logs and handles its own failure
+      await this.connecting.catch(() => undefined)
+      return
+    }
+
     this.isConnected = false
-    this.influxClient = undefined
+    this.connecting = this._connect()
     try {
-      await this._connect()
-    } catch {
-      setTimeout(async () => {
-        this.start()
-      }, 5000)
+      await this.connecting
+    } catch (error) {
+      if (!(error instanceof InvalidConfigError)) {
+        this.reconnectTimer = setTimeout(() => this.start(), 5000)
+      }
+    } finally {
+      this.connecting = undefined
+      if (this.restartPending) {
+        this.restartPending = false
+        this.settingsChanged()
+      }
     }
   }
 
@@ -83,13 +196,13 @@ export class InfluxDBBackend {
         return
       }
       valueKey = "stringValue"
-    } else if (typeof value !== "number") {
-      // skip non-numeric payload (for example JSON)
+    } else if (typeof value !== "number" || !Number.isFinite(value)) {
+      // skip non-numeric payload (for example JSON) and NaN/Infinity
       return
     }
 
     // prepare InfluxDB point
-    const point = {
+    const point: Point = {
       timestamp: new Date(),
       measurement: measurement,
       tags: {
@@ -109,88 +222,253 @@ export class InfluxDBBackend {
       this.lastWriteTime = now
 
       try {
-        await this.influxClient!!.writePoints(this.accumulatedPoints)
+        await this._write(this.accumulatedPoints)
         this.accumulatedPoints = []
       } catch (error) {
+        // the caller does not await us, rethrowing would be an unhandled rejection
         this.accumulatedPoints = []
-        this.logger.debug(error)
+        this.logger.error(`Write failed, reconnecting: ${describeError(error)}`)
         this.start()
-        throw error
       }
     }
   }
 
+  // Writes a batch of points using line protocol. Not private so that tests can stub it.
+  async _write(points: Point[]) {
+    const { url, params } = this._writeRequest()
+    await axios.post(url, toLineProtocolBatch(points), {
+      ...this._requestConfig(params),
+      headers: { "Content-Type": "text/plain; charset=utf-8", ...this._authHeaders() },
+    })
+  }
+
+  _writeRequest(): { url: string; params: Record<string, string> } {
+    switch (this.version) {
+      case "1":
+        return { url: `${this.base}write`, params: { db: this.database, precision: "ms" } }
+      case "2":
+        return { url: `${this.base}api/v2/write`, params: { org: this.org, bucket: this.database, precision: "ms" } }
+      case "3":
+        // InfluxDB 3 accepts the v2 write endpoint, `bucket` is simply the database name, `org` is ignored
+        return { url: `${this.base}api/v2/write`, params: { bucket: this.database, precision: "ms" } }
+      default:
+        throw unsupportedVersion(this.version)
+    }
+  }
+
+  private _authHeaders(): Record<string, string> {
+    switch (this.version) {
+      case "1":
+        return {}
+      case "2":
+        return { Authorization: `Token ${this.token}` }
+      case "3":
+        // no header when running against a server started with --without-auth
+        return this.token ? { Authorization: `Bearer ${this.token}` } : {}
+      default:
+        throw unsupportedVersion(this.version)
+    }
+  }
+
+  private _requestConfig(params?: Record<string, string>): AxiosRequestConfig {
+    return {
+      timeout: requestTimeout,
+      params,
+      headers: this._authHeaders(),
+      auth: this.version === "1" ? { username: this.username, password: this.password } : undefined,
+    }
+  }
+
   private async _connect() {
-    const { host, port, protocol, path, username, password, database, retention } = this.server.config.influxdb
-
-    this.protocol = protocol
-    this.host = host
-    this.port = port
-    this.database = database
-    this.username = username !== "" ? username : "root"
-    this.password = password !== "" ? password : "root"
-    this.path = posix.normalize(path || "/")
-    // ensure path starts, and ends with "/" when set
-    if (!this.path.startsWith("/")) {
-      this.path = "/" + this.path
-    }
-    if (!this.path.endsWith("/")) {
-      this.path = this.path + "/"
+    this.attemptedSettings = JSON.stringify(this.server.config.influxdb)
+    const problems = validateInfluxDBConfig(this.server.config.influxdb)
+    if (problems.length > 0) {
+      this.logger.error(`Invalid InfluxDB configuration, not connecting: ${problems.join(", ")}`)
+      throw new InvalidConfigError(problems.join(", "))
     }
 
+    const retention = this.server.config.influxdb.retention
+    Object.assign(this, normalizeConnection(this.server.config.influxdb))
+    this.bucketId = undefined
+    this.base = `${this.protocol}://${this.host}:${this.port}${this.path}`
+
+    const credentials =
+      this.version === "1"
+        ? `${this.username}:*****`
+        : this.version === "2"
+          ? `org ${this.org}, token *****`
+          : "token *****"
     this.logger.info(
-      `Attempting connection to ${this.protocol}://${this.host}:${this.port}${this.path}${this.database} using ${this.username}:*****`,
+      `Attempting connection to InfluxDB ${this.version} at ${this.base}${this.database} using ${credentials}`,
     )
 
     try {
-      this.influxClient = new InfluxDB({
-        host: this.host,
-        port: Number(this.port),
-        path: this.path,
-        protocol: this.protocol,
-        database: this.database,
-        username: this.username,
-        password: this.password,
-      })
-
-      const databaseNames = await this.influxClient.getDatabaseNames()
-      this.logger.info(`Connected to ${this.host}:${this.port}/${this.database}`)
-      if (!databaseNames.includes(this.database)) {
-        this.logger.info(`Creating database: ${this.database}`)
-        await this.influxClient.createDatabase(this.database)
+      // v2 and v3 create the bucket/database with the retention already applied, so only an
+      // existing one needs the retention (re)applied below; v1 always manages its policy separately
+      let created = false
+      switch (this.version) {
+        case "1":
+          await this._connectV1()
+          break
+        case "2":
+          created = await this._connectV2()
+          break
+        case "3":
+          created = await this._connectV3()
+          break
+        default:
+          throw unsupportedVersion(this.version)
       }
+      this.logger.info(`Connected to ${this.host}:${this.port}/${this.database}`)
       this.isConnected = true
-      await this._setRetentionPolicy(retention)
+      if (created) {
+        this.retention = retention
+      } else {
+        await this._setRetentionPolicy(retention)
+      }
     } catch (error) {
-      this.logger.error(`Unable to connect: ${error}`)
+      this.logger.error(`Unable to connect: ${describeError(error)}`)
       throw error
     }
+  }
+
+  // InfluxQL errors are reported inside a HTTP 200 body, so inspect it
+  private async _query(q: string): Promise<any> {
+    const response = await axios.post(`${this.base}query`, null, this._requestConfig({ q }))
+    const error = response.data?.error ?? response.data?.results?.find((result: any) => result.error)?.error
+    if (error) {
+      throw new Error(error)
+    }
+    return response.data
+  }
+
+  private async _connectV1() {
+    const data = await this._query("SHOW DATABASES")
+    const databaseNames: string[] = (data?.results?.[0]?.series?.[0]?.values ?? []).flat()
+    if (!databaseNames.includes(this.database)) {
+      this.logger.info(`Creating database: ${this.database}`)
+      await this._query(`CREATE DATABASE ${quoteIdentifier(this.database)}`)
+    }
+  }
+
+  // Resolves to true when the bucket was created by this call
+  private async _connectV2(): Promise<boolean> {
+    if (!this.org) {
+      throw new Error("Organization is required for InfluxDB 2.x")
+    }
+    const orgs = (await axios.get(`${this.base}api/v2/orgs`, this._requestConfig({ org: this.org }))).data?.orgs
+    if (!orgs?.length) {
+      throw new Error(`Organization not found: ${this.org}`)
+    }
+    const orgID: string = orgs[0].id
+
+    let buckets: any[] = []
+    try {
+      const response = await axios.get(
+        `${this.base}api/v2/buckets`,
+        this._requestConfig({ name: this.database, orgID }),
+      )
+      buckets = response.data?.buckets ?? []
+    } catch (error) {
+      if (!isStatus(error, 404)) {
+        throw error
+      }
+    }
+
+    if (buckets.length > 0) {
+      this.bucketId = buckets[0].id
+      return false
+    }
+    this.logger.info(`Creating bucket: ${this.database}`)
+    const response = await axios.post(
+      `${this.base}api/v2/buckets`,
+      { orgID, name: this.database, retentionRules: this._v2RetentionRules(this.server.config.influxdb.retention) },
+      this._requestConfig(),
+    )
+    this.bucketId = response.data.id
+    return true
+  }
+
+  private _v2RetentionRules(retention: string) {
+    return [{ type: "expire", everySeconds: retentionSeconds(retention) ?? 0 }]
+  }
+
+  // Resolves to true when the database was created by this call
+  private async _connectV3(): Promise<boolean> {
+    await axios.get(`${this.base}health`, this._requestConfig())
+    // The database is created on first write anyway, but creating it explicitly is the only
+    // way to set its retention period on InfluxDB 3 Core.
+    const body: Record<string, string> = { db: this.database }
+    const retention = this.server.config.influxdb.retention
+    if (retention) {
+      body.retention_period = this._v3RetentionPeriod(retention)
+    }
+    try {
+      await axios.post(`${this.base}api/v3/configure/database`, body, this._requestConfig())
+      this.logger.info(`Created database: ${this.database}`)
+      return true
+    } catch (error) {
+      if (isStatus(error, 409)) {
+        this.logger.debug(`Database exists: ${this.database}`)
+      } else if (isStatus(error, 401, 403)) {
+        throw error
+      } else {
+        this.logger.warn(`Unable to create database ${this.database}: ${describeError(error)}`)
+      }
+      return false
+    }
+  }
+
+  // InfluxDB 3 accepts hours/days/weeks, and treats "0d" as delete everything, so never send it
+  private _v3RetentionPeriod(retention: string): string {
+    const seconds = retentionSeconds(retention)
+    return !seconds ? "none" : `${Math.max(1, Math.round(seconds / 3600))}h`
   }
 
   private async _setRetentionPolicy(retention: string) {
     if (!this.isConnected || !retention) {
       return
     }
-    const opts = {
-      duration: retention,
-      replication: 1,
-      isDefault: true,
-    }
 
     this.logger.info(`Setting retention policy: ${retention}`)
 
     try {
-      await this.influxClient!!.createRetentionPolicy("venus_default", opts)
+      switch (this.version) {
+        case "1":
+          await this._setRetentionPolicyV1(retention)
+          break
+        case "2":
+          await axios.patch(
+            `${this.base}api/v2/buckets/${this.bucketId}`,
+            { retentionRules: this._v2RetentionRules(retention) },
+            this._requestConfig(),
+          )
+          break
+        case "3":
+          // only reached when the database already existed, or when the retention changed later;
+          // InfluxDB 3 Core offers no way to read the current retention back, so always warn
+          this.logger.warn(
+            `InfluxDB 3 applies the retention period only when the database is created, ${this.database} keeps its current retention (configured: ${retention})`,
+          )
+          break
+        default:
+          throw unsupportedVersion(this.version)
+      }
       this.logger.debug(`Retention policy set: ${retention}`)
       this.retention = retention
+    } catch (error) {
+      this.logger.error(`Error setting retention policy: ${retention}, ${describeError(error)}`)
+    }
+  }
+
+  private async _setRetentionPolicyV1(retention: string) {
+    const seconds = retentionSeconds(retention)
+    const duration = !seconds ? "INF" : `${seconds}s`
+    const policy = `RETENTION POLICY ${quoteIdentifier(retentionPolicyName)} ON ${quoteIdentifier(this.database)} DURATION ${duration} REPLICATION 1 DEFAULT`
+    try {
+      await this._query(`CREATE ${policy}`)
     } catch {
-      try {
-        await this.influxClient!!.alterRetentionPolicy("venus_default", opts)
-        this.logger.debug(`Retention policy set: ${retention}`)
-        this.retention = retention
-      } catch (error) {
-        this.logger.error(`Error setting retention policy: ${retention}, ${error}`)
-      }
+      await this._query(`ALTER ${policy}`)
     }
   }
 }

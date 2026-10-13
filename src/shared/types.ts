@@ -106,15 +106,21 @@ export interface AppDataCollectionExpiryConfig {
 
 export type AppInfluxDBProtocol = "http" | "https"
 
+// "1": InfluxDB 1.8+ (also Victoria Metrics), "2": InfluxDB 2.x, "3": InfluxDB 3 Core / Enterprise
+export type AppInfluxDBVersion = "1" | "2" | "3"
+
 export interface AppInfluxDBConfig {
+  version: AppInfluxDBVersion
   protocol: AppInfluxDBProtocol
   host: string
   port: string
   path?: string
-  username?: string
-  password?: string
-  database: string
-  retention: string
+  username?: string // v1 only
+  password?: string // v1 only
+  org?: string // v2 only
+  token?: string // v2 and v3
+  database: string // v1 and v3: database name, v2: bucket name
+  retention: string // "30d" style, "" = leave unmanaged, "0" = infinite
   batchWriteInterval?: number
 }
 
@@ -175,6 +181,7 @@ const defaultAppConfigValues: AppConfig = {
     subscriptions: {},
   },
   influxdb: {
+    version: "1",
     protocol: "http",
     host: "localhost",
     port: "8086",
