@@ -176,6 +176,16 @@ Navigate to http://localhost:8088 to access Venus Influx Loader Admin UI, use `a
 
 Install Venus Grafana by following the instructions here: https://github.com/victronenergy/venus-grafana.
 
+### Build and push release docker images
+
+Releases are cut with `./release.sh` on `main`, which lets semantic-release update the changelog, create the version tag, and publish the GitHub release. With that tag checked out, `build-release-images.sh` builds the multi-platform image and pushes it as `OWNER/venus-influx-loader:X.Y.Z` and `OWNER/venus-influx-loader:X.Y`. When HEAD is not tagged, the image is pushed as `OWNER/venus-influx-loader:develop`. An explicit version argument overrides the detection.
+
+```
+$ export OWNER="martin"
+$ (cd docker && ./build-release-images.sh)          # tags inferred from git
+$ (cd docker && ./build-release-images.sh develop)  # explicit tag
+```
+
 
 ## Source Code Details
 
