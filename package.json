@@ -77,7 +77,7 @@
     "@types/express": "^5.0.6",
     "@types/lodash": "^4.17.26",
     "@types/ms": "^2.1.0",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.5",
     "@types/node-ssdp": "^4.0.5",
     "@types/primus": "^7.3.9",
     "@types/react": "^19.3.0",
