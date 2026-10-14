@@ -109,11 +109,13 @@ Recommendation:
 
 ### Secured Venus devices (Venus OS 3.80 and newer)
 
-Since Venus OS 3.50 every GX device has a *Network Security Profile* (Settings > General). New devices ship with the *Secured* profile, where local MQTT is only available over TLS on port 8883 with a self-signed certificate and requires authentication. Plain MQTT on port 1883 only works with the *Unsecured* profile. UPNP discovery is not affected by the profile.
+Since Venus OS 3.50 every GX device has a *Network Security Profile* (Settings > General > Access & Security). GX devices shipped with Venus OS 3.50 or later default to the *Secured* profile, devices upgraded from an older version keep a profile matching their previous Remote Console settings. With the *Secured* profile local MQTT is only available over TLS on port 8883 with a self-signed certificate and requires authentication. Plain MQTT on port 1883 only works with the *Unsecured* profile. UPNP discovery is not affected by the profile.
+
+The device password that comes with the *Secured* profile (on new units the six-digit Bluetooth PIN printed on the enclosure) is only used by the Remote Console. Venus Influx Loader never asks for it, it pairs with the device instead. See the [Cerbo GX manual](https://www.victronenergy.com/media/pg/Cerbo_GX/en/the-user-interface.html) for the details of each profile.
 
 Venus Influx Loader connects to such devices using a pairing token (Venus OS 3.80 or newer):
 
-1. In the Admin UI, tick **Secure** next to the device on the *Discovery* or *Manual* settings page. Manual hosts have to be saved first, the token is stored under the hostname.
+1. In the Admin UI, tick **Secured** next to the device on the *Discovery* or *Manual* settings page. Manual hosts have to be saved first, the token is stored under the hostname.
 2. Put the Venus device into pairing mode: Settings > Integrations > MQTT Devices > Pairing mode, or quickly press the button on a GX device without a screen twice. Pairing mode stays active for 120 seconds.
 3. Click **Pair** next to the device within those 120 seconds.
 
