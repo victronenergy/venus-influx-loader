@@ -19,7 +19,7 @@ import {
 } from "@coreui/react"
 
 import CIcon from "@coreui/icons-react"
-import { cilRss } from "@coreui/icons"
+import { cilLockLocked, cilRss, cilSettings } from "@coreui/icons"
 import { AppState } from "../../store"
 import { WebSocketStatus } from "../settings/WebsocketStatus"
 import ms from "ms"
@@ -57,6 +57,9 @@ function Dashboard() {
     event.preventDefault()
     navigate("../troubleshooting", { replace: true, state: { filter: label } })
   }
+
+  // settings page where this device was configured
+  const settingsPage = { UPNP: "../settings/discovery", VRM: "../settings/vrm", IP: "../settings/manual" }
 
   return (
     <>
@@ -128,6 +131,14 @@ function Dashboard() {
                                 Stop in {ms(deviceStats.expiry - Date.now())}
                               </CBadge>
                             )}
+                            {deviceStats.secure && (
+                              <>
+                                &nbsp; &nbsp;
+                                <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
+                                  <CIcon icon={cilLockLocked} size="sm" /> Secured
+                                </CBadge>
+                              </>
+                            )}
                           </CCol>
                           <CCol className="text-end" xs="auto">
                             {deviceStats.hasReceivedKeepAliveConfirmation ? (
@@ -137,8 +148,27 @@ function Dashboard() {
                                 <small className="text-muted"> measurements/sec </small>
                               </>
                             ) : null}
+                            &nbsp; &nbsp;
+                            <CLink
+                              href="#"
+                              title="Settings"
+                              className="text-secondary"
+                              onClick={(event) => {
+                                event.preventDefault()
+                                navigate(settingsPage[deviceStats.type])
+                              }}
+                            >
+                              <CIcon icon={cilSettings} size="lg" />
+                            </CLink>
                           </CCol>
                         </CRow>
+                        {deviceStats.lastError && (
+                          <CRow className="mb-1">
+                            <CCol>
+                              <small className="text-danger">{deviceStats.lastError}</small>
+                            </CCol>
+                          </CRow>
+                        )}
                         <CRow className="align-items-end">
                           <CCol>
                             <CProgress
