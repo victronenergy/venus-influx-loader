@@ -32,6 +32,7 @@ export type ConfiguredDevice = {
   portalId?: string
   name?: string
   address: string
+  secure?: boolean // IP/UPNP: connect over TLS (mqtts://address:8883) using the stored pairing token
   subscriptions: VenusMQTTTopic[]
 }
 
@@ -64,6 +65,8 @@ export interface DeviceStatisticsDetails {
   portalId?: string
   isReceivingData: boolean
   hasReceivedKeepAliveConfirmation: boolean
+  secure?: boolean
+  lastError?: string // last connection/TLS/auth error, cleared once connected
   expiry?: number
   measurementRate: number
   totalMeasurementsCount: number

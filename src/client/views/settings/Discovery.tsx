@@ -4,6 +4,8 @@ import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck 
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { SaveError } from "./SaveError"
+import { VenusPairingCell, VenusPairingError, VenusPairingHelp, useVenusPairing } from "./VenusPairing"
+import { DiscoveredDevice } from "../../../shared/state"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import { DeviceList } from "./DeviceList"
 import { useEffect, useState } from "react"
@@ -16,6 +18,8 @@ function Discovery() {
   const [{ data: config, loading: _isLoading, error: _loadError }, load, _cancelLoad] = useGetConfig()
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
   const [isTemporaryConfigDirty, setIsTemporaryConfigDirty] = useState(false)
+
+  const pairing = useVenusPairing("UPNP")
 
   const [referenceTime, setReferenceTime] = useState<number>(0)
   const defaultExpiryDuration = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
@@ -82,6 +86,34 @@ function Discovery() {
     setIsTemporaryConfigDirty(true)
   }
 
+  function handleSecurePortalChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const clone = { ...temporaryConfig!! }
+    const portalId = event.target.value
+    const list = clone.upnp.securePortalIds.filter((x) => x !== portalId)
+    if (event.target.checked) {
+      list.push(portalId)
+    }
+    clone.upnp.securePortalIds = list
+    setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
+  }
+
+  // the server pairs using the discovered address, nothing has to be saved first
+  function renderPairingCell(device: DiscoveredDevice) {
+    if (!temporaryConfig?.upnp.securePortalIds.includes(device.portalId)) {
+      return null
+    }
+    return (
+      <VenusPairingCell
+        token={pairing.tokenOf(device.portalId)}
+        canPair={true}
+        busy={pairing.isBusy(device.portalId)}
+        onPair={() => pairing.pair(device.portalId)}
+        onUnpair={() => pairing.unpair(device.portalId)}
+      />
+    )
+  }
+
   function handleEnableAllPortalsChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
     if (event.target.checked) {
@@ -130,6 +162,10 @@ function Discovery() {
     return <WebSocketStatus websocketStatus={websocketStatus} />
   }
 
+  const hasSecureDevices = temporaryConfig
+    ? upnpDiscovered.some((device) => temporaryConfig.upnp.securePortalIds.includes(device.portalId))
+    : false
+
   return (
     temporaryConfig && (
       <CCard>
@@ -145,6 +181,8 @@ function Discovery() {
           </CForm>
         </CCardHeader>
         <CCardBody>
+          <VenusPairingHelp hidden={!hasSecureDevices} />
+          <VenusPairingError error={pairing.error} />
           <CForm>
             <DeviceList
               settings={temporaryConfig.upnp}
@@ -157,6 +195,9 @@ function Discovery() {
               defaultExpiryDuration={defaultExpiryDuration}
               onPortalExpiryChange={handlePortalExpiryChange}
               onPortalMQTTSubscriptionsChange={handlePortalSubscriptionChange}
+              securePortalIds={temporaryConfig.upnp.securePortalIds}
+              onSecurePortalChange={handleSecurePortalChange}
+              renderPairingCell={renderPairingCell}
             />
           </CForm>
         </CCardBody>

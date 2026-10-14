@@ -144,6 +144,9 @@ export class Server {
       const configureVRMRoutes = (await import("./vrm-api.js")).default
       app.use(this.options.adminApiEndpoint, configureVRMRoutes(this))
 
+      const configureVenusRoutes = (await import("./venus-api.js")).default
+      app.use(this.options.adminApiEndpoint, configureVenusRoutes(this))
+
       // prepare websocket channel for communication with Admin UI
       this.websocket = new WebSocketChannel(this)
       this.websocket.start()
@@ -425,6 +428,8 @@ export class Server {
     try {
       this.logger.info(`Saving secrets to: ${location}...`)
       await fs.writeFile(location, JSON.stringify(this.secrets, null, 2))
+      // only the loader cares: reconnect devices whose credentials changed, nothing in the config did
+      this.emit("secretsChanged", this.secrets)
     } catch (error) {
       this.logger.error(`Failed saving secrets to: ${location}, error: ${error}.`)
       throw error
@@ -451,6 +456,7 @@ export class Server {
 export interface ServerEvents {
   loaderevent: { type: AppStateActionType; data: any }
   settingsChanged: AppConfig
+  secretsChanged: AppSecrets
   upnpDiscoveryDidStart: {}
   upnpDiscoveryDidStop: {}
   upnpDiscovered: DiscoveredDevice

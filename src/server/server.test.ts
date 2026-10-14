@@ -52,6 +52,32 @@ describe("Server config files", () => {
       expect(config.influxdb.database).toBe("venus")
     })
 
+    it("adds the secure device defaults to a config written by an older version", async () => {
+      await fs.writeFile(
+        path.join(configPath, "config.json"),
+        JSON.stringify({
+          upnp: { enabled: true, enabledPortalIds: ["a"] },
+          manual: { enabled: true, hosts: [{ hostName: "h", enabled: true }] },
+        }),
+      )
+      const config = await server.loadConfig()
+      expect(config.upnp.securePortalIds).toEqual([])
+      expect(config.manual.hosts[0].secure).toBeUndefined()
+    })
+
+    it("keeps the stored secure devices", async () => {
+      await fs.writeFile(
+        path.join(configPath, "config.json"),
+        JSON.stringify({
+          upnp: { securePortalIds: ["a"] },
+          manual: { hosts: [{ hostName: "h", enabled: true, secure: true }] },
+        }),
+      )
+      const config = await server.loadConfig()
+      expect(config.upnp.securePortalIds).toEqual(["a"])
+      expect(config.manual.hosts[0].secure).toBe(true)
+    })
+
     describe("with VIL_INFLUXDB_* environment", () => {
       const env = {
         VIL_INFLUXDB_VERSION: "2",
@@ -149,6 +175,12 @@ describe("Server config files", () => {
     it("returns the stored secrets", async () => {
       await fs.writeFile(path.join(configPath, "secrets.json"), JSON.stringify({ vrmToken: "t" }))
       expect(await server.loadSecrets()).toEqual({ vrmToken: "t" })
+    })
+
+    it("returns the stored Venus pairing tokens", async () => {
+      const venusTokens = { "IP:h": { tokenName: "token/venusinfluxloader/vil1", password: "p", pairedAt: 1 } }
+      await fs.writeFile(path.join(configPath, "secrets.json"), JSON.stringify({ venusTokens }))
+      expect(await server.loadSecrets()).toEqual({ venusTokens })
     })
 
     it("falls back to the default admin login when the file is missing", async () => {
