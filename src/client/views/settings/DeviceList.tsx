@@ -25,9 +25,15 @@ interface DeviceListProps {
     _portalId: string,
   ) => void
   onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
+  // local Venus devices only: adds a "Secure" checkbox column, the checkbox id is the portalId
+  securePortalIds?: string[]
+  onSecurePortalChange?: React.ChangeEventHandler<HTMLInputElement>
+  // local Venus devices only: adds a "Pairing" column
+  renderPairingCell?: (_device: DiscoveredDevice) => React.ReactNode
 }
 
 export function DeviceList(props: DeviceListProps) {
+  const showSecure = props.onSecurePortalChange !== undefined
   return (
     <CTable bordered striped hidden={props.hidden}>
       <CTableHead>
@@ -36,6 +42,8 @@ export function DeviceList(props: DeviceListProps) {
           <CTableHeaderCell>Portal ID</CTableHeaderCell>
           <CTableHeaderCell>Subscriptions</CTableHeaderCell>
           {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
+          {showSecure && <CTableHeaderCell>Secure</CTableHeaderCell>}
+          {props.renderPairingCell && <CTableHeaderCell>Pairing</CTableHeaderCell>}
           <CTableHeaderCell>
             <CFormCheck
               id="enable"
@@ -77,6 +85,19 @@ export function DeviceList(props: DeviceListProps) {
                     />
                   </CTableDataCell>
                 )}
+                {showSecure && (
+                  <CTableDataCell>
+                    <CFormCheck
+                      name="securePortal"
+                      id={`secure-${element.portalId}`}
+                      value={element.portalId}
+                      label="Secured"
+                      onChange={props.onSecurePortalChange}
+                      checked={(props.securePortalIds ?? []).indexOf(element.portalId) !== -1}
+                    />
+                  </CTableDataCell>
+                )}
+                {props.renderPairingCell && <CTableDataCell>{props.renderPairingCell(element)}</CTableDataCell>}
                 <CTableDataCell>
                   <CFormCheck
                     name="enablePortal"
