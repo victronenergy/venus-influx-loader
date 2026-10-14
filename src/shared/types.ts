@@ -16,6 +16,7 @@ export type AppConfigKey = keyof AppConfig
 export interface AppUPNPConfig {
   enabled: boolean
   enabledPortalIds: string[]
+  securePortalIds: string[] // portalIds connected over TLS (mqtts://host:8883) using a pairing token
   expiry: AppDataCollectionExpiryConfig
   subscriptions: AppDeviceSubscriptionsConfig
 }
@@ -36,6 +37,7 @@ export type AppVRMConfigKey = keyof AppVRMConfig
 export interface AppDeviceConfig {
   hostName: string
   enabled: boolean
+  secure?: boolean // connect over TLS (mqtts://host:8883) using a pairing token, undefined == false
 }
 
 export type AppDeviceConfigKey = keyof AppDeviceConfig
@@ -128,6 +130,13 @@ export type AppInfluxDBConfigKey = keyof AppInfluxDBConfig
 
 export type AppConfigNestedKey = AppUPNPConfigKey | AppVRMConfigKey | AppManualConfigKey | AppInfluxDBConfigKey
 
+// MQTT credentials handed out by a Venus OS 3.80+ device in pairing mode
+export interface VenusPairingToken {
+  tokenName: string // MQTT username, "token/<role>/<device_id>"
+  password: string // MQTT password
+  pairedAt: number // absolute time in millis when the token was obtained
+}
+
 export interface AppSecrets {
   vrmToken?: string
   vrmTokenId?: string
@@ -136,6 +145,9 @@ export interface AppSecrets {
   login?: {
     username: string
     password: string
+  }
+  venusTokens?: {
+    [key: string]: VenusPairingToken // keyed by venusTokenKey(): "IP:<hostName>" or "UPNP:<portalId>"
   }
 }
 
@@ -163,6 +175,7 @@ const defaultAppConfigValues: AppConfig = {
   upnp: {
     enabled: true,
     enabledPortalIds: [],
+    securePortalIds: [],
     expiry: {},
     subscriptions: {},
   },
