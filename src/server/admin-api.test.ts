@@ -53,16 +53,30 @@ describe("admin-api PUT /config", () => {
     expect(server.saveSecrets).not.toHaveBeenCalled()
   })
 
-  it("forgets pairing tokens of hosts that are no longer configured", async () => {
+  it("forgets pairing tokens of devices that are no longer configured as Secured", async () => {
     server.secrets.venusTokens = {
       "IP:kept": { tokenName: "t", password: "p", pairedAt: 1 },
       "IP:renamed": { tokenName: "t", password: "p", pairedAt: 1 },
+      "IP:plain": { tokenName: "t", password: "p", pairedAt: 1 },
       "UPNP:abc": { tokenName: "t", password: "p", pairedAt: 1 },
+      "UPNP:unticked": { tokenName: "t", password: "p", pairedAt: 1 },
     }
     const config = createAppConfig()
-    config.manual.hosts = [{ hostName: "kept", enabled: true, secure: true }]
+    config.manual.hosts = [
+      { hostName: "kept", enabled: false, secure: true },
+      { hostName: "plain", enabled: true },
+    ]
+    config.upnp.securePortalIds = ["abc"]
     expect((await put(config)).status).toBe(200)
     expect(Object.keys(server.secrets.venusTokens!!)).toEqual(["IP:kept", "UPNP:abc"])
     expect(server.saveSecrets).toHaveBeenCalledTimes(1)
+  })
+
+  it("keeps the secrets untouched when nothing is orphaned", async () => {
+    server.secrets.venusTokens = { "UPNP:abc": { tokenName: "t", password: "p", pairedAt: 1 } }
+    const config = createAppConfig()
+    config.upnp.securePortalIds = ["abc"]
+    expect((await put(config)).status).toBe(200)
+    expect(server.saveSecrets).not.toHaveBeenCalled()
   })
 })

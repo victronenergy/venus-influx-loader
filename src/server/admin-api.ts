@@ -42,11 +42,17 @@ export default (server: Server) => {
     }
   })
 
-  // pairing tokens are keyed by hostName, a host that was renamed or deleted leaves its token behind
+  // pairing tokens only make sense for devices configured as Secured, a host that was renamed,
+  // deleted or switched back to plain MQTT would otherwise leave a live token behind
   async function forgetTokensOfRemovedHosts() {
     const tokens = server.secrets.venusTokens ?? {}
-    const hostNames = server.config.manual.hosts.map((host) => venusTokenKey("IP", host.hostName))
-    const orphans = Object.keys(tokens).filter((key) => key.startsWith("IP:") && !hostNames.includes(key))
+    const secured = [
+      ...server.config.manual.hosts
+        .filter((host) => host.secure === true)
+        .map((host) => venusTokenKey("IP", host.hostName)),
+      ...server.config.upnp.securePortalIds.map((portalId) => venusTokenKey("UPNP", portalId)),
+    ]
+    const orphans = Object.keys(tokens).filter((key) => !secured.includes(key))
     if (orphans.length === 0) return
     server.secrets.venusTokens = Object.fromEntries(Object.entries(tokens).filter(([key]) => !orphans.includes(key)))
     await server.saveSecrets()
