@@ -3,6 +3,7 @@ import { Server } from "./server.js"
 import { AppConfig, AppSecrets } from "../shared/types.js"
 import { API_CONFIG, API_DEBUG, API_LOG, API_SECURITY } from "../shared/api.js"
 import { parseInfluxDBVersion, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
+import { venusTokenKey } from "../shared/venusConfig.js"
 
 // TODO: add TS API request/response interfaces
 // TODO: refactor out hardcoded API endpoints
@@ -28,15 +29,28 @@ export default (server: Server) => {
       return
     }
     config.influxdb.version = parseInfluxDBVersion(config.influxdb.version)!!
+    // older Admin UI bundles or scripts may not send the newer keys
+    config.upnp.securePortalIds = Array.isArray(config.upnp?.securePortalIds) ? config.upnp.securePortalIds : []
     server.config = config
     try {
       await server.saveConfig()
+      await forgetTokensOfRemovedHosts()
       res.status(200).send("Configuration Saved")
       res.send()
     } catch (error) {
       res.status(500).send(error)
     }
   })
+
+  // pairing tokens are keyed by hostName, a host that was renamed or deleted leaves its token behind
+  async function forgetTokensOfRemovedHosts() {
+    const tokens = server.secrets.venusTokens ?? {}
+    const hostNames = server.config.manual.hosts.map((host) => venusTokenKey("IP", host.hostName))
+    const orphans = Object.keys(tokens).filter((key) => key.startsWith("IP:") && !hostNames.includes(key))
+    if (orphans.length === 0) return
+    server.secrets.venusTokens = Object.fromEntries(Object.entries(tokens).filter(([key]) => !orphans.includes(key)))
+    await server.saveSecrets()
+  }
 
   // TODO: annotate req/res
   router.post(`/${API_SECURITY}`, async (req: express.Request<AppSecrets>, res, _next) => {
