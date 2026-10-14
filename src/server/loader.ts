@@ -4,13 +4,16 @@ import buildInfo from "../buildInfo.cjs"
 const buildVersion = buildInfo.buildVersion
 import { Server } from "./server.js"
 import { Logger } from "winston"
-import { ConfiguredDevice, DiscoveredDevice, LoaderStatistics } from "../shared/state.js"
+import { ConfiguredDevice, DeviceStatisticsDetails, DiscoveredDevice, LoaderStatistics } from "../shared/state.js"
 import ms from "ms"
-import { VenusMQTTTopic } from "../shared/types.js"
+import { AppSecrets, VenusMQTTTopic } from "../shared/types.js"
+import { venusTokenKey } from "../shared/venusConfig.js"
 
 const collectStatsInterval = 5
 const checkExpiryInterval = 60
 const keepAliveInterval = 30
+
+const secureProfileHint = "(device in Secured mode?)"
 
 const defaultVenusMQTTSubscriptions: VenusMQTTTopic[] = ["/#"]
 const niceToHaveVenusMQTTSubscriptions: VenusMQTTTopic[] = ["/system/#", "/settings/#"]
@@ -38,6 +41,76 @@ export function calculateVrmBrokerURL(portalId: string): string {
     sum = sum + lowered.charCodeAt(i)
   }
   return `mqtt${sum % 128}.victronenergy.com`
+}
+
+export interface VenusMqttConnection {
+  url: string
+  options: mqtt.IClientOptions
+}
+
+// Decides how to reach a device: VRM brokers and secure local devices use TLS on 8883 with
+// credentials, plain local devices use 1883 without. Throws when a secure local device has no
+// pairing token stored yet. The token is only ever copied into the options, never onto the device.
+export function buildVenusMqttConnection(
+  device: ConfiguredDevice,
+  secrets: AppSecrets,
+  clientId: string,
+): VenusMqttConnection {
+  const base: mqtt.IClientOptions = {
+    reconnectPeriod: 10_000,
+    protocolVersion: 5,
+    // keep retrying after a refused CONNACK (not authorized, bad credentials), otherwise mqtt.js gives up
+    reconnectOnConnackError: true,
+  }
+  if (device.type === "VRM") {
+    return {
+      url: `mqtts://${device.address}:8883`,
+      options: {
+        ...base,
+        rejectUnauthorized: false,
+        username: `${secrets.vrmUsername}`,
+        password: `Token ${secrets.vrmToken}`,
+        // use random clientId + vrmTokenId to identify this loader instance
+        clientId: `venus_influx_loader_${buildVersion}_${clientId}_${secrets.vrmTokenId}`,
+      },
+    }
+  }
+  if (device.secure) {
+    const key = venusTokenKey(device.type, device.type === "IP" ? device.address : device.portalId!!)
+    const token = secrets.venusTokens?.[key]
+    if (token === undefined) {
+      throw new Error("Collection paused: Configured as Secured, but not yet paired")
+    }
+    return {
+      url: `mqtts://${device.address}:8883`,
+      options: {
+        ...base,
+        // Venus OS uses a self-signed certificate
+        rejectUnauthorized: false,
+        username: token.tokenName,
+        password: token.password,
+        // use random clientId to identify this loader instance
+        clientId: `venus_influx_loader_${buildVersion}_${clientId}`,
+      },
+    }
+  }
+  return {
+    url: `mqtt://${device.address}:1883`,
+    options: {
+      ...base,
+      // use random clientId to identify this loader instance
+      clientId: `venus_influx_loader_${buildVersion}_${clientId}`,
+    },
+  }
+}
+
+// Everything that decides *how* we connect, the clientId is random per connection.
+// undefined means "can not connect" (secure device without a token), two of those are the same.
+export function isSameVenusMqttConnection(a?: VenusMqttConnection, b?: VenusMqttConnection): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b
+  }
+  return a.url === b.url && a.options.username === b.options.username && a.options.password === b.options.password
 }
 
 export function prepareVenusMQTTSubscriptions(subscriptions?: VenusMQTTTopic[]): VenusMQTTTopic[] {
@@ -70,6 +143,11 @@ export class Loader {
   async start() {
     // whenever settings change, we disconnect/reconnect as needed
     this.server.on("settingsChanged", () => {
+      this.settingsChanged()
+    })
+
+    // whenever secrets change (pairing, VRM login), we reconnect devices whose credentials changed
+    this.server.on("secretsChanged", () => {
       this.settingsChanged()
     })
 
@@ -168,6 +246,7 @@ export class Loader {
     remaining.forEach((portalId) =>
       this.initiateUpnpDeviceConnection(
         this.server.upnpDevices[portalId],
+        (config.securePortalIds ?? []).includes(portalId),
         config.subscriptions[portalId],
         config.expiry[portalId],
       ),
@@ -203,7 +282,12 @@ export class Loader {
     })
     // connect to Venus devices that are enabled
     remaining.forEach((hostName) =>
-      this.initiateHostnameDeviceConnection(hostName, config.subscriptions[hostName], config.expiry[hostName]),
+      this.initiateHostnameDeviceConnection(
+        hostName,
+        config.hosts.some((host) => host.hostName === hostName && host.secure === true),
+        config.subscriptions[hostName],
+        config.expiry[hostName],
+      ),
     )
     // disable expired devices in the config file
     expired.forEach((hostName) => {
@@ -220,8 +304,10 @@ export class Loader {
     // check what devices are enabled
     // and compute what devices should be disabled
     const config = this.server.config.vrm
-    const e1 = config.enabled ? config.enabledPortalIds : []
-    const e2 = config.enabled
+    // without a VRM token there is nothing to authenticate with, disconnect everything
+    const isUsable = config.enabled && config.hasToken
+    const e1 = isUsable ? config.enabledPortalIds : []
+    const e2 = isUsable
       ? config.manualPortalIds.reduce((r: string[], e) => {
           if (e.enabled) r.push(e.portalId)
           return r
@@ -254,17 +340,41 @@ export class Loader {
     this.isConfigFileDirty = this.isConfigFileDirty ? true : expired.length > 0
   }
 
-  private async initiateUpnpDeviceConnection(d: DiscoveredDevice, subscriptions: VenusMQTTTopic[], expiry?: number) {
-    if (d === undefined) return
-    if (this.upnpConnections[d.portalId]) {
-      this.upnpConnections[d.portalId].updateExpiry(expiry)
-      this.upnpConnections[d.portalId].updateSubscriptions(prepareVenusMQTTSubscriptions(subscriptions))
-      return
+  // true when the existing connection can be kept (expiry/subscriptions updated in place),
+  // false when it was torn down because the way we connect changed (secure flag, pairing token)
+  private reuseConnection(
+    connections: { [key: string]: VenusMqttClient },
+    key: string,
+    secure: boolean,
+    subscriptions: VenusMQTTTopic[],
+    expiry?: number,
+  ): boolean {
+    const existing = connections[key]
+    if (existing === undefined) return false
+    if (existing.needsReconnect(this.server.secrets, secure)) {
+      this.logger.info(`${key}: connection settings changed, reconnecting`)
+      existing.stop()
+      delete connections[key]
+      return false
     }
+    existing.updateExpiry(expiry)
+    existing.updateSubscriptions(prepareVenusMQTTSubscriptions(subscriptions))
+    return true
+  }
+
+  private async initiateUpnpDeviceConnection(
+    d: DiscoveredDevice,
+    secure: boolean,
+    subscriptions: VenusMQTTTopic[],
+    expiry?: number,
+  ) {
+    if (d === undefined) return
+    if (this.reuseConnection(this.upnpConnections, d.portalId, secure, subscriptions, expiry)) return
     const device: ConfiguredDevice = {
       type: "UPNP",
       address: d.address,
       portalId: d.portalId,
+      secure,
       subscriptions: prepareVenusMQTTSubscriptions(subscriptions),
     }
     this.logger.debug(`initiateUpnpDeviceConnection: ${JSON.stringify(device)}`)
@@ -273,16 +383,18 @@ export class Loader {
     await mqttClient.start()
   }
 
-  private async initiateHostnameDeviceConnection(hostName: string, subscriptions: VenusMQTTTopic[], expiry?: number) {
+  private async initiateHostnameDeviceConnection(
+    hostName: string,
+    secure: boolean,
+    subscriptions: VenusMQTTTopic[],
+    expiry?: number,
+  ) {
     if (hostName === undefined) return
-    if (this.manualConnections[hostName]) {
-      this.manualConnections[hostName].updateExpiry(expiry)
-      this.manualConnections[hostName].updateSubscriptions(prepareVenusMQTTSubscriptions(subscriptions))
-      return
-    }
+    if (this.reuseConnection(this.manualConnections, hostName, secure, subscriptions, expiry)) return
     const device: ConfiguredDevice = {
       type: "IP",
       address: hostName,
+      secure,
       subscriptions: prepareVenusMQTTSubscriptions(subscriptions),
     }
     this.logger.debug(`initiateHostnameDeviceConnection: ${JSON.stringify(device)}`)
@@ -293,11 +405,7 @@ export class Loader {
 
   private async initiateVrmDeviceConnection(portalId: string, subscriptions: VenusMQTTTopic[], expiry?: number) {
     if (portalId === undefined) return
-    if (this.vrmConnections[portalId]) {
-      this.vrmConnections[portalId].updateExpiry(expiry)
-      this.vrmConnections[portalId].updateSubscriptions(prepareVenusMQTTSubscriptions(subscriptions))
-      return
-    }
+    if (this.reuseConnection(this.vrmConnections, portalId, false, subscriptions, expiry)) return
     const device: ConfiguredDevice = {
       type: "VRM",
       portalId: portalId,
@@ -305,7 +413,7 @@ export class Loader {
       subscriptions: prepareVenusMQTTSubscriptions(subscriptions),
     }
     this.logger.debug(`initiateVrmDeviceConnection: ${JSON.stringify(device)}`)
-    const mqttClient = new VenusMqttClient(this, device, expiry, true)
+    const mqttClient = new VenusMqttClient(this, device, expiry)
     this.vrmConnections[portalId] = mqttClient
     await mqttClient.start()
   }
@@ -315,76 +423,95 @@ class VenusMqttClient {
   loader: Loader
   logger: Logger
   device: ConfiguredDevice
-  client!: MqttClient
+  client?: MqttClient
+  connection?: VenusMqttConnection
   address: string
-  port: number
-  isVrm: boolean
   expiry?: number
   isFirstKeepAliveRequest: boolean = true
   isDetectingPortalId: boolean = true
+  hasConnected: boolean = false
+  isStopped: boolean = false
   venusKeepAlive: any
 
-  constructor(loader: Loader, device: ConfiguredDevice, expiry?: number, isVrm = false) {
+  constructor(loader: Loader, device: ConfiguredDevice, expiry?: number) {
     this.loader = loader
     this.logger = loader.server.getLogger(`${device.type}:${device.portalId ?? device.address}`)
     this.address = device.address!!
-    this.port = isVrm ? 8883 : 1883
     this.device = device
     this.expiry = expiry
-    this.isVrm = isVrm
 
     this.setupStatistics()
   }
 
+  get isVrm() {
+    return this.device.type === "VRM"
+  }
+
   async start() {
     this.logger.info(`start, will stop ${this.formatExpiry(this.expiry)}`)
+    // decide how to connect first, needsReconnect() compares against it while the name lookup below is pending
+    const clientId = Math.random().toString(16).slice(3)
+    try {
+      this.connection = buildVenusMqttConnection(this.device, this.loader.server.secrets, clientId)
+    } catch (error) {
+      // stays listed on the dashboard with the reason, re-evaluated on the next settings change
+      this.logger.error(`${(error as Error).message}`)
+      this.setLastError((error as Error).message)
+      return this
+    }
     if (this.isVrm && this.device.name === undefined) {
       this.device.name = await this.loader.server.vrm.getInstallationName(this.device.portalId!!, this.logger)
     }
-    return new Promise((resolve, _reject) => {
-      const clientId = Math.random().toString(16).slice(3)
-      let options: mqtt.IClientOptions
-      if (this.isVrm) {
-        options = {
-          rejectUnauthorized: false,
-          username: `${this.loader.server.secrets.vrmUsername}`,
-          password: `Token ${this.loader.server.secrets.vrmToken}`,
-          // use random clientId + vrmTokenId to identify this loader instance
-          clientId: `venus_influx_loader_${buildVersion}_${clientId}_${this.loader.server.secrets.vrmTokenId}`,
-          reconnectPeriod: 10_000,
-          protocolVersion: 5,
-        }
-      } else {
-        options = {
-          // use random clientId to identify this loader instance
-          clientId: `venus_influx_loader_${buildVersion}_${clientId}`,
-          reconnectPeriod: 10_000,
-          protocolVersion: 5,
-        }
-      }
-      this.logger.info(`MQTT connecting to ${this.address}:${this.port} using clientId: ${options.clientId}`)
-      this.client = mqtt.connect(`${this.isVrm ? "mqtts" : "mqtt"}:${this.address}:${this.port}`, options)
-      this.setupMqttClient()
-      resolve(this)
-    })
+    // torn down while the name lookup was pending, the replacement connection owns the device now
+    if (this.isStopped) return this
+    this.logger.info(`MQTT connecting to ${this.connection.url} using clientId: ${this.connection.options.clientId}`)
+    this.client = mqtt.connect(this.connection.url, this.connection.options)
+    this.setupMqttClient(this.client)
+    return this
   }
 
   async stop() {
     this.logger.info("stop")
-    this.client.end(true)
+    this.isStopped = true
+    this.client?.end(true)
     delete this.loader.loaderStatistics.deviceStatistics[this.statisticsKey]
   }
 
-  private setupMqttClient() {
-    this.client.on("connect", () => {
+  // true when the stored secrets or the secure flag now lead to a different connection
+  needsReconnect(secrets: AppSecrets, secure: boolean): boolean {
+    let fresh: VenusMqttConnection | undefined
+    try {
+      fresh = buildVenusMqttConnection({ ...this.device, secure }, secrets, "")
+    } catch {
+      fresh = undefined
+    }
+    return !isSameVenusMqttConnection(this.connection, fresh)
+  }
+
+  // the statistics slot of a stopped client may already belong to its replacement
+  private get statistics(): DeviceStatisticsDetails | undefined {
+    return this.isStopped ? undefined : this.loader.loaderStatistics.deviceStatistics[this.statisticsKey]
+  }
+
+  private setLastError(message?: string) {
+    const stats = this.statistics
+    if (stats) {
+      stats.lastError = message
+    }
+  }
+
+  private setupMqttClient(client: MqttClient) {
+    client.on("connect", () => {
       this.logger.info(`MQTT connected to ${this.clientRemoteAddress}`)
+      this.hasConnected = true
+      this.setLastError(undefined)
       // every connect should trigger full republish on first keepalive
       this.isFirstKeepAliveRequest = true
       if (this.device.portalId === undefined) {
         // we do not know the portalId yet (manual connection)
         this.logger.info("Detecting portalId...")
         // dbus-flashmq only supports publishing at QoS 0
-        this.client.subscribe("N/+/#", { qos: 0 })
+        client.subscribe("N/+/#", { qos: 0 })
         this.isDetectingPortalId = true
       } else {
         // we do know the portalId already (vrm + upnp connection)
@@ -399,14 +526,31 @@ class VenusMqttClient {
       }
     })
 
-    this.client.on("message", (topic, message, packet) => this.onMessage(topic, message, packet))
+    client.on("message", (topic, message, packet) => this.onMessage(topic, message, packet))
 
-    this.client.on("error", (error) => {
+    client.on("error", (error) => {
       this.logger.error(`MQTT connection to ${this.clientRemoteAddress}, ${error}`)
+      // "Connection refused: Not authorized (code 135)" for a deleted pairing token,
+      // "write EPROTO ... wrong version number" for TLS against a plaintext port, ...
+      let message = error instanceof mqtt.ErrorWithReasonCode ? `${error.message} (code ${error.code})` : error.message
+      // a Secured network profile closes the plaintext port, point the user to the fix
+      if (!this.isVrm && !this.device.secure && message.includes("ECONNREFUSED")) {
+        message = `Connection failed: ${message} ${secureProfileHint}`
+      }
+      this.setLastError(message)
     })
 
-    this.client.on("close", () => {
+    client.on("close", () => {
       this.logger.debug(`MQTT connection to ${this.clientRemoteAddress} closed`)
+
+      // mqtt.js swallows stream errors without a code, so plaintext against a TLS-only port only
+      // shows up as a close loop, give the user a hint
+      if (!this.hasConnected && !this.isVrm && !this.device.secure) {
+        const stats = this.statistics
+        if (stats && stats.lastError === undefined) {
+          this.setLastError(`Connection failed: closed before connecting ${secureProfileHint}`)
+        }
+      }
 
       if (this.venusKeepAlive) {
         this.logger.debug(`Clearing keep alive timer`)
@@ -415,20 +559,21 @@ class VenusMqttClient {
       }
     })
 
-    this.client.on("offline", () => {
+    client.on("offline", () => {
       this.logger.debug(`MQTT connection to ${this.clientRemoteAddress} offline`)
 
       // update stats
-      if (this.device.portalId) {
-        this.loader.loaderStatistics.deviceStatistics[this.statisticsKey].isReceivingData = false
+      const stats = this.statistics
+      if (stats && this.device.portalId) {
+        stats.isReceivingData = false
       }
     })
 
-    this.client.on("end", () => {
+    client.on("end", () => {
       this.logger.info(`MQTT connection to ${this.clientRemoteAddress} ended`)
     })
 
-    this.client.on("reconnect", () => {
+    client.on("reconnect", () => {
       this.logger.debug(`MQTT reconnecting to ${this.clientRemoteAddress}`)
     })
   }
@@ -495,7 +640,7 @@ class VenusMqttClient {
     }
     let portalStats = this.loader.loaderStatistics.deviceStatistics[this.statisticsKey]!!
     let logger = this.logger
-    this.client.publish(
+    this.client?.publish(
       `R/${this.device.portalId}/system/0/Serial`,
       isFirstKeepAliveRequest ? "" : '{ "keepalive-options" : ["suppress-republish"] }',
       { qos: 1 },
@@ -519,14 +664,14 @@ class VenusMqttClient {
   private subscribeAndRequestRepublish() {
     const portalId = this.device.portalId!!
     // dbus-flashmq only supports publishing at QoS 0
-    this.client.subscribe(`N/${portalId}/settings/0/Settings/SystemSetup/SystemName`, { qos: 0 })
+    this.client?.subscribe(`N/${portalId}/settings/0/Settings/SystemSetup/SystemName`, { qos: 0 })
     for (const topic of this.device.subscriptions) {
       const x = `N/${portalId}${topic}`
       this.logger.info(`Subscribing to '${x}'`)
       // dbus-flashmq only supports publishing at QoS 0
-      this.client.subscribe(x, { qos: 0 })
+      this.client?.subscribe(x, { qos: 0 })
     }
-    this.client.publish(`R/${portalId}/settings/0/Settings/SystemSetup/SystemName`, "", { qos: 1 })
+    this.client?.publish(`R/${portalId}/settings/0/Settings/SystemSetup/SystemName`, "", { qos: 1 })
     // first keepalive carries empty payload, asking the broker for full republish
     this.keepAlive()
     this.isDetectingPortalId = false
@@ -540,7 +685,7 @@ class VenusMqttClient {
   }
 
   get clientRemoteAddress() {
-    return `${this.client.options?.host}:${this.client.options?.port}`
+    return `${this.client?.options?.host}:${this.client?.options?.port}`
   }
 
   get statisticsKey() {
@@ -562,6 +707,7 @@ class VenusMqttClient {
       address: this.device.address,
       isReceivingData: false,
       hasReceivedKeepAliveConfirmation: false,
+      secure: this.device.secure,
       expiry: this.expiry,
       portalId: this.device.portalId,
       name: this.device.name || this.device.portalId!!,
@@ -609,13 +755,13 @@ class VenusMqttClient {
       for (const topic of toUnsubscribe) {
         const x = `N/${this.device.portalId}${topic}`
         this.logger.info(`Unsubscribing from '${x}'`)
-        this.client.unsubscribe(x)
+        this.client?.unsubscribe(x)
       }
       for (const topic of toSubscribe) {
         const x = `N/${this.device.portalId}${topic}`
         this.logger.info(`Subscribing to '${x}'`)
         // dbus-flashmq only supports publishing at QoS 0
-        this.client.subscribe(x, { qos: 0 })
+        this.client?.subscribe(x, { qos: 0 })
       }
     }
   }

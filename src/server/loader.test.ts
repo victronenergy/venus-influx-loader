@@ -2,12 +2,16 @@ import { describe, expect, it, vi } from "vitest"
 import {
   Loader,
   arrayDifference,
+  buildVenusMqttConnection,
   calculateVrmBrokerURL,
+  isSameVenusMqttConnection,
   parseVenusTopic,
   prepareVenusMQTTSubscriptions,
 } from "./loader.js"
 import ignoredMeasurements from "./ignoredMeasurements.js"
 import { Server } from "./server.js"
+import { AppSecrets } from "../shared/types.js"
+import { ConfiguredDevice } from "../shared/state.js"
 
 describe("parseVenusTopic", () => {
   it("splits portalId, instance and measurement", () => {
@@ -101,5 +105,90 @@ describe("Loader.collectStatistics", () => {
     loader.collectStatistics()
     expect(loader.loaderStatistics.measurementRate).toBe(0)
     expect(loader.loaderStatistics.deviceStatistics["UPNP:1.2.3.4:abc"].measurementRate).toBe(0)
+  })
+})
+
+describe("buildVenusMqttConnection", () => {
+  const secrets: AppSecrets = {
+    vrmUsername: "me@example.com",
+    vrmToken: "vrm-token",
+    vrmTokenId: "42",
+    venusTokens: {
+      "IP:1.2.3.4": { tokenName: "token/venusinfluxloader/vil1", password: "pw-ip", pairedAt: 1 },
+      "UPNP:abc": { tokenName: "token/venusinfluxloader/vil2", password: "pw-upnp", pairedAt: 1 },
+    },
+  }
+  const ip: ConfiguredDevice = { type: "IP", address: "1.2.3.4", subscriptions: ["/#"] }
+  const upnp: ConfiguredDevice = { type: "UPNP", address: "10.0.0.2", portalId: "abc", subscriptions: ["/#"] }
+  const vrm: ConfiguredDevice = {
+    type: "VRM",
+    address: "mqtt38.victronenergy.com",
+    portalId: "abc",
+    subscriptions: ["/#"],
+  }
+
+  it("connects to VRM over TLS with the VRM token", () => {
+    const { url, options } = buildVenusMqttConnection(vrm, secrets, "rnd")
+    expect(url).toBe("mqtts://mqtt38.victronenergy.com:8883")
+    expect(options).toMatchObject({
+      rejectUnauthorized: false,
+      username: "me@example.com",
+      password: "Token vrm-token",
+      reconnectPeriod: 10_000,
+      protocolVersion: 5,
+      reconnectOnConnackError: true,
+    })
+    expect(options.clientId).toMatch(/^venus_influx_loader_.*_rnd_42$/)
+  })
+
+  it("connects to a plain local device without credentials", () => {
+    const { url, options } = buildVenusMqttConnection(ip, secrets, "rnd")
+    expect(url).toBe("mqtt://1.2.3.4:1883")
+    expect(options.username).toBeUndefined()
+    expect(options.password).toBeUndefined()
+    expect(options.rejectUnauthorized).toBeUndefined()
+    expect(options).toMatchObject({ reconnectPeriod: 10_000, protocolVersion: 5, reconnectOnConnackError: true })
+    expect(options.clientId).toMatch(/^venus_influx_loader_.*_rnd$/)
+  })
+
+  it("connects to a secure manual host over TLS with the token stored under its hostName", () => {
+    const { url, options } = buildVenusMqttConnection({ ...ip, secure: true }, secrets, "rnd")
+    expect(url).toBe("mqtts://1.2.3.4:8883")
+    expect(options).toMatchObject({
+      rejectUnauthorized: false,
+      username: "token/venusinfluxloader/vil1",
+      password: "pw-ip",
+    })
+  })
+
+  it("connects to a secure discovered device with the token stored under its portalId", () => {
+    const { url, options } = buildVenusMqttConnection({ ...upnp, secure: true }, secrets, "rnd")
+    expect(url).toBe("mqtts://10.0.0.2:8883")
+    expect(options).toMatchObject({ username: "token/venusinfluxloader/vil2", password: "pw-upnp" })
+  })
+
+  it("refuses to connect a secure device that is not paired", () => {
+    expect(() => buildVenusMqttConnection({ ...ip, address: "5.6.7.8", secure: true }, secrets, "rnd")).toThrow(
+      /not yet paired/,
+    )
+    expect(() => buildVenusMqttConnection({ ...ip, secure: true }, {}, "rnd")).toThrow(/not yet paired/)
+  })
+})
+
+describe("isSameVenusMqttConnection", () => {
+  const a = { url: "mqtts://h:8883", options: { username: "u", password: "p", clientId: "1" } }
+
+  it("ignores the clientId", () => {
+    expect(isSameVenusMqttConnection(a, { ...a, options: { ...a.options, clientId: "2" } })).toBe(true)
+  })
+
+  it("compares url and credentials", () => {
+    expect(isSameVenusMqttConnection(a, { ...a, url: "mqtt://h:1883" })).toBe(false)
+    expect(isSameVenusMqttConnection(a, { ...a, options: { ...a.options, password: "x" } })).toBe(false)
+  })
+
+  it("treats two unpaired states as the same", () => {
+    expect(isSameVenusMqttConnection(undefined, undefined)).toBe(true)
+    expect(isSameVenusMqttConnection(a, undefined)).toBe(false)
   })
 })
