@@ -4,13 +4,16 @@ import {
   arrayDifference,
   buildVenusMqttConnection,
   calculateVrmBrokerURL,
+  describeMqttError,
+  enabledManualHosts,
   isSameVenusMqttConnection,
   parseVenusTopic,
   prepareVenusMQTTSubscriptions,
 } from "./loader.js"
 import ignoredMeasurements from "./ignoredMeasurements.js"
 import { Server } from "./server.js"
-import { AppSecrets } from "../shared/types.js"
+import { AppSecrets, createAppConfig } from "../shared/types.js"
+import mqtt from "mqtt"
 import { ConfiguredDevice } from "../shared/state.js"
 
 describe("parseVenusTopic", () => {
@@ -136,8 +139,8 @@ describe("buildVenusMqttConnection", () => {
       password: "Token vrm-token",
       reconnectPeriod: 10_000,
       protocolVersion: 5,
-      reconnectOnConnackError: true,
     })
+    expect(options.reconnectOnConnackError).toBeUndefined()
     expect(options.clientId).toMatch(/^venus_influx_loader_.*_rnd_42$/)
   })
 
@@ -147,7 +150,8 @@ describe("buildVenusMqttConnection", () => {
     expect(options.username).toBeUndefined()
     expect(options.password).toBeUndefined()
     expect(options.rejectUnauthorized).toBeUndefined()
-    expect(options).toMatchObject({ reconnectPeriod: 10_000, protocolVersion: 5, reconnectOnConnackError: true })
+    expect(options).toMatchObject({ reconnectPeriod: 10_000, protocolVersion: 5 })
+    expect(options.reconnectOnConnackError).toBeUndefined()
     expect(options.clientId).toMatch(/^venus_influx_loader_.*_rnd$/)
   })
 
@@ -158,6 +162,7 @@ describe("buildVenusMqttConnection", () => {
       rejectUnauthorized: false,
       username: "token/venusinfluxloader/vil1",
       password: "pw-ip",
+      reconnectOnConnackError: true,
     })
   })
 
@@ -182,13 +187,60 @@ describe("isSameVenusMqttConnection", () => {
     expect(isSameVenusMqttConnection(a, { ...a, options: { ...a.options, clientId: "2" } })).toBe(true)
   })
 
-  it("compares url and credentials", () => {
+  it("compares url and every other option", () => {
     expect(isSameVenusMqttConnection(a, { ...a, url: "mqtt://h:1883" })).toBe(false)
     expect(isSameVenusMqttConnection(a, { ...a, options: { ...a.options, password: "x" } })).toBe(false)
+    expect(isSameVenusMqttConnection(a, { ...a, options: { ...a.options, rejectUnauthorized: false } })).toBe(false)
   })
 
   it("treats two unpaired states as the same", () => {
     expect(isSameVenusMqttConnection(undefined, undefined)).toBe(true)
     expect(isSameVenusMqttConnection(a, undefined)).toBe(false)
+  })
+})
+
+describe("enabledManualHosts", () => {
+  it("lists enabled hosts with their Secured flag", () => {
+    const config = createAppConfig().manual
+    config.hosts = [
+      { hostName: "secure", enabled: true, secure: true },
+      { hostName: "plain", enabled: true },
+      { hostName: "disabled", enabled: false, secure: true },
+    ]
+    expect([...enabledManualHosts(config)]).toEqual([
+      ["secure", true],
+      ["plain", false],
+    ])
+  })
+
+  it("takes the first enabled entry of a duplicate hostName", () => {
+    const config = createAppConfig().manual
+    config.hosts = [
+      { hostName: "dup", enabled: false, secure: true },
+      { hostName: "dup", enabled: true },
+      { hostName: "dup", enabled: true, secure: true },
+    ]
+    expect([...enabledManualHosts(config)]).toEqual([["dup", false]])
+  })
+
+  it("is empty when manual connections are disabled", () => {
+    const config = createAppConfig().manual
+    config.enabled = false
+    config.hosts = [{ hostName: "h", enabled: true }]
+    expect(enabledManualHosts(config).size).toBe(0)
+  })
+})
+
+describe("describeMqttError", () => {
+  it("includes the reason code of a refused connection", () => {
+    expect(describeMqttError(new mqtt.ErrorWithReasonCode("Connection refused: Not authorized", 135))).toBe(
+      "Connection refused: Not authorized (code 135)",
+    )
+  })
+
+  it("falls back to the error code when the message is empty", () => {
+    const error = Object.assign(new AggregateError([], ""), { code: "ECONNREFUSED" })
+    expect(describeMqttError(error)).toBe("ECONNREFUSED")
+    expect(describeMqttError(new Error("write EPROTO"))).toBe("write EPROTO")
   })
 })
