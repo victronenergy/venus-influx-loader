@@ -46,6 +46,10 @@ interface EditableDeviceListProps {
     _portalId: string,
   ) => void
   onPortalExpiryChange: (_event: React.ChangeEvent<HTMLSelectElement>, _index: number, _portalId: string) => void
+  // local Venus devices only: adds a "Secure" checkbox column
+  onSecureEntryChange?: (_event: React.ChangeEvent<HTMLInputElement>, _index: number) => void
+  // local Venus devices only: adds a "Pairing" column
+  renderPairingCell?: (_entry: AppDeviceConfig | AppInstallationConfig, _index: number) => React.ReactNode
 }
 
 export function EditableDeviceList(props: EditableDeviceListProps) {
@@ -57,6 +61,8 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
             <CTableHeaderCell>{props.entryTitleText}</CTableHeaderCell>
             <CTableHeaderCell>Subscriptions</CTableHeaderCell>
             {props.defaultExpiryDuration && <CTableHeaderCell>Auto Expire Data Collection</CTableHeaderCell>}
+            {props.onSecureEntryChange && <CTableHeaderCell>Secure</CTableHeaderCell>}
+            {props.renderPairingCell && <CTableHeaderCell>Pairing</CTableHeaderCell>}
             <CTableHeaderCell>
               <CFormCheck
                 id="enable"
@@ -109,6 +115,19 @@ export function EditableDeviceList(props: EditableDeviceListProps) {
                         onSelectionDidChange={props.onPortalExpiryChange}
                       />
                     </CTableDataCell>
+                  )}
+                  {props.onSecureEntryChange && (
+                    <CTableDataCell>
+                      <CFormCheck
+                        name="secureHost"
+                        label="Secured"
+                        onChange={(event) => props.onSecureEntryChange!!(event, index)}
+                        checked={"secure" in element && element.secure === true}
+                      />
+                    </CTableDataCell>
+                  )}
+                  {props.renderPairingCell && (
+                    <CTableDataCell>{props.renderPairingCell(element, index)}</CTableDataCell>
                   )}
                   <CTableDataCell>
                     <CFormCheck

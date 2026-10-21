@@ -3,6 +3,7 @@ import { CCard, CCardBody, CCardHeader, CCardFooter, CForm, CButton, CFormCheck 
 
 import { useGetConfig, usePutConfig } from "../../hooks/useAdminApi"
 import { SaveError } from "./SaveError"
+import { VenusPairingCell, VenusPairingError, VenusPairingHelp, useVenusPairing } from "./VenusPairing"
 import { useFormValidation, updateFormField } from "../../hooks/useFormValidation"
 import {
   arrayExpiryToKeyed,
@@ -13,7 +14,7 @@ import {
   validateEntries,
 } from "./EditableDeviceList"
 import { useEffect, useState } from "react"
-import { AppConfig, VenusMQTTTopic } from "../../../shared/types"
+import { AppConfig, AppDeviceConfig, AppInstallationConfig, VenusMQTTTopic } from "../../../shared/types"
 import { WebSocketStatus } from "./WebsocketStatus"
 import { useSelector } from "react-redux"
 import { AppState } from "../../store"
@@ -23,6 +24,11 @@ function Manual() {
   const [{ data: config, loading: _isLoading, error: _loadError }, load, _cancelLoad] = useGetConfig()
   const [{ data: _saveResult, loading: isSaving, error: _saveError }, save, _cancelSave] = usePutConfig()
   const [isTemporaryConfigDirty, setIsTemporaryConfigDirty] = useState(false)
+
+  const pairing = useVenusPairing("IP")
+  // pairing stores the token under the hostName, so only hosts known to the server can be paired,
+  // config and temporaryConfig share their hosts array so this has to be a snapshot taken on load
+  const [savedHostNames, setSavedHostNames] = useState<string[]>([])
 
   const defaultExpiryDuration = useSelector((state: AppState) => state.uiSettings.showAutomaticExpirySettings)
   function populateDefaultExpiry(config?: AppConfig) {
@@ -43,6 +49,7 @@ function Manual() {
   useEffect(() => {
     setReferenceTime(Date.now())
     populateDefaultExpiry(config)
+    setSavedHostNames(config?.manual.hosts.map((host) => host.hostName) ?? [])
     setTemporaryConfig(config)
     setTemporaryExpiry(keyedExpiryToArray(config?.manual.expiry ?? {}, config?.manual.hosts ?? []))
     setTemporarySubscriptions(keyedSubscriptionsToArray(config?.manual.subscriptions ?? {}, config?.manual.hosts ?? []))
@@ -82,7 +89,7 @@ function Manual() {
   function handleEnableAllHostsChange(event: React.ChangeEvent<HTMLInputElement>) {
     const clone = { ...temporaryConfig!! }
     clone.manual.hosts = clone.manual.hosts.map((element) => {
-      return { hostName: element.hostName, enabled: event.target.checked }
+      return { ...element, enabled: event.target.checked }
     })
     setTemporaryConfig(clone)
     setIsTemporaryConfigDirty(true)
@@ -97,6 +104,31 @@ function Manual() {
     setTemporaryConfig(clone)
     revalidateEntries()
     setIsTemporaryConfigDirty(true)
+  }
+
+  function handleSecureHostChange(event: React.ChangeEvent<HTMLInputElement>, index: number) {
+    const clone = { ...temporaryConfig!! }
+    clone.manual.hosts[index].secure = event.target.checked
+    setTemporaryConfig(clone)
+    setIsTemporaryConfigDirty(true)
+  }
+
+  function renderPairingCell(entry: AppDeviceConfig | AppInstallationConfig, index: number) {
+    const host = entry as AppDeviceConfig
+    if (!host.secure) {
+      return null
+    }
+    const canPair = host.hostName !== "" && entriesValidity[index] !== false && savedHostNames.includes(host.hostName)
+    return (
+      <VenusPairingCell
+        token={pairing.tokenOf(host.hostName)}
+        canPair={canPair}
+        cannotPairReason="Save the host before pairing"
+        busy={pairing.isBusy(host.hostName)}
+        onPair={() => pairing.pair(host.hostName)}
+        onUnpair={() => pairing.unpair(host.hostName)}
+      />
+    )
   }
 
   function handleDeleteHost(
@@ -161,6 +193,8 @@ function Manual() {
     return <WebSocketStatus websocketStatus={websocketStatus} />
   }
 
+  const hasSecureHosts = temporaryConfig?.manual.hosts.some((host) => host.secure === true) ?? false
+
   return (
     temporaryConfig && (
       <CCard>
@@ -176,6 +210,8 @@ function Manual() {
           </CForm>
         </CCardHeader>
         <CCardBody>
+          <VenusPairingHelp hidden={!hasSecureHosts} />
+          <VenusPairingError error={pairing.error} />
           <CForm>
             <EditableDeviceList
               entries={temporaryConfig.manual.hosts}
@@ -193,6 +229,8 @@ function Manual() {
               defaultExpiryDuration={defaultExpiryDuration}
               onPortalExpiryChange={handlePortalExpiryChange}
               onPortalMQTTSubscriptionsChange={handlePortalSubscriptionChange}
+              onSecureEntryChange={handleSecureHostChange}
+              renderPairingCell={renderPairingCell}
             />
           </CForm>
         </CCardBody>

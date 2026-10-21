@@ -1,4 +1,5 @@
 import { AppConfig, LogEntry } from "./types.js"
+import { VenusDeviceType } from "./venusConfig.js"
 
 export const ADMIN_API = "/admin-api"
 
@@ -71,3 +72,29 @@ export const ADMIN_API_VRM_REFRESH = `${ADMIN_API}/${API_VRM_REFRESH}`
 
 export type VRMRefreshRequest = {}
 export type VRMRefreshResponse = {}
+
+// pairing with local Venus OS 3.80+ devices, the obtained MQTT token is stored in secrets.json
+
+export const API_VENUS_PAIR = "venusPair"
+export const ADMIN_API_VENUS_PAIR = `${ADMIN_API}/${API_VENUS_PAIR}`
+
+// IP: key is the hostName, UPNP: key is the portalId (the address is taken from the discovered device)
+export type VenusDeviceRequest = { type: VenusDeviceType; key: string }
+
+// what the Admin UI is allowed to see about a stored token, never the password
+export type VenusTokenInfo = { tokenName: string; pairedAt: number }
+
+export type VenusPairRequest = VenusDeviceRequest
+export type VenusPairResponse = VenusTokenInfo
+
+export const API_VENUS_UNPAIR = "venusUnpair"
+export const ADMIN_API_VENUS_UNPAIR = `${ADMIN_API}/${API_VENUS_UNPAIR}`
+
+export type VenusUnpairRequest = VenusDeviceRequest
+export type VenusUnpairResponse = {}
+
+export const API_VENUS_TOKENS = "venusTokens"
+export const ADMIN_API_VENUS_TOKENS = `${ADMIN_API}/${API_VENUS_TOKENS}`
+
+export type GetVenusTokensRequest = {}
+export type GetVenusTokensResponse = { [key: string]: VenusTokenInfo }

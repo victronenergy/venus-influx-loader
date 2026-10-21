@@ -7,6 +7,9 @@ import {
   ADMIN_API_VRM_LOGIN,
   ADMIN_API_VRM_LOGOUT,
   ADMIN_API_VRM_REFRESH,
+  ADMIN_API_VENUS_PAIR,
+  ADMIN_API_VENUS_TOKENS,
+  ADMIN_API_VENUS_UNPAIR,
   GetConfigRequest,
   GetConfigResponse,
   GetDebugRequest,
@@ -25,6 +28,12 @@ import {
   VRMLogoutResponse,
   VRMRefreshRequest,
   VRMRefreshResponse,
+  GetVenusTokensRequest,
+  GetVenusTokensResponse,
+  VenusPairRequest,
+  VenusPairResponse,
+  VenusUnpairRequest,
+  VenusUnpairResponse,
 } from "../../shared/api"
 
 export function useGetConfig() {
@@ -74,6 +83,24 @@ export function useVRMLogout() {
 export function useVRMRefresh() {
   return useAxios<VRMRefreshResponse, VRMRefreshRequest>(
     { url: ADMIN_API_VRM_REFRESH, method: "PUT" },
+    { manual: true },
+  )
+}
+
+export function useGetVenusTokens() {
+  return useAxios<GetVenusTokensResponse, GetVenusTokensRequest>(
+    { url: ADMIN_API_VENUS_TOKENS, method: "GET" },
+    { manual: true },
+  )
+}
+
+export function useVenusPair() {
+  return useAxios<VenusPairResponse, VenusPairRequest>({ url: ADMIN_API_VENUS_PAIR, method: "POST" }, { manual: true })
+}
+
+export function useVenusUnpair() {
+  return useAxios<VenusUnpairResponse, VenusUnpairRequest>(
+    { url: ADMIN_API_VENUS_UNPAIR, method: "POST" },
     { manual: true },
   )
 }

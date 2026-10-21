@@ -10,6 +10,8 @@ It supports connection to the Venus devices:
   - Configured manually by setting their IP address.
   - Configured via VRM login credentials.
 
+Devices running the default *Secured* network security profile of Venus OS are supported via MQTT over TLS and a pairing token, see [Secured Venus devices](#secured-venus-devices-venus-os-380-and-newer).
+
 Venus Influx Loader can run nearby a Venus device, and does not require internet access.
 
 It is therefore ideal to be installed on a Yacht, Motorhome, or sites without permanent internet access.
@@ -104,6 +106,22 @@ Recommendation:
 
 - Raspberry Pi and other installations without a UPS: use InfluxDB 1.x.
 - If you want InfluxDB 3, use InfluxDB 3 Enterprise and store the data in an S3 compatible object store such as MinIO or a cloud bucket, where writes are atomic. With local disk storage, protect the host with a UPS and always shut it down cleanly, and keep backups of the data directory.
+
+### Secured Venus devices (Venus OS 3.80 and newer)
+
+Since Venus OS 3.50 every GX device has a *Network Security Profile* (Settings > General > Access & Security). GX devices shipped with Venus OS 3.50 or later default to the *Secured* profile, devices upgraded from an older version keep a profile matching their previous Remote Console settings. With the *Secured* profile local MQTT is only available over TLS on port 8883 with a self-signed certificate and requires authentication. Plain MQTT on port 1883 only works with the *Unsecured* profile. UPNP discovery is not affected by the profile.
+
+The device password that comes with the *Secured* profile (on new units the six-digit Bluetooth PIN printed on the enclosure) is only used by the Remote Console. Venus Influx Loader never asks for it, it pairs with the device instead. See the [Cerbo GX manual](https://www.victronenergy.com/media/pg/Cerbo_GX/en/the-user-interface.html) for the details of each profile.
+
+Venus Influx Loader connects to such devices using a pairing token (Venus OS 3.80 or newer):
+
+1. In the Admin UI, tick **Secured** next to the device on the *Discovery* or *Manual* settings page. Manual hosts have to be saved first, the token is stored under the hostname.
+2. Put the Venus device into pairing mode: Settings > Integrations > MQTT Devices > Pairing mode, or quickly press the button on a GX device without a screen twice. Pairing mode stays active for 120 seconds.
+3. Click **Pair** next to the device within those 120 seconds.
+
+The loader asks the device for MQTT credentials over `https://<device>/auth/generate-token/`, stores them in `/config/secrets.json` under `venusTokens`, and connects to `mqtts://<device>:8883`. The device's certificate is self-signed and is therefore not verified. The token is listed on the device under Settings > Integrations > MQTT Devices, and pairing switches the device's *MQTT Access* to *Paired devices only* if it was off. Other local MQTT clients that connected without credentials will then need a token too.
+
+**Unpair** forgets the token, the device keeps its copy until it is removed on the device. Every pairing creates a new token, a stale one on the device does no harm. The *Dashboard* shows a `Secured` badge for secured devices and the reason when a connection fails, for example a device that is marked Secured but not paired yet, or a token that was deleted on the device.
 
 #### Tip: Run Influx Loader headless
 
@@ -262,6 +280,9 @@ The directory `/src/server` is a [Node.js](https://nodejs.org/en/) app that is c
    - `/admin-api/vrmLogin` `POST` to login into VRM.
    - `/admin-api/vrmLogout` `POST` to logout from VRM.
    - `/admin-api/vrmRefresh` `PUT` to refresh list of portals available via VRM.
+   - `/admin-api/venusPair` `POST` to request a pairing token from a local Venus device in pairing mode and save it to `/config/secrets.json`.
+   - `/admin-api/venusUnpair` `POST` to forget the pairing token of a local Venus device.
+   - `/admin-api/venusTokens` `GET` the names of the stored pairing tokens, never the passwords.
    - TODO: cleanup (move away from `vrm.js` ??)
 
 

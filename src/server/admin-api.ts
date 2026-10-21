@@ -3,6 +3,7 @@ import { Server } from "./server.js"
 import { AppConfig, AppSecrets } from "../shared/types.js"
 import { API_CONFIG, API_DEBUG, API_LOG, API_SECURITY } from "../shared/api.js"
 import { parseInfluxDBVersion, validateInfluxDBConfig } from "../shared/influxdbConfig.js"
+import { venusTokenKey } from "../shared/venusConfig.js"
 
 // TODO: add TS API request/response interfaces
 // TODO: refactor out hardcoded API endpoints
@@ -28,15 +29,39 @@ export default (server: Server) => {
       return
     }
     config.influxdb.version = parseInfluxDBVersion(config.influxdb.version)!!
+    // older Admin UI bundles or scripts may not send the newer keys
+    config.upnp.securePortalIds = Array.isArray(config.upnp?.securePortalIds) ? config.upnp.securePortalIds : []
     server.config = config
     try {
       await server.saveConfig()
+      await forgetTokensOfRemovedHosts()
       res.status(200).send("Configuration Saved")
-      res.send()
     } catch (error) {
       res.status(500).send(error)
     }
   })
+
+  // pairing tokens only make sense for devices configured as Secured, a host that was renamed,
+  // deleted or switched back to plain MQTT would otherwise leave a live token behind
+  async function forgetTokensOfRemovedHosts() {
+    const tokens = server.secrets.venusTokens ?? {}
+    const secured = [
+      ...server.config.manual.hosts
+        .filter((host) => host.secure === true)
+        .map((host) => venusTokenKey("IP", host.hostName)),
+      ...server.config.upnp.securePortalIds.map((portalId) => venusTokenKey("UPNP", portalId)),
+    ]
+    const orphans = Object.keys(tokens).filter((key) => !secured.includes(key))
+    if (orphans.length === 0) return
+    const previous = server.secrets.venusTokens
+    server.secrets.venusTokens = Object.fromEntries(Object.entries(tokens).filter(([key]) => !orphans.includes(key)))
+    try {
+      await server.saveSecrets()
+    } catch (error) {
+      server.secrets.venusTokens = previous
+      throw error
+    }
+  }
 
   // TODO: annotate req/res
   router.post(`/${API_SECURITY}`, async (req: express.Request<AppSecrets>, res, _next) => {

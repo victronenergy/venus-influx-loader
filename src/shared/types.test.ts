@@ -4,7 +4,13 @@ import { createAppConfig, createAppSecrets } from "./types.js"
 describe("createAppConfig", () => {
   it("returns the full default config", () => {
     const config = createAppConfig()
-    expect(config.upnp).toEqual({ enabled: true, enabledPortalIds: [], expiry: {}, subscriptions: {} })
+    expect(config.upnp).toEqual({
+      enabled: true,
+      enabledPortalIds: [],
+      securePortalIds: [],
+      expiry: {},
+      subscriptions: {},
+    })
     expect(config.manual).toEqual({ enabled: true, hosts: [], expiry: {}, subscriptions: {} })
     expect(config.vrm).toEqual({
       enabled: true,
