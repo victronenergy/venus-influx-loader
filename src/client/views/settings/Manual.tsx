@@ -135,7 +135,7 @@ function Manual() {
     _event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement, MouseEvent>,
     index: number,
   ) {
-    const clone = { ...config!! }
+    const clone = { ...temporaryConfig!! }
     clone.manual.hosts.splice(index, 1)
     const newExpiry = [...temporaryExpiry]
     newExpiry.splice(index, 1)

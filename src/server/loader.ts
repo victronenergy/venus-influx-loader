@@ -194,7 +194,8 @@ export class Loader {
     }, collectStatsInterval * 1000)
 
     this.checkExpiryInterval = setInterval(() => {
-      this.checkExpiry()
+      // an async callback that rejects would otherwise terminate the process as an unhandled rejection
+      this.checkExpiry().catch((error) => this.logger.error(`checkExpiry failed: ${error}`))
     }, checkExpiryInterval * 1000)
 
     // initiate connections to configured devices
