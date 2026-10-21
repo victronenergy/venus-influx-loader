@@ -78,12 +78,13 @@ export default function (server: Server) {
     }
     const key = venusTokenKey(request.type, request.key)
     const previous = server.secrets.venusTokens
-    if (previous?.[key]) {
-      const { [key]: _forgotten, ...remaining } = previous
-      server.secrets.venusTokens = remaining
-      logger.info(`Forgot pairing token of ${key}`)
+    if (!previous?.[key]) {
+      res.send()
+      return
     }
-    // saving emits secretsChanged, the loader disconnects as the device can no longer be reached
+    const { [key]: _forgotten, ...remaining } = previous
+    server.secrets.venusTokens = remaining
+    logger.info(`Forgot pairing token of ${key}`)
     try {
       await server.saveSecrets()
     } catch (error) {

@@ -36,7 +36,6 @@ export default (server: Server) => {
       await server.saveConfig()
       await forgetTokensOfRemovedHosts()
       res.status(200).send("Configuration Saved")
-      res.send()
     } catch (error) {
       res.status(500).send(error)
     }
@@ -54,8 +53,14 @@ export default (server: Server) => {
     ]
     const orphans = Object.keys(tokens).filter((key) => !secured.includes(key))
     if (orphans.length === 0) return
+    const previous = server.secrets.venusTokens
     server.secrets.venusTokens = Object.fromEntries(Object.entries(tokens).filter(([key]) => !orphans.includes(key)))
-    await server.saveSecrets()
+    try {
+      await server.saveSecrets()
+    } catch (error) {
+      server.secrets.venusTokens = previous
+      throw error
+    }
   }
 
   // TODO: annotate req/res
