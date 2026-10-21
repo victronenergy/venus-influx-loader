@@ -29,11 +29,13 @@ import CIcon from "@coreui/icons-react"
 import { cilX, cilListFilter } from "@coreui/icons"
 
 export function TinyFilterActionButton(props: { isFilterActive: boolean; size?: "sm" | "custom"; height?: number }) {
+  // CIcon switches to icon-custom-size as soon as height is set, which disables the
+  // icon-sm sizing rule, so only pass it through when a caller really wants a custom size.
   return (
     <CIcon
       icon={props.isFilterActive ? cilX : cilListFilter}
       size={props.size || "sm"}
-      height={props.height || 12}
+      {...(props.height !== undefined && { height: props.height })}
       className="ms-1"
     />
   )
@@ -105,7 +107,7 @@ function Troubleshooting() {
                   className="text-decoration-none"
                 >
                   <CBadge color="primary" shape="rounded-pill" size="sm">
-                    {labelFilter} <TinyFilterActionButton isFilterActive={labelFilter !== undefined} />
+                    {labelFilter} <TinyFilterActionButton isFilterActive={labelFilter !== undefined} height={12} />
                   </CBadge>
                 </CLink>
               )}
@@ -187,7 +189,7 @@ function LogList(props: LogListProps) {
                     >
                       <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill" size="sm">
                         {entry.label}
-                        {<TinyFilterActionButton isFilterActive={props.labelFilter !== undefined} />}
+                        {<TinyFilterActionButton isFilterActive={props.labelFilter !== undefined} height={12} />}
                       </CBadge>
                     </CLink>
                   </CTableDataCell>

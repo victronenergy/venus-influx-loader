@@ -98,7 +98,7 @@ function Dashboard() {
                     <CTableDataCell>
                       <CContainer>
                         <CRow className="align-items-start mb-1">
-                          <CCol>
+                          <CCol className="d-flex align-items-center gap-3">
                             <CIcon
                               className={
                                 deviceStats.hasReceivedKeepAliveConfirmation
@@ -110,35 +110,29 @@ function Dashboard() {
                               icon={cilRss}
                               size="lg"
                             />
-                            <strong>
-                              &nbsp; &nbsp;
-                              {deviceStats.name || deviceStats.address}
-                              &nbsp; &nbsp;
-                            </strong>
-                            <CLink
-                              href="#"
-                              onClick={(event) => handleLabelFilterChange(event, logLabel)}
-                              className="text-decoration-none"
-                            >
-                              <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
-                                {deviceStats.type} {deviceStats.address}
-                                <TinyFilterActionButton isFilterActive={false} height={16} />
-                              </CBadge>
-                            </CLink>
-                            &nbsp; &nbsp;
-                            {deviceStats.expiry !== undefined && deviceStats.expiry > 0 && (
-                              <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
-                                Stop in {ms(deviceStats.expiry - Date.now())}
-                              </CBadge>
-                            )}
-                            {deviceStats.secure && (
-                              <>
-                                &nbsp; &nbsp;
+                            <strong>{deviceStats.name || deviceStats.address}</strong>
+                            <span className="d-flex align-items-center gap-2">
+                              <CLink
+                                href="#"
+                                onClick={(event) => handleLabelFilterChange(event, logLabel)}
+                                className="text-decoration-none d-flex"
+                              >
+                                <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
+                                  {deviceStats.type} {deviceStats.address}
+                                  <TinyFilterActionButton isFilterActive={false} />
+                                </CBadge>
+                              </CLink>
+                              {deviceStats.expiry !== undefined && deviceStats.expiry > 0 && (
+                                <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
+                                  Stop in {ms(deviceStats.expiry - Date.now())}
+                                </CBadge>
+                              )}
+                              {deviceStats.secure && (
                                 <CBadge textBgColor="light" textColor="secondary" shape="rounded-pill">
                                   <CIcon icon={cilLockLocked} size="sm" /> Secured
                                 </CBadge>
-                              </>
-                            )}
+                              )}
+                            </span>
                           </CCol>
                           <CCol className="text-end" xs="auto">
                             {deviceStats.hasReceivedKeepAliveConfirmation ? (
