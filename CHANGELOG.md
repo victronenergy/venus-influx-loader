@@ -1,3 +1,24 @@
+# [1.10.0](https://github.com/victronenergy/venus-influx-loader/compare/1.9.0...1.10.0) (2026-10-21)
+
+
+### Bug Fixes
+
+* align dashboard device badges in height, baseline, and spacing ([32dc79e](https://github.com/victronenergy/venus-influx-loader/commit/32dc79e8bd57c29b31867ad31b64cdb0db757aaf))
+* delete manual host from the edited config and log expiry timer failures ([#410](https://github.com/victronenergy/venus-influx-loader/issues/410)) ([54fdb1d](https://github.com/victronenergy/venus-influx-loader/commit/54fdb1d0bf910242dcf7bd4979bcf41fb8c95881))
+* forget pairing tokens of devices no longer configured as Secured ([a08bcdb](https://github.com/victronenergy/venus-influx-loader/commit/a08bcdb53e9e4184c14e2fc4ef95bd08c22ba0e4))
+* guard loader statistics after stop and derive VRM and Secured flags reliably ([a7f9b9d](https://github.com/victronenergy/venus-influx-loader/commit/a7f9b9dfefba2094f2a734099aa696db319feae3))
+* remove double res.send, add rollback to forgetTokens, skip no-op unpair ([ded4281](https://github.com/victronenergy/venus-influx-loader/commit/ded42812c7d4288fde021990a259d03e9d06e510))
+
+
+### Features
+
+* add admin API to pair with secured Venus devices ([b3e7f7c](https://github.com/victronenergy/venus-influx-loader/commit/b3e7f7cc4432e879497b0b247e30e3bf7313f2d8))
+* add secure flag and pairing token types to config and secrets ([4fc7c9d](https://github.com/victronenergy/venus-influx-loader/commit/4fc7c9d54bd1451421dc8bdaa39dce94331c8c8c))
+* connect to secured Venus devices over MQTT TLS using pairing tokens ([53a6940](https://github.com/victronenergy/venus-influx-loader/commit/53a69401535b194e522e2affb12668043bbfc0b4))
+* pair secured Venus devices from the Admin UI ([6f1a73b](https://github.com/victronenergy/venus-influx-loader/commit/6f1a73b2cea16ab645b4e0f8033d23d52d482e0c))
+* secured Venus device support and pairing ([e32046d](https://github.com/victronenergy/venus-influx-loader/commit/e32046d294c6e7700e8725f97805a15df1d2d0a2))
+* show secured badge, connection errors and settings link on the dashboard ([03f965c](https://github.com/victronenergy/venus-influx-loader/commit/03f965cdce7fb346d5cf9dfe909203f8c0219982))
+
 # [1.9.0](https://github.com/victronenergy/venus-influx-loader/compare/1.8.1...1.9.0) (2026-10-13)
 
 
